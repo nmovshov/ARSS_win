@@ -1,0 +1,89 @@
+	// I temporarily put a *terrible* gravity calculation here, for emergency LPSC reasons, might be useful
+	PxU32 nbActors = gPhysX.mScene->getNbActors(gPhysX.roles.dynamics);
+	gPhysX.mScene->getActors(gPhysX.roles.dynamics,gPhysX.cast,nbActors);
+	for (PxU32 j=0; j<nbActors; j++)
+	{
+		PxRigidDynamic* actorj = gPhysX.cast[j]->isRigidDynamic();
+		if (actorj == sgp::VIPs.nucleus) continue;
+		if (actorj == sgp::VIPs.kicker) continue;
+		PxVec3 rj = actorj->getGlobalPose().p;
+		PxReal mj = actorj->getMass();
+		for (PxU32 k=0; k<j; k++)
+		{
+			PxRigidDynamic* actork = gPhysX.cast[k]->isRigidDynamic();
+			if (actork == sgp::VIPs.nucleus) continue;
+			if (actork == sgp::VIPs.kicker) continue;
+			PxVec3 rk = actork->getGlobalPose().p;
+			PxReal mk = actork->getMass();
+
+			PxVec3 rjk = rk-rj;
+			PxReal d2jk = rjk.magnitudeSquared();
+			rjk.normalize();
+			PxVec3 F = (sgp::units.bigG * mj * mk / d2jk) * rjk;
+
+			actorj->addForce(F);
+			actork->addForce(-F);
+		}
+	}
+
+	// vibrate nucleus, a good method, use somewhere else
+	if (sgp::VIPs.nucleus && sgp::eExperimentType == sgp::eSHAKE_SGP)
+	{
+		static PxReal angle = 0;
+		static PxVec3 axis(0,1,0);
+		PxTransform pose = sgp::VIPs.nucleus->getGlobalPose();
+		pose.q = PxQuat(angle,axis);
+		//sgp::VIPs.nucleus->setGlobalPose(pose);
+		sgp::VIPs.nucleus->setKinematicTarget(pose);
+		angle+=0.01*sgp::params.shakeMagnitude;
+		if (angle > 2*PxPi)
+		{
+			axis = PxVec3(gUtils.normalRNG->dev(),gUtils.normalRNG->dev(),gUtils.normalRNG->dev());
+			axis.normalize();
+			angle = 0;
+		}
+
+	}
+
+// Log grain positions
+		string logFile = gRun.workingDirectory + "/" + gRun.baseName + ".";
+		char buf[MAX_CHARS_PER_NAME];
+		if (_itoa_s(gSim.frame,buf,MAX_CHARS_PER_NAME,10)==0)
+			logFile += buf;
+		logFile += ".log";
+		ofstream fh(logFile);
+		if (!fh.good())
+		{
+			ncc__warning("Could not open log file, log not saved!\a");
+		}
+		else
+		{
+			PxU32 nbActors = gPhysX.mScene->getNbActors(gPhysX.roles.dynamics);
+			gPhysX.mScene->getActors(gPhysX.roles.dynamics,gPhysX.cast,nbActors);
+			for (PxU32 k=0; k<nbActors; k++)
+			{
+				PxRigidDynamic* actor = gPhysX.cast[k]->isRigidDynamic();
+				PxReal r = actor->getGlobalPose().p.magnitude();
+				PxReal m = actor->getMass();
+				if (r>R) R=r;
+				M += m;
+				PxU32  n = 0;
+				const char* name = actor->getName();
+				if (name && strcmp(name,"size1")==0)
+					n=1;
+				if (name && strcmp(name,"size2")==0)
+					n=2;
+
+				fh << n << "\t" << r << endl;
+			}
+		}
+
+
+// kick the pile
+		sgp::VIPs.kicker = CreateRubbleGrain(gCamera.pos+gCamera.forward*2.5*sgp::gsd.size1,eSPHERE_GRAIN,0.5*sgp::gsd.size1,*gPhysX.mDefaultMaterial,100*gExp.defGrainDensity);
+		if (sgp::VIPs.kicker)
+		{
+			PxReal vesc = sqrt(2*sgp::units.bigG*M/R);
+			sgp::VIPs.kicker->setLinearVelocity(gCamera.forward * sgp::params.kickMagnitude * vesc);
+			ColorActor(sgp::VIPs.kicker,ncc::rgb::rDarkRed);
+		}
