@@ -11,3 +11,7 @@
 *.lai
 *.la
 *.a
+
+# Visual Studio local files
+*.opensdf
+*.sdf
