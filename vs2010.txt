@@ -1,0 +1,23 @@
+Visual Studio 2010 quirks
+
+On Windows the VS2010 solution ARSS.sln can be used to build and run all projects with one click. Almost. There are a few quirks. In no particular order:
+
+The following properties do not transfer well through the .props file and need to be set individually for new projects.
+
+Pre-build events: command line
+echo del "$(OutDir)*.dll"
+del "$(OutDir)*.dll"
+
+Post-build events: command line
+echo copy "$(CudaToolkitBinDir)\cudart*.dll" "$(OutDir)"
+copy "$(CudaToolkitBinDir)\cudart*.dll" "$(OutDir)"
+echo copy "$(SolutionDir)extern\glut\win32\lib\glut32.dll" "$(OutDir)"
+copy "$(SolutionDir)extern\glut\win32\lib\glut32.dll" "$(OutDir)"
+echo copy "$(SolutionDir)extern\DevIL\win32\lib\*.dll" "$(OutDir)"
+copy "$(SolutionDir)extern\DevIL\win32\lib\*.dll" "$(OutDir)"
+echo copy "$(SolutionDir)extern\PhysX\v3.2.0_win\Bin\win32\*.dll" "$(OutDir)"
+copy "$(SolutionDir)extern\PhysX\v3.2.0_win\Bin\win32\*.dll" "$(OutDir)"
+
+General: Character set - Not Set
+
+Build order: in some situations compiling several projects ar once can cause build order clashes. The projects are independent anyway and there is little reason to load and compile two at once.
