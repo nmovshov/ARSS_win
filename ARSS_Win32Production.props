@@ -1,0 +1,38 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ImportGroup Label="PropertySheets" />
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup />
+  <ItemDefinitionGroup>
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <AdditionalIncludeDirectories>$(SolutionDir)\common;$(SolutionDir)\extern\ncclib;$(SolutionDir)\extern\glut\win32\include;$(SolutionDir)\extern\DevIL\win32\include;$(SolutionDir)\extern\PhysX\v3.2.0_win\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>HAVE_CUDA_TK;NDEBUG;_CRT_SECURE_NO_WARNINGS</PreprocessorDefinitions>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+    </ClCompile>
+    <Link>
+      <AdditionalLibraryDirectories>$(SolutionDir)\extern\glut\win32\lib;$(SolutionDir)\extern\DevIL\win32\lib;$(SolutionDir)\extern\PhysX\v3.2.0_win\Lib\win32;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>cudart.lib;glut32.lib;ILU.lib;ILUT.lib;DevIL.lib;PhysX3_x86.lib;PhysX3Common_x86.lib;PhysX3Cooking_x86.lib;PhysX3Extensions.lib;PhysXVisualDebuggerSDK.lib;RepX3.lib;RepXUpgrader3.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <SubSystem>Console</SubSystem>
+      <IgnoreSpecificDefaultLibraries>libcmt</IgnoreSpecificDefaultLibraries>
+      <OptimizeReferences>true</OptimizeReferences>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+    </Link>
+    <PreBuildEvent>
+      <Command>del "$(OutDir)*.dll"</Command>
+      <Message>Delete old DLLs</Message>
+    </PreBuildEvent>
+    <PostBuildEvent>
+      <Command>echo copying cudart* DLLs from "$(CudaToolkitBinDir)\"
+copy "$(CudaToolkitBinDir)\cudart*.dll" "$(OutDir)"
+echo copying glut DLL from "$(SolutionDir)extern\glut\win32\lib\"
+copy "$(SolutionDir)extern\glut\win32\lib\glut32.dll" "$(OutDir)"
+echo copying DevIL DLLs from "$(SolutionDir)extern\DevIL\win32\lib\"
+copy "$(SolutionDir)extern\DevIL\win32\lib\*.dll" "$(OutDir)"
+echo copying PhysX DLLs from "$(SolutionDir)extern\PhysX\v3.2.0_win\Bin\win32\"
+copy "$(SolutionDir)extern\PhysX\v3.2.0_win\Bin\win32\*.dll" "$(OutDir)"</Command>
+      <Message>Copy new DLLs</Message>
+    </PostBuildEvent>
+  </ItemDefinitionGroup>
+  <ItemGroup />
+</Project>

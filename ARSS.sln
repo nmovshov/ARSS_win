@@ -1,0 +1,50 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 11.00
+# Visual Studio 2010
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "AloWorld", "AloWorld\AloWorld.vcxproj", "{9381B488-BAD1-4CC4-A60A-5D2469266614}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Verify", "Verify\Verify.vcxproj", "{B37B1542-4BB0-4B18-AE4C-6926C4D709C7}"
+	ProjectSection(ProjectDependencies) = postProject
+		{9381B488-BAD1-4CC4-A60A-5D2469266614} = {9381B488-BAD1-4CC4-A60A-5D2469266614}
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Cliff", "Cliff\Cliff.vcxproj", "{48508135-7AA1-4D85-95F5-282809136CF5}"
+	ProjectSection(ProjectDependencies) = postProject
+		{B37B1542-4BB0-4B18-AE4C-6926C4D709C7} = {B37B1542-4BB0-4B18-AE4C-6926C4D709C7}
+		{9381B488-BAD1-4CC4-A60A-5D2469266614} = {9381B488-BAD1-4CC4-A60A-5D2469266614}
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SGP", "SGP\SGP.vcxproj", "{7EEC6D92-06FE-4621-A393-546441DA7717}"
+	ProjectSection(ProjectDependencies) = postProject
+		{48508135-7AA1-4D85-95F5-282809136CF5} = {48508135-7AA1-4D85-95F5-282809136CF5}
+		{B37B1542-4BB0-4B18-AE4C-6926C4D709C7} = {B37B1542-4BB0-4B18-AE4C-6926C4D709C7}
+		{9381B488-BAD1-4CC4-A60A-5D2469266614} = {9381B488-BAD1-4CC4-A60A-5D2469266614}
+	EndProjectSection
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Win32 = Debug|Win32
+		Production|Win32 = Production|Win32
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{9381B488-BAD1-4CC4-A60A-5D2469266614}.Debug|Win32.ActiveCfg = Debug|Win32
+		{9381B488-BAD1-4CC4-A60A-5D2469266614}.Debug|Win32.Build.0 = Debug|Win32
+		{9381B488-BAD1-4CC4-A60A-5D2469266614}.Production|Win32.ActiveCfg = Production|Win32
+		{9381B488-BAD1-4CC4-A60A-5D2469266614}.Production|Win32.Build.0 = Production|Win32
+		{B37B1542-4BB0-4B18-AE4C-6926C4D709C7}.Debug|Win32.ActiveCfg = Debug|Win32
+		{B37B1542-4BB0-4B18-AE4C-6926C4D709C7}.Debug|Win32.Build.0 = Debug|Win32
+		{B37B1542-4BB0-4B18-AE4C-6926C4D709C7}.Production|Win32.ActiveCfg = Production|Win32
+		{B37B1542-4BB0-4B18-AE4C-6926C4D709C7}.Production|Win32.Build.0 = Production|Win32
+		{48508135-7AA1-4D85-95F5-282809136CF5}.Debug|Win32.ActiveCfg = Debug|Win32
+		{48508135-7AA1-4D85-95F5-282809136CF5}.Debug|Win32.Build.0 = Debug|Win32
+		{48508135-7AA1-4D85-95F5-282809136CF5}.Production|Win32.ActiveCfg = Production|Win32
+		{48508135-7AA1-4D85-95F5-282809136CF5}.Production|Win32.Build.0 = Production|Win32
+		{7EEC6D92-06FE-4621-A393-546441DA7717}.Debug|Win32.ActiveCfg = Debug|Win32
+		{7EEC6D92-06FE-4621-A393-546441DA7717}.Debug|Win32.Build.0 = Debug|Win32
+		{7EEC6D92-06FE-4621-A393-546441DA7717}.Production|Win32.ActiveCfg = Production|Win32
+		{7EEC6D92-06FE-4621-A393-546441DA7717}.Production|Win32.Build.0 = Production|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal

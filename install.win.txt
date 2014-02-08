@@ -1,0 +1,85 @@
+This is the "installation" guide for ARSS. Here I try to ease some of the pain associated with obtaining and installing the required external libraries. This is not a hand holding step-by-step guide. Rather, I describe what NEEDS to happen in order for ARSS projects to compile and link (and run) correctly. No doubt, problems will arise, especially on non-Windows machines. Hopefully this document will at least let you know how things should look on a properly installed setup, so that you know how to start troubleshooting. Let's begin.
+
+1. What do you need to build and run ARSS?
+ARSS is written in c++, so you need a c++ compiler. On Windows cl (the Visual Studio compiler) will work. On Windows, g++ will NOT work. If you can get Visual Studio 2010 Pro or better, building ARSS will be greatly simplified. College students can get VS Pro for free at www.dreamspark.com. Otherwise it is an expensive product, but Visual Studio 2010 Express is free and will be able to compile ARSS, with some more work.
+
+The c++ source files for the ARSS projects are included here, so they can be compiled on any system. But all ARSS projects also link against several external libraries, foremost of which is the PhysX library, without which none of this work would be possible. You need to obtain the correct version for your operating system for each of these libraries. Below I enumerate all the external libraries, what they do, why they are needed, where to get them, and how to install them.
+
+2. External libraries.
+Assume ARSS is the top level directory.
+
+2a. NCCLIB - Naor's c++ collection.
+This is my collection of general use routines. Things like file I/O and other utility methods. It also includes a slightly modified version of the Numerical Recipes (3rd ed.) base header, as well as a few other Numerical Recipes methods of general use.
+Installation: None. It's already in ARSS/extern/ncclib.
+
+2b. OpenGL - the rendering engine.
+ARSS uses OpenGL to draw shapes to the screen. You almost certainly already have the OpenGL library on your system.
+Installation: The library is almost certainly on your system already. It is usually installed when you install Visual Studio, and it will probably be located in C:\Program Files (x86)\Microsoft SDKs\Windows\ along with many other libraries. If you installed Visual Studio correctly, the compiler should be able to find the headers when you #include them with <> and the linker should be able to find OpenGL32.lib without assistance. If not, you should locate them on your system and take a note of their location for the build stage (see section 3).
+For general information on openGL see http://www.opengl.org/wiki/Getting_started
+
+2c. GLUT - A window and event manager for OpenGL.
+This is a simple, light-weight and portable window and event manager. This is the library that let's us control our windowed application with the mouse and keyboard.
+Installation: The windows version is already in ARSS/extern/glut/win32.
+
+2d. DevIL - A development image library.
+We use this to make movies of our simulation by saving jpeg images from the OpenGL rendering (screen shots).
+Installation: The Windows is already in ARSS/extern/DevIL.
+
+2e. CUDA - The GPU programming API.
+We use CUDA to run the N-body gravity calculations in ARSS.
+Installation: The CUDA runtime library is actually part of the NVIDIA driver already installed on your system (assuming you have an NVIDIA video card). Obtain the CUDA Toolkit from http://www.nvidia.com/content/cuda/cuda-downloads.html. You need the Toolkit, and it's a good idea to update the drivers. You don't need the SDK unless you want to learn more about CUDA programming. You will need to add the CUDA bin directory to your system's path.
+
+NOTE: If you are using Visual Studio Pro or better then you have an easier and better option. Install NSIGHT instead (http://www.nvidia.com/object/nsight.html) and it will come bundled with the CUDA toolkit you need and also configure VS and environment variables. Not to mention that you will be able to debug and profile CUDA code if you're into that...
+
+2f. PhysX - The DEM.
+We use PhysX to do all the collision detection, collision resolution, and time integration in our simulation.
+Installation: The Windows version is already installed in ARSS/extern/PhysX/v3.2.0_win.
+
+3. Configuring the build.
+If you have Visual Studio (pro or better) and installed CUDA using NSIGHT, then a double-click on ARSS.sln and then F7 should get all the projects compiled and linked. But if you insist on using a command window there will be many compiler and linker options to set, and likely a lot of troubleshooting to do as well. I will describe briefly the general process here, and I will put an example makefile inside each project's directory. But note that this "makefile" is just to demonstrate the build options to use. Your own makefile will be different and depend on your system, your compiler, and the location of the libraries you installed.
+
+3a. Additional Include Directories
+The compiler needs to know where to find the header files for ARSS, for the project you are compiling, and for the external libraries. You must add the following directories to the include search path as a setting the IDE, or pass them to the compiler with the /I or -I switch:
+ARSS/common
+ARSS/extern/ncclib
+ARSS/extern/DevIL/win32/include
+ARSS/extern/glut/win32/include
+ARSS/extern/PhysX/v3.2.0_win/Include
+(CUDA Toolkit installation directory)/include
+
+3b. Additional Library directories
+Similarly, the linker needs to know where to look for the library files. You need to add the following directories to the lib search path in your IDE or with the /L switch:
+ARSS/extern/DevIL/win32/lib (or ARSS/extern/DevIL/win32/lib/x64)
+ARSS/extern/glut/win32/lib (or ARSS/extern/glut/win32/lib/x64)
+ARSS/extern/PhysX/v3.2.0_win/Lib/win32 (or ARSS/extern/PhysX/v3.2.0_win/Lib/win64)
+(CUDA Toolkit installation directory)/Lib/Win32 (or (CUDA Toolkit installation directory)/Lib/x64)
+
+3c. Compiling against the externals
+Now that the compiler knows where to look for them, it needs to be told to do so. You would set that in the IDE, or with the /l switch in the command line. You need to link against the following:
+ILU.lib
+ILUT.lib
+DevIL.lib
+PhysX3.lib
+PhysX3Common.lib
+PhysX3Cooking.lib
+PhysX3Extensions.lib
+cudart.lib
+
+The order doesn't matter. But there is a chance the files will be named something else on your system. Look for something similar.
+
+3d. Dynamic link directories
+some of the external libraries dynamically link at run time to their various sub libraries. So the system need to be able to find these sub libraries, *at run time*. You can put all the required .dll files in one directory on the path, or in the same directory as your project's executable where they can be found. Or you can add their individual locations to the system PATH. (The ARSS.sln handles these with a "build event" if you're using VS.) In any case, the files that you need to be available are:
+ARSS/extern/DevIL/win32/lib/*.dll (or ARSS/extern/DevIL/win32/lib/x64/*.dll)
+ARSS/extern/glut/win32/lib/*.dll (or ARSS/extern/glut/win32/lib/x64/*.dll)
+ARSS/extern/PhysX/v3.2.0_win/Bin/win32/*.dll or ARSS/extern/PhysX/v3.2.0_win/Bin/win64/*.dll)
+(CUDA Toolkit installation directory)/bin/*.dll
+
+3e. Other build options
+-O3 (for optimization)
+-m64 (for 64-bit compilation)
+-D"NDEBUG"
+
+3f. NVCC
+To compile a project that contains CUDA code, you must use the nvcc compiler driver. This is installed when you install the CUDA Toolkit, or NSIGHT. This is a front-end to your system's compiler, which means it will first set up a lot of switches and flags, and then call your compiler (cl) passing along all the compile options you specified in the command line. If nvcc is on your path, all you need to know is that you replace each call to cl whatever with a call to nvcc, with the rest of the command line options unchanged. Of course, if you're using VS Pro and NSIGHT, nvcc will be automatically invoked if needed when you build with F7.
+
+Good luck!
