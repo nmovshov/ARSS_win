@@ -1,0 +1,1 @@
+CUDA is installed in a location that depends on your system. You need to install the CUDA Toolkit, or even better install NSIGHT for VIsual Studio or Eclipse. See ARSS/install.txt.
