@@ -146,7 +146,62 @@ void RightArrowAction()
 }
 
 // BoxOfRox namespace functions
+void rox::CreateContainment()
+{
+	// Define height, length, and width
+	PxReal H = 100; // in millimeters
+	PxReal L = 100; // in millimeters
+	PxReal W = 100; // in millimeters
 
+	// Now place the walls
+	PxActor* anActor;
+
+	// Left wall
+	anActor = PxCreatePlane(*gPhysX.mPhysics,PxPlane(PxVec3(1,0,0),L/2),*gPhysX.mDefaultMaterial);
+	if (!anActor)
+		ncc__error("Containment wall creation failed. Experiment aborted.\a");
+	anActor->setName("~leftwall"); // ~name is a quick way to request invisibility
+	gPhysX.mScene->addActor(*anActor);
+
+	// Right wall
+	anActor = PxCreatePlane(*gPhysX.mPhysics,PxPlane(PxVec3(-1,0,0),L/2),*gPhysX.mDefaultMaterial);
+	if (!anActor)
+		ncc__error("Containment wall creation failed. Experiment aborted.\a");
+	anActor->setName("~rightwall"); // ~name is a quick way to request invisibility
+	gPhysX.mScene->addActor(*anActor);
+
+	// Back wall
+	anActor = PxCreatePlane(*gPhysX.mPhysics,PxPlane(PxVec3(0,0,-1),W/2),*gPhysX.mDefaultMaterial);
+	if (!anActor)
+		ncc__error("Containment wall creation failed. Experiment aborted.\a");
+	anActor->setName("~backwall"); // ~name is a quick way to request invisibility
+	gPhysX.mScene->addActor(*anActor);
+
+	// Front wall
+	anActor = PxCreatePlane(*gPhysX.mPhysics,PxPlane(PxVec3(0,0,1),W/2),*gPhysX.mDefaultMaterial);
+	if (!anActor)
+		ncc__error("Containment wall creation failed. Experiment aborted.\a");
+	anActor->setName("~frontwall"); // ~name is a quick way to request invisibility
+	gPhysX.mScene->addActor(*anActor);
+
+	// Top wall
+	anActor = PxCreatePlane(*gPhysX.mPhysics,PxPlane(PxVec3(0,1,0),H/2),*gPhysX.mDefaultMaterial);
+	if (!anActor)
+		ncc__error("Containment wall creation failed. Experiment aborted.\a");
+	anActor->setName("~topwall"); // ~name is a quick way to request invisibility
+	gPhysX.mScene->addActor(*anActor);
+
+	// Bottom wall
+	anActor = PxCreatePlane(*gPhysX.mPhysics,PxPlane(PxVec3(0,-1,0),H/2),*gPhysX.mDefaultMaterial);
+	if (!anActor)
+		ncc__error("Containment wall creation failed. Experiment aborted.\a");
+	anActor->setName("~bottomwall"); // ~name is a quick way to request invisibility
+	gPhysX.mScene->addActor(*anActor);
+
+	// For convenience, place the camera for a nice viewpoint
+	gCamera.pos.y = H;
+	gCamera.pos.z = 3*H;
+}
 // End lint level warnings
 #ifdef LINT
 #pragma warning(pop)
