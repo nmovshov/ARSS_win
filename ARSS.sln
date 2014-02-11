@@ -21,8 +21,6 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SGP", "SGP\SGP.vcxproj", "{
 		{9381B488-BAD1-4CC4-A60A-5D2469266614} = {9381B488-BAD1-4CC4-A60A-5D2469266614}
 	EndProjectSection
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "BoxOfRox", "BoxOfRox\BoxOfRox.vcxproj", "{4BF97879-1337-48B8-8200-181D2FCCD23F}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -51,12 +49,6 @@ Global
 		{7EEC6D92-06FE-4621-A393-546441DA7717}.Production|Win32.ActiveCfg = Production|Win32
 		{7EEC6D92-06FE-4621-A393-546441DA7717}.Production|Win32.Build.0 = Production|Win32
 		{7EEC6D92-06FE-4621-A393-546441DA7717}.Release|Win32.ActiveCfg = Production|Win32
-		{4BF97879-1337-48B8-8200-181D2FCCD23F}.Debug|Win32.ActiveCfg = Debug|Win32
-		{4BF97879-1337-48B8-8200-181D2FCCD23F}.Debug|Win32.Build.0 = Debug|Win32
-		{4BF97879-1337-48B8-8200-181D2FCCD23F}.Production|Win32.ActiveCfg = Release|Win32
-		{4BF97879-1337-48B8-8200-181D2FCCD23F}.Production|Win32.Build.0 = Release|Win32
-		{4BF97879-1337-48B8-8200-181D2FCCD23F}.Release|Win32.ActiveCfg = Release|Win32
-		{4BF97879-1337-48B8-8200-181D2FCCD23F}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
