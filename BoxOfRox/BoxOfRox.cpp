@@ -57,6 +57,14 @@ bool ConfigExperimentOptions()
 	else
 		rox::eExperimentType = rox::eBAD_EXPERIMENT_TYPE;
 	
+	// Parameters for the box
+	ncc::GetStrPropertyFromINIFile("box","box_height","100",buf,MAX_CHARS_PER_NAME,gRun.iniFile.c_str());
+	rox::params.boxHeight = atof(buf);
+	ncc::GetStrPropertyFromINIFile("box","box_length","100",buf,MAX_CHARS_PER_NAME,gRun.iniFile.c_str());
+	rox::params.boxLength = atof(buf);
+	ncc::GetStrPropertyFromINIFile("box","box_width","100",buf,MAX_CHARS_PER_NAME,gRun.iniFile.c_str());
+	rox::params.boxWidth = atof(buf);
+
 	// Parameters of the grain size distribution
 	ncc::GetStrPropertyFromINIFile("experiment","gsd_type","uniform",buf,MAX_CHARS_PER_NAME,gRun.iniFile.c_str());
 	if		(strcmp(buf,"uniform")==0)
@@ -105,11 +113,15 @@ void CreateExperiment()
 {
 	gDebug.bXYGridOn=true;
 	
-	
-	// Move the camera to where you can see TODO: replace with a function call
-	FindExtremers();
-	if (gExp.VIPs.extremers.outmost)
-		gCamera.pos.z = gExp.VIPs.extremers.outmost->getGlobalPose().p.z + 10*gExp.defGrainSize;
+	switch (rox::eExperimentType)
+	{
+	case rox::eFILL_BOX:
+		rox::CreateFillBoxExperiment();
+		break;
+	case rox::eBAD_EXPERIMENT_TYPE: // intentional fall through
+	default:
+		ncc__error("Unknown experiment type. Experiment aborted.\a");
+	}
 
 	// Start the action
 	gSim.isRunning=true;
@@ -149,9 +161,9 @@ void RightArrowAction()
 void rox::CreateContainment()
 {
 	// Define height, length, and width
-	PxReal H = 100; // in millimeters
-	PxReal L = 100; // in millimeters
-	PxReal W = 100; // in millimeters
+	PxReal H = rox::params.boxHeight;
+	PxReal L = rox::params.boxLength;
+	PxReal W = rox::params.boxWidth;
 
 	// Now place the walls
 	PxActor* anActor;
@@ -200,8 +212,14 @@ void rox::CreateContainment()
 
 	// For convenience, place the camera for a nice viewpoint
 	gCamera.pos.y = H;
-	gCamera.pos.z = 3*H;
+	gCamera.pos.z = 10*H;
 }
+
+void rox::CreateFillBoxExperiment()
+{
+	rox::CreateContainment();
+}
+
 // End lint level warnings
 #ifdef LINT
 #pragma warning(pop)

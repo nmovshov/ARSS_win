@@ -1,7 +1,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 // Header file for project BoxOfRox. 
 //
-// Author:  Viranga
+// Authors:  Viranga and Naor
 ///////////////////////////////////////////////////////////////////////////////
 
 #ifndef BOXOFROX_H
@@ -15,13 +15,20 @@ namespace rox
 	} hudMsgs;
 
 	struct {
+		
+	} VIPs;
 
+	struct {
+		PxReal boxWidth;
+		PxReal boxHeight;
+		PxReal boxLength;
 	} params;
 
 	struct {
 		enum {eBAD_GSD_TYPE, eGSD_UNIFORM} type;
 	} gsd; // grain size distribution
 
-	
+	void CreateContainment();
+	void CreateFillBoxExperiment();
 };
 #endif

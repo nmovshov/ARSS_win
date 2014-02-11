@@ -24,6 +24,9 @@
     <ClInclude Include="..\extern\ncclib\ncclib.h" />
     <ClInclude Include="BoxOfRox.h" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="BoxOfRox.ini" />
+  </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{232C3DDF-0C21-4DF9-A295-D825C515619D}</ProjectGuid>
     <RootNamespace>BoxOfRox</RootNamespace>
@@ -67,8 +70,18 @@
     </Link>
     <PostBuildEvent>
       <Command>echo copy "$(CudaToolkitBinDir)\cudart*.dll" "$(OutDir)"
-copy "$(CudaToolkitBinDir)\cudart*.dll" "$(OutDir)"</Command>
+copy "$(CudaToolkitBinDir)\cudart*.dll" "$(OutDir)"
+echo copy "$(SolutionDir)extern\glut\win32\lib\glut32.dll" "$(OutDir)"
+copy "$(SolutionDir)extern\glut\win32\lib\glut32.dll" "$(OutDir)"
+echo copy "$(SolutionDir)extern\DevIL\win32\lib\*.dll" "$(OutDir)"
+copy "$(SolutionDir)extern\DevIL\win32\lib\*.dll" "$(OutDir)"
+echo copy "$(SolutionDir)extern\PhysX\v3.2.0_win\Bin\win32\*.dll" "$(OutDir)"
+copy "$(SolutionDir)extern\PhysX\v3.2.0_win\Bin\win32\*.dll" "$(OutDir)"</Command>
     </PostBuildEvent>
+    <PreBuildEvent>
+      <Command>echo del "$(OutDir)*.dll"
+del "$(OutDir)*.dll"</Command>
+    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>

@@ -44,4 +44,7 @@
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
+  <ItemGroup>
+    <None Include="BoxOfRox.ini" />
+  </ItemGroup>
 </Project>
