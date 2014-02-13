@@ -58,12 +58,8 @@ bool ConfigExperimentOptions()
 		rox::eExperimentType = rox::eBAD_EXPERIMENT_TYPE;
 	
 	// Parameters for the box
-	ncc::GetStrPropertyFromINIFile("box","box_height","100",buf,MAX_CHARS_PER_NAME,gRun.iniFile.c_str());
-	rox::params.boxHeight = atof(buf);
-	ncc::GetStrPropertyFromINIFile("box","box_length","100",buf,MAX_CHARS_PER_NAME,gRun.iniFile.c_str());
-	rox::params.boxLength = atof(buf);
-	ncc::GetStrPropertyFromINIFile("box","box_width","100",buf,MAX_CHARS_PER_NAME,gRun.iniFile.c_str());
-	rox::params.boxWidth = atof(buf);
+	ncc::GetStrPropertyFromINIFile("box","box_unit_size","100",buf,MAX_CHARS_PER_NAME,gRun.iniFile.c_str());
+	rox::params.boxSize = atof(buf);
 
 	// Parameters of the grain size distribution
 	ncc::GetStrPropertyFromINIFile("experiment","gsd_type","uniform",buf,MAX_CHARS_PER_NAME,gRun.iniFile.c_str());
@@ -160,59 +156,34 @@ void RightArrowAction()
 // BoxOfRox namespace functions
 void rox::CreateContainment()
 {
-	// Define height, length, and width
-	PxReal H = rox::params.boxHeight;
-	PxReal L = rox::params.boxLength;
-	PxReal W = rox::params.boxWidth;
+	// Define wall dimension and thickness
+	PxReal U = rox::params.boxSize;
+	PxReal t = 0.02*U;
 
-	// Now place the walls
-	PxActor* anActor;
+	// We'll make the containment with a kinematic actor
+	PxRigidDynamic* theBox = gPhysX.mPhysics->createRigidDynamic(PxTransform(PxVec3(0)));
+	if (!theBox)
+		ncc__error("actor creation failed!");
+	theBox->setRigidDynamicFlag(PxRigidDynamicFlag::eKINEMATIC, true);
 
-	// Left wall
-	anActor = PxCreatePlane(*gPhysX.mPhysics,PxPlane(PxVec3(1,0,0),L/2),*gPhysX.mDefaultMaterial);
-	if (!anActor)
-		ncc__error("Containment wall creation failed. Experiment aborted.\a");
-	anActor->setName("~leftwall"); // ~name is a quick way to request invisibility
-	gPhysX.mScene->addActor(*anActor);
+	// Define sides
+	PxBoxGeometry box_side(U/2,t/2,U/2);
+	PxMaterial* defmat=gPhysX.mDefaultMaterial;
 
-	// Right wall
-	anActor = PxCreatePlane(*gPhysX.mPhysics,PxPlane(PxVec3(-1,0,0),L/2),*gPhysX.mDefaultMaterial);
-	if (!anActor)
-		ncc__error("Containment wall creation failed. Experiment aborted.\a");
-	anActor->setName("~rightwall"); // ~name is a quick way to request invisibility
-	gPhysX.mScene->addActor(*anActor);
+	// Attach the sides
+	theBox->createShape(box_side,*defmat); // the bottom
+	theBox->createShape(box_side,*defmat,PxTransform(PxVec3(0,U,0))); // the top
+	theBox->createShape(box_side,*defmat,PxTransform(PxVec3(-U/2,U/2,0),PxQuat(PxPi/2,PxVec3(0,0,1)))); // left wall
+	theBox->createShape(box_side,*defmat,PxTransform(PxVec3(U/2,U/2,0),PxQuat(PxPi/2,PxVec3(0,0,1)))); // right wall
+	theBox->createShape(box_side,*defmat,PxTransform(PxVec3(0,U/2,-U/2),PxQuat(PxPi/2,PxVec3(1,0,0)))); // back wall
+	PxShape* fwall = theBox->createShape(box_side,*defmat,PxTransform(PxVec3(0,U/2,U/2),PxQuat(PxPi/2,PxVec3(1,0,0)))); // front wall
 
-	// Back wall
-	anActor = PxCreatePlane(*gPhysX.mPhysics,PxPlane(PxVec3(0,0,-1),W/2),*gPhysX.mDefaultMaterial);
-	if (!anActor)
-		ncc__error("Containment wall creation failed. Experiment aborted.\a");
-	anActor->setName("~backwall"); // ~name is a quick way to request invisibility
-	gPhysX.mScene->addActor(*anActor);
+	// Make the front wall transparent
+	fwall->setName("~fwall");
 
-	// Front wall
-	anActor = PxCreatePlane(*gPhysX.mPhysics,PxPlane(PxVec3(0,0,1),W/2),*gPhysX.mDefaultMaterial);
-	if (!anActor)
-		ncc__error("Containment wall creation failed. Experiment aborted.\a");
-	anActor->setName("~frontwall"); // ~name is a quick way to request invisibility
-	gPhysX.mScene->addActor(*anActor);
-
-	// Top wall
-	anActor = PxCreatePlane(*gPhysX.mPhysics,PxPlane(PxVec3(0,1,0),H/2),*gPhysX.mDefaultMaterial);
-	if (!anActor)
-		ncc__error("Containment wall creation failed. Experiment aborted.\a");
-	anActor->setName("~topwall"); // ~name is a quick way to request invisibility
-	gPhysX.mScene->addActor(*anActor);
-
-	// Bottom wall
-	anActor = PxCreatePlane(*gPhysX.mPhysics,PxPlane(PxVec3(0,-1,0),H/2),*gPhysX.mDefaultMaterial);
-	if (!anActor)
-		ncc__error("Containment wall creation failed. Experiment aborted.\a");
-	anActor->setName("~bottomwall"); // ~name is a quick way to request invisibility
-	gPhysX.mScene->addActor(*anActor);
-
-	// For convenience, place the camera for a nice viewpoint
-	gCamera.pos.y = H;
-	gCamera.pos.z = 10*H;
+	// Register the box
+	gPhysX.mScene->addActor(*theBox);
+	rox::VIPs.theBox = theBox;
 }
 
 void rox::CreateFillBoxExperiment()

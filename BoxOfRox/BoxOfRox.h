@@ -15,13 +15,11 @@ namespace rox
 	} hudMsgs;
 
 	struct {
-		
+		PxRigidDynamic* theBox;
 	} VIPs;
 
 	struct {
-		PxReal boxWidth;
-		PxReal boxHeight;
-		PxReal boxLength;
+		PxReal boxSize;
 	} params;
 
 	struct {
