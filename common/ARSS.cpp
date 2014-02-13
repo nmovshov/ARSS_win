@@ -1188,6 +1188,8 @@ openGL geometry drawer.
 		actor->getShapes(shapes,MAX_SHAPES_PER_ACTOR);
 		while (nbShapes--)
 		{
+			const char* name = shapes[nbShapes]->getName();
+			if (name && strcmp(name,"~")>=0) continue;
 			DrawShape(shapes[nbShapes]);
 		}
 	}
