@@ -194,11 +194,13 @@ void rox::CreateContainment()
 
 	// Define sides
 	PxBoxGeometry box_side(U/2,t/2,U/2);
+	PxBoxGeometry minibox_side(U/2,t/4,U/10);
 	PxMaterial* defmat=gPhysX.mDefaultMaterial;
 
 	// Attach the sides
 	theBox->createShape(box_side,*defmat); // the bottom
 	theBox->createShape(box_side,*defmat,PxTransform(PxVec3(0,U,0))); // the top
+	theBox->createShape(minibox_side,*defmat,PxTransform(PxVec3(0,U/5,U/2.5))); // minibox
 	theBox->createShape(box_side,*defmat,PxTransform(PxVec3(-U/2,U/2,0),PxQuat(PxPi/2,PxVec3(0,0,1)))); // left wall
 	theBox->createShape(box_side,*defmat,PxTransform(PxVec3(U/2,U/2,0),PxQuat(PxPi/2,PxVec3(0,0,1)))); // right wall
 	theBox->createShape(box_side,*defmat,PxTransform(PxVec3(0,U/2,-U/2),PxQuat(PxPi/2,PxVec3(1,0,0)))); // back wall
@@ -224,6 +226,44 @@ void rox::CreateFillBoxExperiment()
  * TODOL Implement more nucleus options (currently capsule)
 */
 
+	// Make a random convex mesh to be referenced by all grains
+	vector<PxVec3> verts = MakeRandomVertexList();
+	PxConvexMesh* theMesh = MakePxMeshFromVertexList(verts);
+
+	// Calculate placement positions
+	vector<PxVec3> positions(rox::grain.totalNumber);
+	PxReal safeDL = PxMax(rox::grain.size1,rox::grain.size2) * 2.06;
+
+	PxReal r = rox::params.nucleusRadius, teta = 0, phi = 0; // the center is reserved for a kinematic nucleus
+	for (PxU32 k=0; k<positions.size(); k++)
+	{
+		PxReal dr = 0, dteta = 0, dphi=0;
+		// try advancing on a slice
+		if (teta) {
+			dphi = safeDL / (r * sin(teta));
+			phi += dphi;
+			if (phi > 2*PxPi)
+				phi = 0;
+		}
+		// if not possible, try a stack
+		if (phi == 0) {
+			dteta = safeDL / r;
+			teta += dteta;
+			if (teta > PxPi)
+				teta = 0;
+		}
+		// if not possible, try a radius
+		if (teta == 0) {
+			dr = safeDL;
+			r += dr;
+		}
+
+		PxReal x = r * sin(teta) * cos(phi);
+		PxReal y = r * sin(teta) * sin(phi);
+		PxReal z = r * cos(teta);
+		positions[k] = PxVec3(x,y,z);
+	}
+
 	// place the nucleus
 	if (rox::params.nucleusRadius)
 		rox::VIPs.nucleus = CreateRubbleGrain(PxVec3(0),eCAPSULE_GRAIN,rox::params.nucleusRadius/2,*gPhysX.mDefaultMaterial);
@@ -240,7 +280,7 @@ void rox::CreateFillBoxExperiment()
 		PxReal grainScale = rox::grain.size1;
 		//bool isSize2 = (k % (rox::grain.numberRatio)) == 0;
 		bool isSize2 = (rox::grain.type==rox::grain.eGRAIN_BIMODAL && k < rox::grain.numberRatio);
-		if (rox::grain.type==rox::grain.eGSD_BIMODAL && isSize2)
+		if (rox::grain.type==rox::grain.eGRAIN_BIMODAL && isSize2)
 			grainScale = rox::grain.size2;
 		
 		// create a convex geometry for the next grain
@@ -279,6 +319,10 @@ void rox::GravitateSelf()
 		rox::GravitateOnDevice();
 	else
 		rox::GravitateOnHost();
+}
+void rox::GravitateOnDevice()
+{
+
 }
 void rox::GravitateOnHost()
 /*
@@ -345,7 +389,6 @@ void rox::GravitateOnHost()
 
 	return;
 }
-
 // End lint level warnings
 #ifdef LINT
 #pragma warning(pop)
