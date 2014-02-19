@@ -194,20 +194,40 @@ void rox::CreateContainment()
 
 	// Define sides
 	PxBoxGeometry box_side(U/2,t/2,U/2);
-	PxBoxGeometry minibox_side(U/2,t/4,U/10);
+	PxBoxGeometry minibox_side(U/10,t/4,U/2);
 	PxMaterial* defmat=gPhysX.mDefaultMaterial;
 
 	// Attach the sides
-	theBox->createShape(box_side,*defmat); // the bottom
-	theBox->createShape(box_side,*defmat,PxTransform(PxVec3(0,U,0))); // the top
-	theBox->createShape(minibox_side,*defmat,PxTransform(PxVec3(0,U/5,U/2.5))); // minibox
-	theBox->createShape(box_side,*defmat,PxTransform(PxVec3(-U/2,U/2,0),PxQuat(PxPi/2,PxVec3(0,0,1)))); // left wall
-	theBox->createShape(box_side,*defmat,PxTransform(PxVec3(U/2,U/2,0),PxQuat(PxPi/2,PxVec3(0,0,1)))); // right wall
-	theBox->createShape(box_side,*defmat,PxTransform(PxVec3(0,U/2,-U/2),PxQuat(PxPi/2,PxVec3(1,0,0)))); // back wall
-	PxShape* fwall = theBox->createShape(box_side,*defmat,PxTransform(PxVec3(0,U/2,U/2),PxQuat(PxPi/2,PxVec3(1,0,0)))); // front wall
+		// Middle Chamber
+		theBox->createShape(box_side,*defmat); // middle chamber front wall
+		theBox->createShape(box_side,*defmat,PxTransform(PxVec3(0,U,0))); // middle chamber back wall
+		theBox->createShape(box_side,*defmat,PxTransform(PxVec3(-U/2,U/2,0),PxQuat(PxPi/2,PxVec3(0,0,1)))); // middle chamber left wall
+		theBox->createShape(box_side,*defmat,PxTransform(PxVec3(U/2,U/2,0),PxQuat(PxPi/2,PxVec3(0,0,1)))); // middle chamber right wall
+		theBox->createShape(box_side,*defmat,PxTransform(PxVec3(0,U/2,-U/2),PxQuat(PxPi/2,PxVec3(1,0,0)))); // middle chamber bottom wall
+		PxShape* mtwall = theBox->createShape(box_side,*defmat,PxTransform(PxVec3(0,U/2,U/2),PxQuat(PxPi/2,PxVec3(1,0,0)))); // middle chamber top wall
 
-	// Make the front wall transparent
-	fwall->setName("~fwall");
+		// Left Chamber
+		theBox->createShape(box_side,*defmat,PxTransform(PxVec3(-U,0,0))); // left chamber front wall
+		theBox->createShape(box_side,*defmat,PxTransform(PxVec3(-U,U,0))); // left chamber back wall
+		theBox->createShape(box_side,*defmat,PxTransform(PxVec3(-U,U/2,-U/2),PxQuat(PxPi/2,PxVec3(1,0,0)))); // left chamber bottom wall
+		PxShape* ltwall = theBox->createShape(box_side,*defmat,PxTransform(PxVec3(-U,U/2,U/2),PxQuat(PxPi/2,PxVec3(1,0,0)))); // left chamber top wall
+		theBox->createShape(box_side,*defmat,PxTransform(PxVec3(-(3*U/2),U/2,0),PxQuat(PxPi/2,PxVec3(0,0,1)))); // left chamber left wall
+
+		// Right Chamber
+		theBox->createShape(box_side,*defmat,PxTransform(PxVec3(U,0,0))); // right chamber front wall
+		theBox->createShape(box_side,*defmat,PxTransform(PxVec3(U,U,0))); // right chamber back wall
+		theBox->createShape(box_side,*defmat,PxTransform(PxVec3(U,U/2,-U/2),PxQuat(PxPi/2,PxVec3(1,0,0)))); // right chamber bottom wall
+		PxShape* rtwall = theBox->createShape(box_side,*defmat,PxTransform(PxVec3(U,U/2,U/2),PxQuat(PxPi/2,PxVec3(1,0,0)))); // right chamber top wall
+		theBox->createShape(box_side,*defmat,PxTransform(PxVec3((3*U/2),U/2,0),PxQuat(PxPi/2,PxVec3(0,0,1)))); // right chamber right wall
+
+		// Mini Boxes
+		theBox->createShape(minibox_side,*defmat,PxTransform(PxVec3(-(3*U/5),U/2,-(3*U/10)),PxQuat(PxPi/2,PxVec3(1,0,0)))); // left chamber minibox
+		theBox->createShape(minibox_side,*defmat,PxTransform(PxVec3((3*U/5),U/2,-(3*U/10)),PxQuat(PxPi/2,PxVec3(1,0,0)))); // right chamber minibox
+
+		// Transparent walls
+		mtwall->setName("~mtwall");
+		ltwall->setName("~ltwall");
+		rtwall->setName("~rtwall");
 
 	// Register the box
 	gPhysX.mScene->addActor(*theBox);
