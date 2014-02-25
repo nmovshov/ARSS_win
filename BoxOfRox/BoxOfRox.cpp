@@ -50,7 +50,7 @@ bool ConfigExperimentOptions()
 	// Read in parameters by group, file.ini style
 	char buf[MAX_CHARS_PER_NAME];
 
-	// Experiment Type
+	// Experiment parameters
 	ncc::GetStrPropertyFromINIFile("experiment","experiment_type","",buf,MAX_CHARS_PER_NAME,gRun.iniFile.c_str());
 	if		(strcmp(buf,"fill_box")==0)
 		rox::eExperimentType = rox::eFILL_BOX;
@@ -59,32 +59,33 @@ bool ConfigExperimentOptions()
 	else
 		rox::eExperimentType = rox::eBAD_EXPERIMENT_TYPE;
 	
+	ncc::GetStrPropertyFromINIFile("experiment","shake_magnitude","0",buf,MAX_CHARS_PER_NAME,gRun.iniFile.c_str());
+	rox::params.shakeMagnitude = atof(buf);
+
 	// Parameters for the box
 	ncc::GetStrPropertyFromINIFile("box","box_unit_size","100",buf,MAX_CHARS_PER_NAME,gRun.iniFile.c_str());
 	rox::params.boxSize = atof(buf);
-
-	// Parameters of the grain size distribution
-	ncc::GetStrPropertyFromINIFile("experiment","grain_type","uniform",buf,MAX_CHARS_PER_NAME,gRun.iniFile.c_str());
-	if		(strcmp(buf,"uniform")==0)
-		rox::grain.type = rox::grain.eGRAIN_UNIFORM;
-	else if	(strcmp(buf,"bimodal")==0)
-		rox::grain.type = rox::grain.eGRAIN_BIMODAL;
+	ncc::GetStrPropertyFromINIFile("box","box_design","",buf,MAX_CHARS_PER_NAME,gRun.iniFile.c_str());
+	if (strcmp(buf,"AOSAT1")==0)
+		rox::eBoxDesign = rox::eAOSAT1;
 	else
-		rox::grain.type = rox::grain.eBAD_GRAIN_TYPE;
+		rox::eBoxDesign = rox::eBAD_BOX_DESIGN;
 
-	ncc::GetStrPropertyFromINIFile("experiment","grain_size1","1",buf,MAX_CHARS_PER_NAME,gRun.iniFile.c_str());
-	rox::grain.size1 = atof(buf);
-	ncc::GetStrPropertyFromINIFile("experiment","grain_size2","1",buf,MAX_CHARS_PER_NAME,gRun.iniFile.c_str());
-	rox::grain.size2 = atof(buf);
+	// Parameters for the regolith
+	ncc::GetStrPropertyFromINIFile("regolith","grain_type","uniform",buf,MAX_CHARS_PER_NAME,gRun.iniFile.c_str());
+	if		(strcmp(buf,"uniform")==0)
+		rox::regolith.type = rox::regolith.eGRAIN_UNIFORM;
+	else if	(strcmp(buf,"bimodal")==0)
+		rox::regolith.type = rox::regolith.eGRAIN_BIMODAL;
+	else
+		rox::regolith.type = rox::regolith.eBAD_GRAIN_TYPE;
 
-	rox::grain.totalNumber = ncc::GetIntPropertyFromINIFile("experiment","grain_total_number",0,gRun.iniFile.c_str());
-	
-	ncc::GetStrPropertyFromINIFile("experiment","nucleus_radius", "0",buf,MAX_CHARS_PER_NAME,gRun.iniFile.c_str());
-	rox::params.nucleusRadius = atof(buf);
+	ncc::GetStrPropertyFromINIFile("regolith","grain_size1","1",buf,MAX_CHARS_PER_NAME,gRun.iniFile.c_str());
+	rox::regolith.size1 = atof(buf);
+	ncc::GetStrPropertyFromINIFile("regolith","grain_size2","1",buf,MAX_CHARS_PER_NAME,gRun.iniFile.c_str());
+	rox::regolith.size2 = atof(buf);
 
-	// Parameters for box agitation
-	ncc::GetStrPropertyFromINIFile("experiment","shake_magnitude","0",buf,MAX_CHARS_PER_NAME,gRun.iniFile.c_str());
-	rox::params.shakeMagnitude = atof(buf);
+	rox::regolith.totalNumber = ncc::GetIntPropertyFromINIFile("regolith","grain_total_number",0,gRun.iniFile.c_str());
 	
 	// Code units and scaling
 	ncc::GetStrPropertyFromINIFile("units","big_g","0",buf,MAX_CHARS_PER_NAME,gRun.iniFile.c_str());
@@ -148,7 +149,6 @@ void CreateExperiment()
 	// Start the action
 	gSim.isRunning=true;
 	gSim.bPause=false;
-	gCUDA.cudaCapable=false; // TODO: remove when cuda gravity is implemented
 	RefreshHUD();
 }
 void RebootExperiment()
@@ -180,158 +180,70 @@ void RightArrowAction()
 }
 
 // BoxOfRox namespace functions
-void rox::CreateContainment()
+void rox::CreateTheBox()
 {
-	// Define wall dimension and thickness
-	PxReal U = rox::params.boxSize;
-	PxReal t = 0.02*U;
-
-	// We'll make the containment with a kinematic actor
-	PxRigidDynamic* theBox = gPhysX.mPhysics->createRigidDynamic(PxTransform(PxVec3(0)));
-	if (!theBox)
-		ncc__error("actor creation failed!");
-	theBox->setRigidDynamicFlag(PxRigidDynamicFlag::eKINEMATIC, true);
-
-	// Define sides
-	PxBoxGeometry box_side(U/2,t/2,U/2);
-	PxBoxGeometry minibox_side(U/10,t/4,U/2);
-	PxMaterial* defmat=gPhysX.mDefaultMaterial;
-
-	// Attach the sides
-		// Middle Chamber
-		theBox->createShape(box_side,*defmat); // middle chamber front wall
-		theBox->createShape(box_side,*defmat,PxTransform(PxVec3(0,U,0))); // middle chamber back wall
-		theBox->createShape(box_side,*defmat,PxTransform(PxVec3(-U/2,U/2,0),PxQuat(PxPi/2,PxVec3(0,0,1)))); // middle chamber left wall
-		theBox->createShape(box_side,*defmat,PxTransform(PxVec3(U/2,U/2,0),PxQuat(PxPi/2,PxVec3(0,0,1)))); // middle chamber right wall
-		theBox->createShape(box_side,*defmat,PxTransform(PxVec3(0,U/2,-U/2),PxQuat(PxPi/2,PxVec3(1,0,0)))); // middle chamber bottom wall
-		PxShape* mtwall = theBox->createShape(box_side,*defmat,PxTransform(PxVec3(0,U/2,U/2),PxQuat(PxPi/2,PxVec3(1,0,0)))); // middle chamber top wall
-
-		// Left Chamber
-		theBox->createShape(box_side,*defmat,PxTransform(PxVec3(-U,0,0))); // left chamber front wall
-		theBox->createShape(box_side,*defmat,PxTransform(PxVec3(-U,U,0))); // left chamber back wall
-		theBox->createShape(box_side,*defmat,PxTransform(PxVec3(-U,U/2,-U/2),PxQuat(PxPi/2,PxVec3(1,0,0)))); // left chamber bottom wall
-		PxShape* ltwall = theBox->createShape(box_side,*defmat,PxTransform(PxVec3(-U,U/2,U/2),PxQuat(PxPi/2,PxVec3(1,0,0)))); // left chamber top wall
-		theBox->createShape(box_side,*defmat,PxTransform(PxVec3(-(3*U/2),U/2,0),PxQuat(PxPi/2,PxVec3(0,0,1)))); // left chamber left wall
-
-		// Right Chamber
-		theBox->createShape(box_side,*defmat,PxTransform(PxVec3(U,0,0))); // right chamber front wall
-		theBox->createShape(box_side,*defmat,PxTransform(PxVec3(U,U,0))); // right chamber back wall
-		theBox->createShape(box_side,*defmat,PxTransform(PxVec3(U,U/2,-U/2),PxQuat(PxPi/2,PxVec3(1,0,0)))); // right chamber bottom wall
-		PxShape* rtwall = theBox->createShape(box_side,*defmat,PxTransform(PxVec3(U,U/2,U/2),PxQuat(PxPi/2,PxVec3(1,0,0)))); // right chamber top wall
-		theBox->createShape(box_side,*defmat,PxTransform(PxVec3((3*U/2),U/2,0),PxQuat(PxPi/2,PxVec3(0,0,1)))); // right chamber right wall
-
-		// Mini Boxes
-		theBox->createShape(minibox_side,*defmat,PxTransform(PxVec3(-(3*U/5),U/2,-(3*U/10)),PxQuat(PxPi/2,PxVec3(1,0,0)))); // left chamber minibox
-		theBox->createShape(minibox_side,*defmat,PxTransform(PxVec3((3*U/5),U/2,-(3*U/10)),PxQuat(PxPi/2,PxVec3(1,0,0)))); // right chamber minibox
-
-		// Transparent walls
-		mtwall->setName("~mtwall");
-		ltwall->setName("~ltwall");
-		rtwall->setName("~rtwall");
-
-	// Register the box
-	gPhysX.mScene->addActor(*theBox);
-	rox::VIPs.theBox = theBox;
+	switch (rox::eBoxDesign)
+	{
+	case rox::eAOSAT1:
+		rox::CreateAOSAT1();
+		break;
+	case rox::eBAD_BOX_DESIGN: // intentional fall through
+	default:
+		ncc__error("Unknown box design\a");
+	}
 }
 void rox::CreateFillBoxExperiment()
 {
-	rox::CreateContainment();
+	rox::CreateTheBox();
 
-	/*
- * This rubble-pile creation method places grains in a volume ????
 
- * In the "uniform" variant, all grains share a convex mesh, just scaled differently.
- * TODO: In the non-uniform variant, grains are generated individually, with a size scale.
- * TODO: Implement more size distributions (currently bimodal)
- * TODOL Implement more nucleus options (currently capsule)
-*/
+	//// Make a random convex mesh to be referenced by all grains
+	//vector<PxVec3> verts = MakeRandomVertexList();
+	//PxConvexMesh* theMesh = MakePxMeshFromVertexList(verts);
 
-	// Make a random convex mesh to be referenced by all grains
-	vector<PxVec3> verts = MakeRandomVertexList();
-	PxConvexMesh* theMesh = MakePxMeshFromVertexList(verts);
+	//// Calculate placement positions
+	//vector<PxVec3> positions(rox::grain.totalNumber);
+	//PxReal safeDL = PxMax(rox::grain.size1,rox::grain.size2) * 2.06;
 
-	// Calculate placement positions
-	vector<PxVec3> positions(rox::grain.totalNumber);
-	PxReal safeDL = PxMax(rox::grain.size1,rox::grain.size2) * 2.06;
+	//// Place actors
+	//for (PxU32 k=0; k<positions.size(); k++)
+	//{
+	//	// select a size for the next grain
+	//	PxReal grainScale = rox::grain.size1;
+	//	//bool isSize2 = (k % (rox::grain.numberRatio)) == 0;
+	//	bool isSize2 = (rox::grain.type==rox::grain.eGRAIN_BIMODAL && k < rox::grain.numberRatio);
+	//	if (rox::grain.type==rox::grain.eGRAIN_BIMODAL && isSize2)
+	//		grainScale = rox::grain.size2;
+	//	
+	//	// create a convex geometry for the next grain
+	//	PxMeshScale meshScale;
+	//	meshScale.scale = PxVec3(grainScale);
+	//	PxMat33 M = meshScale.toMat33();
+	//	PxConvexMeshGeometry meshGeometry(theMesh,meshScale);
 
-	PxReal r = rox::params.nucleusRadius, teta = 0, phi = 0; // the center is reserved for a kinematic nucleus
-	for (PxU32 k=0; k<positions.size(); k++)
-	{
-		PxReal dr = 0, dteta = 0, dphi=0;
-		// try advancing on a slice
-		if (teta) {
-			dphi = safeDL / (r * sin(teta));
-			phi += dphi;
-			if (phi > 2*PxPi)
-				phi = 0;
-		}
-		// if not possible, try a stack
-		if (phi == 0) {
-			dteta = safeDL / r;
-			teta += dteta;
-			if (teta > PxPi)
-				teta = 0;
-		}
-		// if not possible, try a radius
-		if (teta == 0) {
-			dr = safeDL;
-			r += dr;
-		}
+	//	// create a convex actor from this geometry
+	//	PxRigidDynamic* aGrain = PxCreateDynamic(*gPhysX.mPhysics,PxTransform(positions[k]),meshGeometry,*gPhysX.mDefaultMaterial,gExp.defGrainDensity);
+	//	if (aGrain)
+	//	{
+	//		if (gPhysX.props.sleepThreshold > -1) aGrain->setSleepThreshold(0.5*gPhysX.props.sleepThreshold*gPhysX.props.sleepThreshold);
+	//		if (gPhysX.props.angularDamping > -1) aGrain->setAngularDamping(gPhysX.props.angularDamping);
+	//		if (gPhysX.props.linearDamping  > -1) aGrain->setLinearDamping(gPhysX.props.linearDamping);
 
-		PxReal x = r * sin(teta) * cos(phi);
-		PxReal y = r * sin(teta) * sin(phi);
-		PxReal z = r * cos(teta);
-		positions[k] = PxVec3(x,y,z);
-	}
+	//		if (isSize2)
+	//		{
+	//			aGrain->setName("size2");
+	//			ColorActor(aGrain,ncc::rgb::oDarkOrange);
+	//		}
+	//		else
+	//		{
+	//			aGrain->setName("size1");
+	//		}
 
-	// place the nucleus
-	if (rox::params.nucleusRadius)
-		rox::VIPs.nucleus = CreateRubbleGrain(PxVec3(0),eCAPSULE_GRAIN,rox::params.nucleusRadius/2,*gPhysX.mDefaultMaterial);
-	if (rox::VIPs.nucleus)
-	{
-		ColorActor(rox::VIPs.nucleus,ncc::rgb::rDarkRed);
-		rox::VIPs.nucleus->setRigidDynamicFlag(PxRigidDynamicFlag::eKINEMATIC,true);
-	}
+	//		RandOrientActor(aGrain);
 
-	// Place actors
-	for (PxU32 k=0; k<positions.size(); k++)
-	{
-		// select a size for the next grain
-		PxReal grainScale = rox::grain.size1;
-		//bool isSize2 = (k % (rox::grain.numberRatio)) == 0;
-		bool isSize2 = (rox::grain.type==rox::grain.eGRAIN_BIMODAL && k < rox::grain.numberRatio);
-		if (rox::grain.type==rox::grain.eGRAIN_BIMODAL && isSize2)
-			grainScale = rox::grain.size2;
-		
-		// create a convex geometry for the next grain
-		PxMeshScale meshScale;
-		meshScale.scale = PxVec3(grainScale);
-		PxMat33 M = meshScale.toMat33();
-		PxConvexMeshGeometry meshGeometry(theMesh,meshScale);
-
-		// create a convex actor from this geometry
-		PxRigidDynamic* aGrain = PxCreateDynamic(*gPhysX.mPhysics,PxTransform(positions[k]),meshGeometry,*gPhysX.mDefaultMaterial,gExp.defGrainDensity);
-		if (aGrain)
-		{
-			if (gPhysX.props.sleepThreshold > -1) aGrain->setSleepThreshold(0.5*gPhysX.props.sleepThreshold*gPhysX.props.sleepThreshold);
-			if (gPhysX.props.angularDamping > -1) aGrain->setAngularDamping(gPhysX.props.angularDamping);
-			if (gPhysX.props.linearDamping  > -1) aGrain->setLinearDamping(gPhysX.props.linearDamping);
-
-			if (isSize2)
-			{
-				aGrain->setName("size2");
-				ColorActor(aGrain,ncc::rgb::oDarkOrange);
-			}
-			else
-			{
-				aGrain->setName("size1");
-			}
-
-			RandOrientActor(aGrain);
-
-			gPhysX.mScene->addActor(*aGrain);
-		}
-	}
+	//		gPhysX.mScene->addActor(*aGrain);
+	//	}
+	//}
 }
 void rox::GravitateSelf()
 {
@@ -342,7 +254,7 @@ void rox::GravitateSelf()
 }
 void rox::GravitateOnDevice()
 {
-
+	rox::GravitateOnHost(); //TODO: include device implementation when needed, for speed
 }
 void rox::GravitateOnHost()
 /*
@@ -409,6 +321,60 @@ void rox::GravitateOnHost()
 
 	return;
 }
+void rox::CreateAOSAT1()
+{
+	// Define wall dimension and thickness
+	PxReal U = rox::params.boxSize;
+	PxReal t = 0.02*U;
+
+	// We'll make the containment with a kinematic actor
+	PxRigidDynamic* theBox = gPhysX.mPhysics->createRigidDynamic(PxTransform(PxVec3(0)));
+	if (!theBox)
+		ncc__error("actor creation failed!");
+	theBox->setRigidDynamicFlag(PxRigidDynamicFlag::eKINEMATIC, true);
+
+	// Define sides
+	PxBoxGeometry box_side(U/2,t/2,U/2);
+	PxBoxGeometry minibox_side(U/10,t/4,U/2);
+	PxMaterial* defmat=gPhysX.mDefaultMaterial;
+
+	// Attach the sides
+	// Middle Chamber
+	theBox->createShape(box_side,*defmat); // middle chamber front wall
+	theBox->createShape(box_side,*defmat,PxTransform(PxVec3(0,U,0))); // middle chamber back wall
+	theBox->createShape(box_side,*defmat,PxTransform(PxVec3(-U/2,U/2,0),PxQuat(PxPi/2,PxVec3(0,0,1)))); // middle chamber left wall
+	theBox->createShape(box_side,*defmat,PxTransform(PxVec3(U/2,U/2,0),PxQuat(PxPi/2,PxVec3(0,0,1)))); // middle chamber right wall
+	theBox->createShape(box_side,*defmat,PxTransform(PxVec3(0,U/2,-U/2),PxQuat(PxPi/2,PxVec3(1,0,0)))); // middle chamber bottom wall
+	PxShape* mtwall = theBox->createShape(box_side,*defmat,PxTransform(PxVec3(0,U/2,U/2),PxQuat(PxPi/2,PxVec3(1,0,0)))); // middle chamber top wall
+
+	// Left Chamber
+	theBox->createShape(box_side,*defmat,PxTransform(PxVec3(-U,0,0))); // left chamber front wall
+	theBox->createShape(box_side,*defmat,PxTransform(PxVec3(-U,U,0))); // left chamber back wall
+	theBox->createShape(box_side,*defmat,PxTransform(PxVec3(-U,U/2,-U/2),PxQuat(PxPi/2,PxVec3(1,0,0)))); // left chamber bottom wall
+	PxShape* ltwall = theBox->createShape(box_side,*defmat,PxTransform(PxVec3(-U,U/2,U/2),PxQuat(PxPi/2,PxVec3(1,0,0)))); // left chamber top wall
+	theBox->createShape(box_side,*defmat,PxTransform(PxVec3(-(3*U/2),U/2,0),PxQuat(PxPi/2,PxVec3(0,0,1)))); // left chamber left wall
+
+	// Right Chamber
+	theBox->createShape(box_side,*defmat,PxTransform(PxVec3(U,0,0))); // right chamber front wall
+	theBox->createShape(box_side,*defmat,PxTransform(PxVec3(U,U,0))); // right chamber back wall
+	theBox->createShape(box_side,*defmat,PxTransform(PxVec3(U,U/2,-U/2),PxQuat(PxPi/2,PxVec3(1,0,0)))); // right chamber bottom wall
+	PxShape* rtwall = theBox->createShape(box_side,*defmat,PxTransform(PxVec3(U,U/2,U/2),PxQuat(PxPi/2,PxVec3(1,0,0)))); // right chamber top wall
+	theBox->createShape(box_side,*defmat,PxTransform(PxVec3((3*U/2),U/2,0),PxQuat(PxPi/2,PxVec3(0,0,1)))); // right chamber right wall
+
+	// Mini Boxes
+	theBox->createShape(minibox_side,*defmat,PxTransform(PxVec3(-(3*U/5),U/2,-(3*U/10)),PxQuat(PxPi/2,PxVec3(1,0,0)))); // left chamber minibox
+	theBox->createShape(minibox_side,*defmat,PxTransform(PxVec3((3*U/5),U/2,-(3*U/10)),PxQuat(PxPi/2,PxVec3(1,0,0)))); // right chamber minibox
+
+	// Transparent walls
+	mtwall->setName("~mtwall");
+	ltwall->setName("~ltwall");
+	rtwall->setName("~rtwall");
+
+	// Register the box
+	gPhysX.mScene->addActor(*theBox);
+	rox::VIPs.theBox = theBox;
+}
+
 // End lint level warnings
 #ifdef LINT
 #pragma warning(pop)

@@ -9,6 +9,7 @@
 namespace rox
 {
 	enum {eBAD_EXPERIMENT_TYPE, eFILL_BOX, eSHAKE_BOX} eExperimentType;
+	enum {eBAD_BOX_DESIGN, eAOSAT1} eBoxDesign;
 
 	struct {
 		unsigned int systemDiag;
@@ -16,13 +17,11 @@ namespace rox
 
 	struct {
 		PxRigidDynamic* theBox;
-		PxRigidDynamic* nucleus;
 	} VIPs;
 
 	struct {
 		PxReal boxSize;
 		PxReal shakeMagnitude;
-		PxReal nucleusRadius;
 	} params;
 
 	struct {
@@ -31,7 +30,7 @@ namespace rox
 		PxReal size1;
 		PxU32 numberRatio;
 		PxU32 totalNumber;
-	} grain; // grain size distribution
+	} regolith;
 
 	struct {
 		PxReal length;
@@ -40,7 +39,8 @@ namespace rox
 		PxReal bigG;
 	} units;
 
-	void CreateContainment();
+	void CreateTheBox();
+	void CreateAOSAT1();
 	void CreateFillBoxExperiment();
 	void GravitateSelf();
 	void GravitateOnHost();
