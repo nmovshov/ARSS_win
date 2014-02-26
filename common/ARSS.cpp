@@ -1192,7 +1192,9 @@ openGL geometry drawer.
 		{
 			const char* name = shapes[nbShapes]->getName();
 			if (name && strcmp(name,"~")>=0) continue;
-			DrawShape(shapes[nbShapes], wireframe);
+			bool wf = false;
+			if (name && strcmp(name,"|")>=0) wf = true;
+			DrawShape(shapes[nbShapes], (wireframe || wf));
 		}
 	}
 
