@@ -265,6 +265,6 @@ void DrawActor(PxRigidActor* actor);
 void ColorActor(PxActor*,const GLubyte*);
 
 // Shape drawing routine defined in Drawers.cpp
-void DrawShape(PxShape*);
+//void DrawShape(PxShape*);
 
 #endif // include guards

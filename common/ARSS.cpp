@@ -1162,6 +1162,8 @@ openGL geometry drawer.
 	// Actors' names may signify special treatment
 	const char* name=actor->getName();
 	if (name && strcmp(name,"~")>=0) return; // a name that starts with a tilde (~) signifies invisibility
+	bool wireframe = false;
+	if (name && strcmp(name,"|")>=0) wireframe = true; // a name that starts with a pound (#) signifies wireframe mode
 
 	// Save current OpenGL attributes that may be messed up during drawing
 	glPushAttrib(GL_CURRENT_BIT | GL_ENABLE_BIT | GL_LIGHTING_BIT);
@@ -1190,7 +1192,7 @@ openGL geometry drawer.
 		{
 			const char* name = shapes[nbShapes]->getName();
 			if (name && strcmp(name,"~")>=0) continue;
-			DrawShape(shapes[nbShapes]);
+			DrawShape(shapes[nbShapes], wireframe);
 		}
 	}
 

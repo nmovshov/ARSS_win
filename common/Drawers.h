@@ -22,7 +22,7 @@
 #include "PxPhysicsAPI.h"
 using namespace physx;
 
-void DrawShape(PxShape*);
+void DrawShape(PxShape*, bool wireframe=false);
 void Draw3DBoxGrid();
 void DrawXZGrid();
 void DrawXYGrid();

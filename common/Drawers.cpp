@@ -28,19 +28,19 @@
  * The calls wouldn't work anyway because I suppress external linkage. This allows
  * me some leeway to use "unsafe" techniques in this file.
  */
-static void DrawBox(PxShape*);
-static void DrawSphere(PxShape*);
+static void DrawBox(PxShape*, bool wireframe);
+static void DrawSphere(PxShape*, bool wireframe);
 static void DrawPlane(PxShape*);
-static void DrawCapsule(PxShape*);
+static void DrawCapsule(PxShape*, bool wireframe);
 static void DrawConvex(PxShape*);
-static void RenderBox();
-static void RenderSphere();
-static void RenderCylinder();
+static void RenderBox(bool wireframe);
+static void RenderSphere(bool wireframe);
+static void RenderCylinder(bool wireframe);
 static void RenderPlane();
 static void RenderRightHandedAxes();
 
 // Top level "dispatcher" function available for external linkage
-void DrawShape(PxShape* shape)
+void DrawShape(PxShape* shape, bool wireframe)
 {
 	// Start by clearing the top of the matrix stack so that mid level routine can count on a clean slate
 	glMatrixMode(GL_MODELVIEW);
@@ -60,13 +60,13 @@ void DrawShape(PxShape* shape)
 	switch (geom.getType())
 	{
 	case PxGeometryType::eBOX:
-		DrawBox(shape);
+		DrawBox(shape, wireframe);
 		break;
 	case PxGeometryType::eSPHERE:
-		DrawSphere(shape);
+		DrawSphere(shape, wireframe);
 		break;
 	case PxGeometryType::eCAPSULE:
-		DrawCapsule(shape);
+		DrawCapsule(shape, wireframe);
 		break;
 	case PxGeometryType::ePLANE:
 		DrawPlane(shape);
@@ -266,7 +266,7 @@ void DrawArrow(PxVec3 base, PxVec3 head, GLfloat headSize/*=0.12*/, GLfloat thic
 
 
 // Mid level model and view transformation functions
-static void DrawBox(PxShape* shape)
+static void DrawBox(PxShape* shape, bool wireframe)
 {
 	// Prepare
 	PxBoxGeometry	geom;
@@ -286,9 +286,9 @@ static void DrawBox(PxShape* shape)
 	glScalef(geom.halfExtents.x,geom.halfExtents.y,geom.halfExtents.z);
 
 	// Draw
-	RenderBox();
+	RenderBox(wireframe);
 }
-static void DrawSphere(PxShape* shape)
+static void DrawSphere(PxShape* shape, bool wireframe)
 {
 	// Prepare
 	PxSphereGeometry	geom;
@@ -303,9 +303,9 @@ static void DrawSphere(PxShape* shape)
 	glScalef(geom.radius,geom.radius,geom.radius);
 
 	// Draw
-	RenderSphere();
+	RenderSphere(wireframe);
 }
-static void DrawCapsule(PxShape* shape)
+static void DrawCapsule(PxShape* shape, bool wireframe)
 {
 	// Prepare
 	PxCapsuleGeometry	geom;
@@ -328,17 +328,20 @@ static void DrawCapsule(PxShape* shape)
 	glPushMatrix();
 	glTranslatef(+geom.halfHeight,0.0f,0.0f);
 	glScalef(geom.radius,geom.radius,geom.radius);
-	RenderSphere();
+	RenderSphere(wireframe);
 	glPopMatrix();
 	// Draw bottom cap
 	glPushMatrix();
 	glTranslatef(-geom.halfHeight,0.0f,0.0f);
 	glScalef(geom.radius,geom.radius,geom.radius);
-	RenderSphere();
+	RenderSphere(wireframe);
 	glPopMatrix();
 	// Draw cylinder
 	qobj = gluNewQuadric();
-	gluQuadricDrawStyle(qobj,GLU_FILL);
+	if (wireframe)
+		gluQuadricDrawStyle(qobj,GLU_LINE);
+	else
+		gluQuadricDrawStyle(qobj,GLU_FILL);
 	gluQuadricNormals(qobj,GLU_SMOOTH);
 	glPushMatrix();
 	glTranslatef(-geom.halfHeight,0,0);
@@ -415,13 +418,19 @@ static void DrawPlane(PxShape* shape)
 }
 
 // Low level vertex assignment functions
-static void RenderBox()
+static void RenderBox(bool wireframe)
 {
-	glutSolidCube(2.0);
+	if (wireframe)
+		glutWireCube(2.0);
+	else
+		glutSolidCube(2.0);
 }
-static void RenderSphere()
+static void RenderSphere(bool wireframe)
 {
-	glutSolidSphere(1.0,12,12);
+	if (wireframe)
+		glutWireSphere(1.0,12,12);
+	else
+		glutSolidSphere(1.0,12,12);
 }
 static void RenderPlane()
 {
