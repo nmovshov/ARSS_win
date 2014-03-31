@@ -282,7 +282,7 @@ void rox::CreateAOSAT1()
 
 	// Define sides
 	PxBoxGeometry box_side(U/2,t/2,U/2);
-	PxBoxGeometry minibox_side(U/10,t/4,U/2);
+	PxBoxGeometry minibox_side(t/2,U/2,U/2-U/10);
 	PxMaterial* defmat=gPhysX.mDefaultMaterial;
 
 	// Attach the sides
@@ -308,9 +308,15 @@ void rox::CreateAOSAT1()
 	theBox->createShape(box_side,*defmat,PxTransform(PxVec3(U,U/2,U/2),PxQuat(PxPi/2,PxVec3(1,0,0)))); // right chamber front wall
 	theBox->createShape(box_side,*defmat,PxTransform(PxVec3((3*U/2),U/2,0),PxQuat(PxPi/2,PxVec3(0,0,1)))); // right chamber right wall
 
-	// Mini Boxes
-	theBox->createShape(minibox_side,*defmat,PxTransform(PxVec3(-(3*U/5),U/2,-(3*U/10)),PxQuat(PxPi/2,PxVec3(1,0,0)))); // left chamber minibox
-	theBox->createShape(minibox_side,*defmat,PxTransform(PxVec3((3*U/5),U/2,-(3*U/10)),PxQuat(PxPi/2,PxVec3(1,0,0)))); // right chamber minibox
+	// Mini Boxes (regolith containment)
+	PxShape* mini = theBox->createShape(minibox_side,*defmat,PxTransform(PxVec3(-(7*U/10),U/2,-U/10))); // left chamber minibox
+	gColors.colorBucket.push_back(vector<GLubyte>(3));
+	gColors.colorBucket.back()[0] = ncc::rgb::rRed[0];
+	gColors.colorBucket.back()[1] = ncc::rgb::rRed[1];
+	gColors.colorBucket.back()[2] = ncc::rgb::rRed[2];
+	mini->userData = &(gColors.colorBucket.back()[0]);
+	mini = theBox->createShape(minibox_side,*defmat,PxTransform(PxVec3((7*U/10),U/2,-U/10))); // right chamber minibox
+	mini->userData = &(gColors.colorBucket.back()[0]);
 
 	// Name, color, and register the box
 	theBox->setName("#the_box");
