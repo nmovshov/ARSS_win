@@ -141,11 +141,6 @@ void CreateExperiment()
 		ncc__error("Unknown experiment type. Experiment aborted.\a");
 	}
 
-	// Move the camera to where you can see TODO: replace with a function call
-	FindExtremers();
-	if (gExp.VIPs.extremers.outmost)
-		gCamera.pos.z = gExp.VIPs.extremers.outmost->getGlobalPose().p.z + 10*gExp.defGrainSize;
-
 	// Start the action
 	gSim.isRunning=true;
 	gSim.bPause=false;
@@ -195,55 +190,7 @@ void rox::CreateTheBox()
 void rox::CreateFillBoxExperiment()
 {
 	rox::CreateTheBox();
-
-
-	//// Make a random convex mesh to be referenced by all grains
-	//vector<PxVec3> verts = MakeRandomVertexList();
-	//PxConvexMesh* theMesh = MakePxMeshFromVertexList(verts);
-
-	//// Calculate placement positions
-	//vector<PxVec3> positions(rox::grain.totalNumber);
-	//PxReal safeDL = PxMax(rox::grain.size1,rox::grain.size2) * 2.06;
-
-	//// Place actors
-	//for (PxU32 k=0; k<positions.size(); k++)
-	//{
-	//	// select a size for the next grain
-	//	PxReal grainScale = rox::grain.size1;
-	//	//bool isSize2 = (k % (rox::grain.numberRatio)) == 0;
-	//	bool isSize2 = (rox::grain.type==rox::grain.eGRAIN_BIMODAL && k < rox::grain.numberRatio);
-	//	if (rox::grain.type==rox::grain.eGRAIN_BIMODAL && isSize2)
-	//		grainScale = rox::grain.size2;
-	//	
-	//	// create a convex geometry for the next grain
-	//	PxMeshScale meshScale;
-	//	meshScale.scale = PxVec3(grainScale);
-	//	PxMat33 M = meshScale.toMat33();
-	//	PxConvexMeshGeometry meshGeometry(theMesh,meshScale);
-
-	//	// create a convex actor from this geometry
-	//	PxRigidDynamic* aGrain = PxCreateDynamic(*gPhysX.mPhysics,PxTransform(positions[k]),meshGeometry,*gPhysX.mDefaultMaterial,gExp.defGrainDensity);
-	//	if (aGrain)
-	//	{
-	//		if (gPhysX.props.sleepThreshold > -1) aGrain->setSleepThreshold(0.5*gPhysX.props.sleepThreshold*gPhysX.props.sleepThreshold);
-	//		if (gPhysX.props.angularDamping > -1) aGrain->setAngularDamping(gPhysX.props.angularDamping);
-	//		if (gPhysX.props.linearDamping  > -1) aGrain->setLinearDamping(gPhysX.props.linearDamping);
-
-	//		if (isSize2)
-	//		{
-	//			aGrain->setName("size2");
-	//			ColorActor(aGrain,ncc::rgb::oDarkOrange);
-	//		}
-	//		else
-	//		{
-	//			aGrain->setName("size1");
-	//		}
-
-	//		RandOrientActor(aGrain);
-
-	//		gPhysX.mScene->addActor(*aGrain);
-	//	}
-	//}
+	gCamera.pos = PxVec3(0,rox::params.boxSize,3*rox::params.boxSize);
 }
 void rox::GravitateSelf()
 {
