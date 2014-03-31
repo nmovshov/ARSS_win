@@ -1,7 +1,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 // Source file for project BoxOfRox.
 //
-// Author: Viranga
+// Authors: Viranga and Naor
 ///////////////////////////////////////////////////////////////////////////////
 
 #include "ARSS.h"
@@ -340,37 +340,38 @@ void rox::CreateAOSAT1()
 
 	// Attach the sides
 	// Middle Chamber
-	theBox->createShape(box_side,*defmat); // middle chamber front wall
-	theBox->createShape(box_side,*defmat,PxTransform(PxVec3(0,U,0))); // middle chamber back wall
+	theBox->createShape(box_side,*defmat); // middle chamber bottom wall
+	theBox->createShape(box_side,*defmat,PxTransform(PxVec3(0,U,0))); // middle chamber top wall
 	theBox->createShape(box_side,*defmat,PxTransform(PxVec3(-U/2,U/2,0),PxQuat(PxPi/2,PxVec3(0,0,1)))); // middle chamber left wall
 	theBox->createShape(box_side,*defmat,PxTransform(PxVec3(U/2,U/2,0),PxQuat(PxPi/2,PxVec3(0,0,1)))); // middle chamber right wall
-	theBox->createShape(box_side,*defmat,PxTransform(PxVec3(0,U/2,-U/2),PxQuat(PxPi/2,PxVec3(1,0,0)))); // middle chamber bottom wall
-	PxShape* mtwall = theBox->createShape(box_side,*defmat,PxTransform(PxVec3(0,U/2,U/2),PxQuat(PxPi/2,PxVec3(1,0,0)))); // middle chamber top wall
+	theBox->createShape(box_side,*defmat,PxTransform(PxVec3(0,U/2,-U/2),PxQuat(PxPi/2,PxVec3(1,0,0)))); // middle chamber back wall
+	theBox->createShape(box_side,*defmat,PxTransform(PxVec3(0,U/2,U/2),PxQuat(PxPi/2,PxVec3(1,0,0)))); // middle chamber front wall
 
 	// Left Chamber
-	theBox->createShape(box_side,*defmat,PxTransform(PxVec3(-U,0,0))); // left chamber front wall
-	theBox->createShape(box_side,*defmat,PxTransform(PxVec3(-U,U,0))); // left chamber back wall
-	theBox->createShape(box_side,*defmat,PxTransform(PxVec3(-U,U/2,-U/2),PxQuat(PxPi/2,PxVec3(1,0,0)))); // left chamber bottom wall
-	PxShape* ltwall = theBox->createShape(box_side,*defmat,PxTransform(PxVec3(-U,U/2,U/2),PxQuat(PxPi/2,PxVec3(1,0,0)))); // left chamber top wall
+	theBox->createShape(box_side,*defmat,PxTransform(PxVec3(-U,0,0))); // left chamber bottom wall
+	theBox->createShape(box_side,*defmat,PxTransform(PxVec3(-U,U,0))); // left chamber top wall
+	theBox->createShape(box_side,*defmat,PxTransform(PxVec3(-U,U/2,-U/2),PxQuat(PxPi/2,PxVec3(1,0,0)))); // left chamber back wall
+	theBox->createShape(box_side,*defmat,PxTransform(PxVec3(-U,U/2,U/2),PxQuat(PxPi/2,PxVec3(1,0,0)))); // left chamber front wall
 	theBox->createShape(box_side,*defmat,PxTransform(PxVec3(-(3*U/2),U/2,0),PxQuat(PxPi/2,PxVec3(0,0,1)))); // left chamber left wall
 
 	// Right Chamber
-	theBox->createShape(box_side,*defmat,PxTransform(PxVec3(U,0,0))); // right chamber front wall
-	theBox->createShape(box_side,*defmat,PxTransform(PxVec3(U,U,0))); // right chamber back wall
-	theBox->createShape(box_side,*defmat,PxTransform(PxVec3(U,U/2,-U/2),PxQuat(PxPi/2,PxVec3(1,0,0)))); // right chamber bottom wall
-	PxShape* rtwall = theBox->createShape(box_side,*defmat,PxTransform(PxVec3(U,U/2,U/2),PxQuat(PxPi/2,PxVec3(1,0,0)))); // right chamber top wall
+	theBox->createShape(box_side,*defmat,PxTransform(PxVec3(U,0,0))); // right chamber bottom wall
+	theBox->createShape(box_side,*defmat,PxTransform(PxVec3(U,U,0))); // right chamber top wall
+	theBox->createShape(box_side,*defmat,PxTransform(PxVec3(U,U/2,-U/2),PxQuat(PxPi/2,PxVec3(1,0,0)))); // right chamber back wall
+	theBox->createShape(box_side,*defmat,PxTransform(PxVec3(U,U/2,U/2),PxQuat(PxPi/2,PxVec3(1,0,0)))); // right chamber front wall
 	theBox->createShape(box_side,*defmat,PxTransform(PxVec3((3*U/2),U/2,0),PxQuat(PxPi/2,PxVec3(0,0,1)))); // right chamber right wall
 
 	// Mini Boxes
 	theBox->createShape(minibox_side,*defmat,PxTransform(PxVec3(-(3*U/5),U/2,-(3*U/10)),PxQuat(PxPi/2,PxVec3(1,0,0)))); // left chamber minibox
 	theBox->createShape(minibox_side,*defmat,PxTransform(PxVec3((3*U/5),U/2,-(3*U/10)),PxQuat(PxPi/2,PxVec3(1,0,0)))); // right chamber minibox
 
-	// Transparent walls
-	mtwall->setName("~mtwall");
-	ltwall->setName("~ltwall");
-	rtwall->setName("~rtwall");
-
-	// Register the box
+	// Name, color, and register the box
+	theBox->setName("#the_box");
+	gColors.colorBucket.push_back(vector<GLubyte>(3));
+	gColors.colorBucket.back()[0] = ncc::rgb::yLightYellow[0];
+	gColors.colorBucket.back()[1] = ncc::rgb::yLightYellow[1];
+	gColors.colorBucket.back()[2] = ncc::rgb::yLightYellow[2];
+	theBox->userData = &(gColors.colorBucket.back()[0]);
 	gPhysX.mScene->addActor(*theBox);
 	rox::VIPs.theBox = theBox;
 }
