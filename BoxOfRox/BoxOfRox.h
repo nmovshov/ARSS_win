@@ -25,7 +25,7 @@ namespace rox
 	} params;
 
 	struct {
-		enum {eBAD_GRAIN_TYPE, eGRAIN_UNIFORM, eGRAIN_BIMODAL} type;
+		enum {eBAD_REGOLITH_TYPE, eREGOLITH_UNIFORM, eREGOLITH_BIMODAL} type;
 		PxReal size2;
 		PxReal size1;
 		PxU32 numberRatio;
@@ -40,6 +40,7 @@ namespace rox
 	} units;
 
 	void CreateTheBox();
+	void FillTheBox();
 	void CreateAOSAT1();
 	void CreateFillBoxExperiment();
 	void GravitateSelf();

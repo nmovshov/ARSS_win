@@ -72,13 +72,13 @@ bool ConfigExperimentOptions()
 		rox::eBoxDesign = rox::eBAD_BOX_DESIGN;
 
 	// Parameters for the regolith
-	ncc::GetStrPropertyFromINIFile("regolith","grain_type","uniform",buf,MAX_CHARS_PER_NAME,gRun.iniFile.c_str());
+	ncc::GetStrPropertyFromINIFile("regolith","regolith_type","uniform",buf,MAX_CHARS_PER_NAME,gRun.iniFile.c_str());
 	if		(strcmp(buf,"uniform")==0)
-		rox::regolith.type = rox::regolith.eGRAIN_UNIFORM;
+		rox::regolith.type = rox::regolith.eREGOLITH_UNIFORM;
 	else if	(strcmp(buf,"bimodal")==0)
-		rox::regolith.type = rox::regolith.eGRAIN_BIMODAL;
+		rox::regolith.type = rox::regolith.eREGOLITH_BIMODAL;
 	else
-		rox::regolith.type = rox::regolith.eBAD_GRAIN_TYPE;
+		rox::regolith.type = rox::regolith.eBAD_REGOLITH_TYPE;
 
 	ncc::GetStrPropertyFromINIFile("regolith","grain_size1","1",buf,MAX_CHARS_PER_NAME,gRun.iniFile.c_str());
 	rox::regolith.size1 = atof(buf);
@@ -187,10 +187,15 @@ void rox::CreateTheBox()
 		ncc__error("Unknown box design\a");
 	}
 }
+void rox::FillTheBox()
+{
+	CreateRubbleGrain(PxVec3(0,rox::params.boxSize/2,0),gExp.defGrainType,gExp.defGrainSize,*gPhysX.mDefaultMaterial,gExp.defGrainDensity);
+}
 void rox::CreateFillBoxExperiment()
 {
 	rox::CreateTheBox();
 	gCamera.pos = PxVec3(0,rox::params.boxSize,3*rox::params.boxSize);
+	rox::FillTheBox();
 }
 void rox::GravitateSelf()
 {
