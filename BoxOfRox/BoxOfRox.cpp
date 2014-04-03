@@ -167,11 +167,11 @@ void DownArrowAction()
 }
 void LeftArrowAction()
 {
-
+	rox::OpenLeftDoor();
 }
 void RightArrowAction()
 {
-
+	rox::OpenRightDoor();
 }
 
 // BoxOfRox namespace functions
@@ -189,7 +189,22 @@ void rox::CreateTheBox()
 }
 void rox::FillTheBox()
 {
-	CreateRubbleGrain(PxVec3(0,rox::params.boxSize/2,0),gExp.defGrainType,gExp.defGrainSize,*gPhysX.mDefaultMaterial,gExp.defGrainDensity);
+	CreateRubbleGrain(PxVec3(-0.2,rox::params.boxSize/2,0),gExp.defGrainType,gExp.defGrainSize,*gPhysX.mDefaultMaterial,gExp.defGrainDensity);
+	CreateRubbleGrain(PxVec3(+0.2,rox::params.boxSize/2,0),gExp.defGrainType,gExp.defGrainSize,*gPhysX.mDefaultMaterial,gExp.defGrainDensity);
+}
+void rox::OpenLeftDoor()
+{
+	if (rox::VIPs.ldoor) {
+		rox::VIPs.ldoor->release();
+		rox::VIPs.ldoor = NULL;
+	}
+}
+void rox::OpenRightDoor()
+{
+	if (rox::VIPs.rdoor) {
+		rox::VIPs.rdoor->release();
+		rox::VIPs.rdoor = NULL;
+	}
 }
 void rox::CreateFillBoxExperiment()
 {
@@ -263,6 +278,8 @@ void rox::GravitateOnHost()
 	for (PxU32 k=0; k<nbActors; k++)
 	{
 		PxRigidDynamic* actor = gPhysX.cast[k]->isRigidDynamic();
+		PxRigidDynamicFlags flags = actor->getRigidDynamicFlags();
+		if (flags & PxRigidDynamicFlag::eKINEMATIC) continue;
 		PxVec3 F(forces[3*k+0],forces[3*k+1],forces[3*k+2]);
 		actor->addForce(F);
 	}
@@ -288,6 +305,7 @@ void rox::CreateAOSAT1()
 	// Define sides
 	PxBoxGeometry box_side(U/2,t/2,U/2);
 	PxBoxGeometry minibox_side(t/2,U/2,U/2-U/10);
+	PxBoxGeometry minibox_door(t/2,U/2,U/10);
 	PxMaterial* defmat=gPhysX.mDefaultMaterial;
 
 	// Attach the sides
@@ -322,6 +340,16 @@ void rox::CreateAOSAT1()
 	mini->userData = &(gColors.colorBucket.back()[0]);
 	mini = theBox->createShape(minibox_side,*defmat,PxTransform(PxVec3((7*U/10),U/2,-U/10))); // right chamber minibox
 	mini->userData = &(gColors.colorBucket.back()[0]);
+
+	// Doors
+	rox::VIPs.ldoor = theBox->createShape(minibox_door,*defmat,PxTransform(PxVec3(-(7*U/10),U/2,2*U/5)));
+	rox::VIPs.rdoor = theBox->createShape(minibox_door,*defmat,PxTransform(PxVec3(+(7*U/10),U/2,2*U/5)));
+	gColors.colorBucket.push_back(vector<GLubyte>(3));
+	gColors.colorBucket.back()[0] = ncc::rgb::bAqua[0];
+	gColors.colorBucket.back()[1] = ncc::rgb::bAqua[1];
+	gColors.colorBucket.back()[2] = ncc::rgb::bAqua[2];
+	rox::VIPs.ldoor->userData = &(gColors.colorBucket.back()[0]);
+	rox::VIPs.rdoor->userData = &(gColors.colorBucket.back()[0]);
 
 	// Name, color, and register the box
 	theBox->setName("#the_box");

@@ -17,6 +17,8 @@ namespace rox
 
 	struct {
 		PxRigidDynamic* theBox;
+		PxShape* ldoor;
+		PxShape* rdoor;
 	} VIPs;
 
 	struct {
@@ -41,6 +43,8 @@ namespace rox
 
 	void CreateTheBox();
 	void FillTheBox();
+	void OpenLeftDoor();
+	void OpenRightDoor();
 	void CreateAOSAT1();
 	void CreateFillBoxExperiment();
 	void GravitateSelf();
