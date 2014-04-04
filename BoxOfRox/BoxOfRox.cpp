@@ -189,8 +189,63 @@ void rox::CreateTheBox()
 }
 void rox::FillTheBox()
 {
-	CreateRubbleGrain(PxVec3(-0.2,rox::params.boxSize/2,0),gExp.defGrainType,gExp.defGrainSize,*gPhysX.mDefaultMaterial,gExp.defGrainDensity);
-	CreateRubbleGrain(PxVec3(+0.2,rox::params.boxSize/2,0),gExp.defGrainType,gExp.defGrainSize,*gPhysX.mDefaultMaterial,gExp.defGrainDensity);
+	// Create a few randomized convex meshes
+	int nbMeshes = 10;
+	vector<PxConvexMesh*> mesh_list(nbMeshes);
+	for (unsigned int k=0; k<mesh_list.size(); k++)
+	{
+		vector<PxVec3> verts = MakeRandomVertexList();
+		mesh_list[k] = MakePxMeshFromVertexList(verts);
+	}
+
+	// Calculate a position grid that fits in the regolith containers
+	PxBoxGeometry geometry;
+	if(!rox::VIPs.lmbox->getBoxGeometry(geometry)) ncc__error("Something is wrong, expecting a box");
+	PxReal X_max = geometry.halfExtents.x*2;
+	if(!rox::VIPs.ldoor->getBoxGeometry(geometry)) ncc__error("Something is wrong, expecting a box");
+	PxReal Z_max = geometry.halfExtents.z*2;
+	PxReal Y_max = rox::params.boxSize;
+	
+	PxReal dl = rox::regolith.size1*2.06;
+	vector<PxVec3> positions;
+	unsigned int nbGrains = rox::regolith.totalNumber;
+	PxReal x, y, z;
+	PxReal clearance = dl + geometry.halfExtents.minElement();
+	x = y = z = clearance;
+	while (nbGrains--)
+	{
+		positions.push_back(PxVec3(x,y,z));
+		x += dl;
+		if (x > X_max - clearance) {x=clearance; z+=dl;}
+		if (z > Z_max - clearance) {x=clearance; z=clearance; y+=dl;}
+		if (y > Y_max - clearance) ncc__error("Can't fit grains in container, experiment aborted.");
+	}
+
+	// Place the grains in left chamber minibox
+	for (unsigned int k=0; k<positions.size(); k++)
+	{
+		// Find the corner of the minibox
+		rox::VIPs.lmbox->getBoxGeometry(geometry);
+		PxVec3 center = rox::VIPs.lmbox->getLocalPose().p;
+		PxVec3 corner = center - geometry.halfExtents;
+		// Create a mesh geometry from one of the meshes
+		PxMeshScale meshScale;
+		meshScale.scale = PxVec3(rox::regolith.size1);
+		unsigned int m_i = k%mesh_list.size();
+		PxConvexMeshGeometry meshGeometry(mesh_list[m_i],meshScale);
+
+		// Create an actor with this geometry
+		PxRigidDynamic* aGrain = PxCreateDynamic(*gPhysX.mPhysics,PxTransform(positions[k]+corner),meshGeometry,*gPhysX.mDefaultMaterial,gExp.defGrainDensity);
+		if (aGrain)
+		{
+			if (gPhysX.props.sleepThreshold > -1) aGrain->setSleepThreshold(0.5*gPhysX.props.sleepThreshold*gPhysX.props.sleepThreshold);
+			if (gPhysX.props.angularDamping > -1) aGrain->setAngularDamping(gPhysX.props.angularDamping);
+			if (gPhysX.props.linearDamping  > -1) aGrain->setLinearDamping(gPhysX.props.linearDamping);
+			aGrain->setName("regolith");
+			RandOrientActor(aGrain);
+			gPhysX.mScene->addActor(*aGrain);
+		}
+	}
 }
 void rox::OpenLeftDoor()
 {
@@ -342,22 +397,20 @@ void rox::CreateAOSAT1()
 	// mini->userData = &(gColors.colorBucket.back()[0]);
 
 	// Mini Boxes (regolith containment)
-	PxShape* mini = theBox->createShape(minibox_side,*defmat,PxTransform(PxVec3(-(3*U/5),U/2,3*U/10))); // left chamber minibox
-	gColors.colorBucket.push_back(vector<GLubyte>(3));
-	gColors.colorBucket.back()[0] = ncc::rgb::rRed[0];
-	gColors.colorBucket.back()[1] = ncc::rgb::rRed[1];
-	gColors.colorBucket.back()[2] = ncc::rgb::rRed[2];
-	mini->userData = &(gColors.colorBucket.back()[0]);
-	mini = theBox->createShape(minibox_side,*defmat,PxTransform(PxVec3((3*U/5),U/2,3*U/10))); // right chamber minibox
-	mini->userData = &(gColors.colorBucket.back()[0]);
-
-	// Doors
-	rox::VIPs.ldoor = theBox->createShape(minibox_door,*defmat,PxTransform(PxVec3(-(7*U/10),U/2,2*U/5)));
-	rox::VIPs.rdoor = theBox->createShape(minibox_door,*defmat,PxTransform(PxVec3(+(7*U/10),U/2,2*U/5)));
+	rox::VIPs.lmbox = theBox->createShape(minibox_side,*defmat,PxTransform(PxVec3(-(3*U/5),U/2,3*U/10))); // left chamber minibox side
+	rox::VIPs.rmbox = theBox->createShape(minibox_side,*defmat,PxTransform(PxVec3(+(3*U/5),U/2,3*U/10))); // right chamber minibox side
+	rox::VIPs.ldoor = theBox->createShape(minibox_door,*defmat,PxTransform(PxVec3(-(7*U/10),U/2,2*U/5))); // left chamber minibox door
+	rox::VIPs.rdoor = theBox->createShape(minibox_door,*defmat,PxTransform(PxVec3(+(7*U/10),U/2,2*U/5))); // right chamber minibox door
 	gColors.colorBucket.push_back(vector<GLubyte>(3));
 	gColors.colorBucket.back()[0] = ncc::rgb::bAqua[0];
 	gColors.colorBucket.back()[1] = ncc::rgb::bAqua[1];
 	gColors.colorBucket.back()[2] = ncc::rgb::bAqua[2];
+	rox::VIPs.lmbox->userData = &(gColors.colorBucket.back()[0]);
+	rox::VIPs.rmbox->userData = &(gColors.colorBucket.back()[0]);
+	gColors.colorBucket.push_back(vector<GLubyte>(3));
+	gColors.colorBucket.back()[0] = ncc::rgb::rRed[0];
+	gColors.colorBucket.back()[1] = ncc::rgb::rRed[1];
+	gColors.colorBucket.back()[2] = ncc::rgb::rRed[2];
 	rox::VIPs.ldoor->userData = &(gColors.colorBucket.back()[0]);
 	rox::VIPs.rdoor->userData = &(gColors.colorBucket.back()[0]);
 

@@ -17,6 +17,8 @@ namespace rox
 
 	struct {
 		PxRigidDynamic* theBox;
+		PxShape* lmbox;
+		PxShape* rmbox;
 		PxShape* ldoor;
 		PxShape* rdoor;
 	} VIPs;
