@@ -246,6 +246,32 @@ void rox::FillTheBox()
 			gPhysX.mScene->addActor(*aGrain);
 		}
 	}
+
+	// Place the grains in right chamber minibox
+	for (unsigned int k=0; k<positions.size(); k++)
+	{
+		// Find the corner of the minibox
+		rox::VIPs.rmbox->getBoxGeometry(geometry);
+		PxVec3 center = rox::VIPs.rmbox->getLocalPose().p;
+		PxVec3 corner = center - geometry.halfExtents;
+		// Create a mesh geometry from one of the meshes
+		PxMeshScale meshScale;
+		meshScale.scale = PxVec3(rox::regolith.size1);
+		unsigned int m_i = k%mesh_list.size();
+		PxConvexMeshGeometry meshGeometry(mesh_list[m_i],meshScale);
+
+		// Create an actor with this geometry
+		PxRigidDynamic* aGrain = PxCreateDynamic(*gPhysX.mPhysics,PxTransform(positions[k]+corner),meshGeometry,*gPhysX.mDefaultMaterial,gExp.defGrainDensity);
+		if (aGrain)
+		{
+			if (gPhysX.props.sleepThreshold > -1) aGrain->setSleepThreshold(0.5*gPhysX.props.sleepThreshold*gPhysX.props.sleepThreshold);
+			if (gPhysX.props.angularDamping > -1) aGrain->setAngularDamping(gPhysX.props.angularDamping);
+			if (gPhysX.props.linearDamping  > -1) aGrain->setLinearDamping(gPhysX.props.linearDamping);
+			aGrain->setName("regolith");
+			RandOrientActor(aGrain);
+			gPhysX.mScene->addActor(*aGrain);
+		}
+	}
 }
 void rox::OpenLeftDoor()
 {
