@@ -58,9 +58,6 @@ bool ConfigExperimentOptions()
 		rox::eExperimentType = rox::eSHAKE_BOX;
 	else
 		rox::eExperimentType = rox::eBAD_EXPERIMENT_TYPE;
-	
-	ncc::GetStrPropertyFromINIFile("experiment","shake_magnitude","0",buf,MAX_CHARS_PER_NAME,gRun.iniFile.c_str());
-	rox::params.shakeMagnitude = atof(buf);
 
 	// Parameters for the box
 	ncc::GetStrPropertyFromINIFile("box","box_unit_size","100",buf,MAX_CHARS_PER_NAME,gRun.iniFile.c_str());
@@ -103,15 +100,34 @@ void CustomizeGLUT()
 }
 void CustomizeHUD()
 {
-
+	rox::hudMsgs.boxSpinOmega = gHUD.hud.AddElement("w = ",0.9,0.04);
+	rox::hudMsgs.boxSpinGee   = gHUD.hud.AddElement("",0.9,0.08);
 }
 void RefreshCustomHUDElements()
 {
+	char buf[MAX_CHARS_PER_NAME];
+	int ch2px = 18; // hud uses 18 pt font
+	float px2width = 1.0/glutGet(GLUT_WINDOW_WIDTH);
+	float scrPos = glutGet(GLUT_WINDOW_WIDTH);
+	unsigned int eid;
 
+	// Box spin state...
+	eid = rox::hudMsgs.boxSpinOmega;
+	sprintf_s(buf,MAX_CHARS_PER_NAME,"w = %.3f rpm",rox::params.spinOmega*30.0/PxPi);
+	scrPos = 1.0 - strlen(buf)*ch2px*px2width*0.6;
+	gHUD.hud.SetElement(eid,buf,scrPos,0.04);
+	if (rox::params.bSpin)
+		gHUD.hud.SetElementColor(eid,1,0,0);
+	else
+	    gHUD.hud.SetElementColor(eid,0,1,0);
+
+	// ... and corresponding g-value
+	eid = rox::hudMsgs.boxSpinGee;
+	/* exercise: print the effective gee-force on the HUD, below the rpm number */
 }
 void FireAction()
 {
-	
+	rox::params.bSpin = !rox::params.bSpin;
 }
 void LogExperiment()
 {
@@ -123,6 +139,7 @@ void PrintDebug()
 void ApplyCustomInteractions()
 {
 	rox::GravitateSelf();
+	if (rox::params.bSpin) rox::SpinBox();
 }
 void RenderOtherStuff()
 {
@@ -159,11 +176,11 @@ void LoadExperiment()
 }
 void UpArrowAction()
 {
-
+	rox::params.spinOmega += 0.01; // rad/sec
 }
 void DownArrowAction()
 {
-
+	rox::params.spinOmega -= 0.01; // rad/sec
 }
 void LeftArrowAction()
 {
@@ -449,6 +466,13 @@ void rox::CreateAOSAT1()
 	theBox->userData = &(gColors.colorBucket.back()[0]);
 	gPhysX.mScene->addActor(*theBox);
 	rox::VIPs.theBox = theBox;
+}
+void rox::SpinBox()
+{
+	PxTransform pose = rox::VIPs.theBox->getGlobalPose();
+	PxQuat dq(rox::params.spinOmega*gSim.timeStep,PxVec3(0.0f,1.0f,0.0f));
+	pose.q = dq*pose.q; // this is the correct order although with fixed axis rotation it's actually commutative
+	rox::VIPs.theBox->setKinematicTarget(pose);
 }
 
 // End lint level warnings

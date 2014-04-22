@@ -13,6 +13,8 @@ namespace rox
 
 	struct {
 		unsigned int systemDiag;
+		unsigned int boxSpinOmega;
+		unsigned int boxSpinGee;
 	} hudMsgs;
 
 	struct {
@@ -25,7 +27,8 @@ namespace rox
 
 	struct {
 		PxReal boxSize;
-		PxReal shakeMagnitude;
+		PxReal spinOmega;
+		bool   bSpin;
 	} params;
 
 	struct {
@@ -52,6 +55,7 @@ namespace rox
 	void GravitateSelf();
 	void GravitateOnHost();
 	void GravitateOnDevice();
+	void SpinBox();
 
 };
 #endif
