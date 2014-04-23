@@ -376,6 +376,7 @@ void IdleCallback()
 	static unsigned int hudFrame = 0;
 	static unsigned int renderTime = 0;
 	static unsigned int outputFrame = 0;
+	static unsigned int captureFrame = 0;
 	static unsigned int physicsTime = 0;
 
 	// Accumulate wall clock time
@@ -399,6 +400,12 @@ void IdleCallback()
 	if ((gRun.outputFrequency > 0) && (gSim.frame - outputFrame >= gRun.outputFrequency)) {
 		outputFrame = gSim.frame;
 		LogExperiment();
+	}
+
+	// Take a screen shot
+	if ((gRun.captureFrequency > 0) && (gSim.frame - captureFrame >= gRun.captureFrequency)) {
+		captureFrame = gSim.frame;
+		CaptureScreen();
 	}
 
 	// Advance the simulation
