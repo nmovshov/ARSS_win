@@ -427,9 +427,12 @@ void ProcessAsciiKeys(unsigned char key, int x, int y)
 	case 32: /*SPACE*/
 		FireAction();
 		break;
-	case 'x': /*ALT-x*/
+	case 'x': /*x or ALT-x*/
 		if (glutGetModifiers()==GLUT_ACTIVE_ALT)
 			PrintDebug();
+		break;
+	case 'g': /*g or ALT-g*/
+		if (glutGetModifiers()==GLUT_ACTIVE_ALT) gDebug.bXYGridOn = !gDebug.bXYGridOn;
 		break;
 	case '?': /*WakeUp*/
 		Reveille();
