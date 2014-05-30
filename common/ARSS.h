@@ -65,6 +65,7 @@ struct arss_glut_hud {
 	unsigned int WALL_TIME;
 	unsigned int DBG_MSG;
 	unsigned int PAUSED;
+	unsigned int HELP;
 };
 extern arss_glut_hud gHUD;
 // Run globals (file names, run name, misc information etc.)
@@ -213,6 +214,7 @@ void ProcessCameraControls();
 // All project functions
 void AdvanceSimulation(PxReal);
 void RefreshHUD();
+void DisplayHelp();
 void CaptureScreen();
 bool ConfigARSSOptions();
 void UpdateIntegralsOfMotion();

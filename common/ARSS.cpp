@@ -161,6 +161,7 @@ bool InitHUD()
 	gHUD.WALL_TIME	= gHUD.hud.AddElement("Wall time = ", 0.04,0.08);
 	gHUD.DBG_MSG	= gHUD.hud.AddElement("",0.5,0.66);
 	gHUD.PAUSED		= gHUD.hud.AddElement("",0.4,0.5);
+	gHUD.HELP       = gHUD.hud.AddElement("",0.4,0.2);
 
 	// Set up experiment specific HUD elements
 	CustomizeHUD();
@@ -460,6 +461,9 @@ void ProcessSpecialKeys(int key, int x, int y)
 {
 	switch (key)
 	{
+	case GLUT_KEY_F1: // display help message in hud
+		DisplayHelp();
+		break;
 	case GLUT_KEY_F10: // reboot experiment
 		RebootExperiment();
 		break;
@@ -576,6 +580,21 @@ void RefreshHUD()
 	gHUD.hud.SetElement(gHUD.PAUSED,s);
 
 	RefreshCustomHUDElements(); // Project specific HUD elements, implemented in project source
+}
+void DisplayHelp()
+{
+	static bool helpOn = false;
+	helpOn = !helpOn;
+	if (helpOn)
+	{
+		string msg("Help message place holder");
+		gHUD.hud.SetElement(gHUD.HELP,msg.c_str());
+		gHUD.hud.SetElementColor(gHUD.HELP,0,0,1);
+	}
+	else
+	{
+		gHUD.hud.SetElement(gHUD.HELP,"");
+	}
 }
 void LogRunStats()
 {
