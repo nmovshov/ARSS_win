@@ -44,6 +44,7 @@ struct arss_glut_camera {
 	float zBufNear;
 	float zBufFar;
 	float speed;
+	int   liveCamera;
 };
 extern arss_glut_camera gCamera;
 extern vector<arss_glut_camera> gCameraLoop;
@@ -67,6 +68,7 @@ struct arss_glut_hud {
 	unsigned int DBG_MSG;
 	unsigned int PAUSED;
 	unsigned int HELP;
+	unsigned int CAMERA;
 };
 extern arss_glut_hud gHUD;
 // Run globals (file names, run name, misc information etc.)

@@ -164,6 +164,7 @@ bool InitHUD()
 	gHUD.DBG_MSG	= gHUD.hud.AddElement("",0.5,0.66);
 	gHUD.PAUSED		= gHUD.hud.AddElement("",0.4,0.5);
 	gHUD.HELP       = gHUD.hud.AddElement("",0.4,0.2);
+	gHUD.CAMERA     = gHUD.hud.AddElement("Camera 0",0.04,0.12);
 
 	// Set up experiment specific HUD elements
 	CustomizeHUD();
@@ -584,6 +585,8 @@ void RefreshHUD()
 	else
 		sprintf(s,"");
 	gHUD.hud.SetElement(gHUD.PAUSED,s);
+	sprintf(s,"Camera %d",gCamera.liveCamera);
+	gHUD.hud.SetElement(gHUD.CAMERA,s);
 
 	RefreshCustomHUDElements(); // Project specific HUD elements, implemented in project source
 }
@@ -1250,10 +1253,11 @@ void AddCamera()
 }
 void CycleCamera()
 {
-	static int currentCameraIdx = 0;
-	gCameraLoop[currentCameraIdx] = gCamera;
-	currentCameraIdx = (currentCameraIdx + 1)%gCameraLoop.size();
-	gCamera = gCameraLoop[currentCameraIdx];
+	static int liveCameraIdx = 0;
+	gCameraLoop[liveCameraIdx] = gCamera;
+	liveCameraIdx = (liveCameraIdx + 1)%gCameraLoop.size();
+	gCamera = gCameraLoop[liveCameraIdx];
+	gCamera.liveCamera = liveCameraIdx;
 }
 
 // End lint level warnings
