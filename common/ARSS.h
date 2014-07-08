@@ -46,6 +46,7 @@ struct arss_glut_camera {
 	float speed;
 };
 extern arss_glut_camera gCamera;
+extern vector<arss_glut_camera> gCameraLoop;
 struct arss_glut_colors {
 	GLfloat background[3];
 	GLubyte defaultActor[3];
@@ -223,6 +224,8 @@ void LogRunStats();
 PxU32 CountSleepers();
 void Reveille();
 void DeadStop();
+void AddCamera();
+void CycleCamera();
 void ReCenterActors();
 void FindExtremers();
 bool SaveSceneToRepXDump();

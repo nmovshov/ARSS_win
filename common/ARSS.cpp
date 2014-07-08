@@ -16,6 +16,7 @@
 
 // GLUT globals (window manager, event manager, rendering manager)
 arss_glut_camera gCamera;
+vector<arss_glut_camera> gCameraLoop;
 arss_glut_colors gColors;
 arss_glut_controls gControls;
 arss_glut_hud gHUD;
@@ -135,6 +136,7 @@ bool InitGlut(int argc, char **argv)
 	gCamera.speed = 1.0f;
 	gCamera.yFOV = 60.0f;
 	gCamera.aspectRatio = (float) glutGet(GLUT_WINDOW_WIDTH)/glutGet(GLUT_WINDOW_HEIGHT);
+	gCameraLoop.push_back(gCamera);
 
 	// Initialize controls values
 	for (int k=0; k<MAX_KEYBOARD_KEYS; k++) gControls.keys[k]=false;
@@ -448,6 +450,10 @@ void ProcessAsciiKeys(unsigned char key, int x, int y)
 	case 'p': /*Toggle Pause*/
 		gSim.bPause=!gSim.bPause;
 		RefreshHUD();
+		break;
+	case 'c': /*c or ALT-c*/
+		if (glutGetModifiers()==GLUT_ACTIVE_ALT) AddCamera();
+		else CycleCamera();
 		break;
 	//default: // uncomment to find out unknown ascii codes
 	//	printf("%d\n",key);
@@ -1237,6 +1243,17 @@ void ColorActor(PxActor* actor, const GLubyte* color)
 	gColors.colorBucket.back()[1]=color[1];
 	gColors.colorBucket.back()[2]=color[2];
 	actor->userData=&(gColors.colorBucket.back()[0]);
+}
+void AddCamera()
+{
+	gCameraLoop.push_back(gCamera);
+}
+void CycleCamera()
+{
+	static int currentCameraIdx = 0;
+	gCameraLoop[currentCameraIdx] = gCamera;
+	currentCameraIdx = (currentCameraIdx + 1)%gCameraLoop.size();
+	gCamera = gCameraLoop[currentCameraIdx];
 }
 
 // End lint level warnings
