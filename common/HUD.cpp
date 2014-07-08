@@ -16,7 +16,7 @@
 // hud.SetElement(e1,"She is so Pooch!"); // modify existing element
 // 
 // Notes:
-// This is a bare bones implementations. There are almost no checks, and certainly
+// This is a bare bones implementation. There are almost no checks, and certainly
 // no error messages. Some potential gotchas to keep in mind are:
 //   1) The string manipulation is done with char pointers and the unsecure strcpy().
 //      When using the Microsoft VC++ compiler you may #define _CRT_SECURE_NO_WARNINGS
