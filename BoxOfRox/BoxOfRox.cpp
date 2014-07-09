@@ -65,6 +65,8 @@ bool ConfigExperimentOptions()
 	ncc::GetStrPropertyFromINIFile("box","box_design","",buf,MAX_CHARS_PER_NAME,gRun.iniFile.c_str());
 	if (strcmp(buf,"AOSAT1")==0)
 		rox::eBoxDesign = rox::eAOSAT1;
+	else if (strcmp(buf,"AOSAT2")==0)
+		rox::eBoxDesign = rox::eAOSAT2;
 	else
 		rox::eBoxDesign = rox::eBAD_BOX_DESIGN;
 
@@ -198,6 +200,9 @@ void rox::CreateTheBox()
 	{
 	case rox::eAOSAT1:
 		rox::CreateAOSAT1();
+		break;
+	case rox::eAOSAT2:
+		rox::CreateAOSAT2();
 		break;
 	case rox::eBAD_BOX_DESIGN: // intentional fall through
 	default:
@@ -473,6 +478,75 @@ void rox::SpinBox()
 	PxQuat dq(rox::params.spinOmega*gSim.timeStep,PxVec3(0.0f,1.0f,0.0f));
 	pose.q = dq*pose.q; // this is the correct order although with fixed axis rotation it's actually commutative
 	rox::VIPs.theBox->setKinematicTarget(pose);
+}
+void rox::CreateAOSAT2()
+{
+	// Define wall dimension and thickness
+	PxReal U = rox::params.boxSize;
+	PxReal t = 0.02*U;
+
+	// We'll make the containment with a kinematic actor
+	PxRigidDynamic* theBox = gPhysX.mPhysics->createRigidDynamic(PxTransform(PxVec3(0)));
+	if (!theBox)
+		ncc__error("actor creation failed!");
+	theBox->setRigidDynamicFlag(PxRigidDynamicFlag::eKINEMATIC, true);
+
+	// Define sides
+	PxBoxGeometry box_side(U/2,t/2,U/2);
+	PxBoxGeometry minibox_side(U/10,U/2,t/2);
+	PxBoxGeometry minibox_door(t/2,U/2,U/10);
+	PxMaterial* defmat=gPhysX.mDefaultMaterial;
+
+	// Attach the sides
+	// Middle Chamber
+	theBox->createShape(box_side,*defmat); // middle chamber bottom wall
+	theBox->createShape(box_side,*defmat,PxTransform(PxVec3(0,U,0))); // middle chamber top wall
+	theBox->createShape(box_side,*defmat,PxTransform(PxVec3(-U/2,U/2,0),PxQuat(PxPi/2,PxVec3(0,0,1)))); // middle chamber left wall
+	theBox->createShape(box_side,*defmat,PxTransform(PxVec3(U/2,U/2,0),PxQuat(PxPi/2,PxVec3(0,0,1)))); // middle chamber right wall
+	theBox->createShape(box_side,*defmat,PxTransform(PxVec3(0,U/2,-U/2),PxQuat(PxPi/2,PxVec3(1,0,0)))); // middle chamber back wall
+	theBox->createShape(box_side,*defmat,PxTransform(PxVec3(0,U/2,U/2),PxQuat(PxPi/2,PxVec3(1,0,0)))); // middle chamber front wall
+
+	// Left Chamber
+	theBox->createShape(box_side,*defmat,PxTransform(PxVec3(-U,0,0))); // left chamber bottom wall
+	theBox->createShape(box_side,*defmat,PxTransform(PxVec3(-U,U,0))); // left chamber top wall
+	theBox->createShape(box_side,*defmat,PxTransform(PxVec3(-U,U/2,-U/2),PxQuat(PxPi/2,PxVec3(1,0,0)))); // left chamber back wall
+	theBox->createShape(box_side,*defmat,PxTransform(PxVec3(-U,U/2,U/2),PxQuat(PxPi/2,PxVec3(1,0,0)))); // left chamber front wall
+	theBox->createShape(box_side,*defmat,PxTransform(PxVec3(-(3*U/2),U/2,0),PxQuat(PxPi/2,PxVec3(0,0,1)))); // left chamber left wall
+
+	// Right Chamber
+	theBox->createShape(box_side,*defmat,PxTransform(PxVec3(U,0,0))); // right chamber bottom wall
+	theBox->createShape(box_side,*defmat,PxTransform(PxVec3(U,U,0))); // right chamber top wall
+	theBox->createShape(box_side,*defmat,PxTransform(PxVec3(U,U/2,-U/2),PxQuat(PxPi/2,PxVec3(1,0,0)))); // right chamber back wall
+	theBox->createShape(box_side,*defmat,PxTransform(PxVec3(U,U/2,U/2),PxQuat(PxPi/2,PxVec3(1,0,0)))); // right chamber front wall
+	theBox->createShape(box_side,*defmat,PxTransform(PxVec3((3*U/2),U/2,0),PxQuat(PxPi/2,PxVec3(0,0,1)))); // right chamber right wall
+
+	// Mini Boxes (regolith containment)
+	rox::VIPs.lmbox = theBox->createShape(minibox_side,*defmat,PxTransform(PxVec3(-(3*U/5),U/2,3*U/10))); // left chamber minibox side
+	rox::VIPs.rmbox = theBox->createShape(minibox_side,*defmat,PxTransform(PxVec3(+(3*U/5),U/2,3*U/10))); // right chamber minibox side
+	rox::VIPs.ldoor = theBox->createShape(minibox_door,*defmat,PxTransform(PxVec3(-(7*U/10),U/2,2*U/5))); // left chamber minibox door
+	rox::VIPs.rdoor = theBox->createShape(minibox_door,*defmat,PxTransform(PxVec3(+(7*U/10),U/2,2*U/5))); // right chamber minibox door
+	gColors.colorBucket.push_back(vector<GLubyte>(3));
+	gColors.colorBucket.back()[0] = ncc::rgb::bAqua[0];
+	gColors.colorBucket.back()[1] = ncc::rgb::bAqua[1];
+	gColors.colorBucket.back()[2] = ncc::rgb::bAqua[2];
+	rox::VIPs.lmbox->userData = &(gColors.colorBucket.back()[0]);
+	rox::VIPs.rmbox->userData = &(gColors.colorBucket.back()[0]);
+	gColors.colorBucket.push_back(vector<GLubyte>(3));
+	gColors.colorBucket.back()[0] = ncc::rgb::rRed[0];
+	gColors.colorBucket.back()[1] = ncc::rgb::rRed[1];
+	gColors.colorBucket.back()[2] = ncc::rgb::rRed[2];
+	rox::VIPs.ldoor->userData = &(gColors.colorBucket.back()[0]);
+	rox::VIPs.rdoor->userData = &(gColors.colorBucket.back()[0]);
+
+	// Name, color, and register the box
+	theBox->setName("#the_box");
+	gColors.colorBucket.push_back(vector<GLubyte>(3));
+	gColors.colorBucket.back()[0] = ncc::rgb::yLightYellow[0];
+	gColors.colorBucket.back()[1] = ncc::rgb::yLightYellow[1];
+	gColors.colorBucket.back()[2] = ncc::rgb::yLightYellow[2];
+	theBox->userData = &(gColors.colorBucket.back()[0]);
+	gPhysX.mScene->addActor(*theBox);
+	rox::VIPs.theBox = theBox;
 }
 
 // End lint level warnings

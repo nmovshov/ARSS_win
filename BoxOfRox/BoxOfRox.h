@@ -9,7 +9,7 @@
 namespace rox
 {
 	enum {eBAD_EXPERIMENT_TYPE, eFILL_BOX, eSHAKE_BOX} eExperimentType;
-	enum {eBAD_BOX_DESIGN, eAOSAT1} eBoxDesign;
+	enum {eBAD_BOX_DESIGN, eAOSAT1, eAOSAT2} eBoxDesign;
 
 	struct {
 		unsigned int systemDiag;
@@ -51,6 +51,7 @@ namespace rox
 	void OpenLeftDoor();
 	void OpenRightDoor();
 	void CreateAOSAT1();
+	void CreateAOSAT2();
 	void CreateFillBoxExperiment();
 	void GravitateSelf();
 	void GravitateOnHost();
