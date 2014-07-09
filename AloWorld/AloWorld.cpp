@@ -42,11 +42,7 @@ void CreateExperiment()
 {
 	gDebug.bXZGridOn=true;
 
-	gExp.VIPs.groundPlane = PxCreatePlane(*gPhysX.mPhysics,PxPlane(PxVec3(0,1,0),0),*gPhysX.mDefaultMaterial);
-	if (!gExp.VIPs.groundPlane)
-		ncc__error("ground plane creation failed!");
-	gExp.VIPs.groundPlane->setName("ground");
-	gPhysX.mScene->addActor(*gExp.VIPs.groundPlane);
+	CreateGroundPlane();
 
 	PxRigidStatic* basket = gPhysX.mPhysics->createRigidStatic(PxTransform(PxVec3(0)));
 	if (!basket)
