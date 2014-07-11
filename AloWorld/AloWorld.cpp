@@ -1,12 +1,13 @@
-///////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////
 // This project exists to test the proper "installation" of the ARSS package,
-// testing compilation and linking with the external libraries. If everything
-// is installed correctly, you should get a window showing ????????????????????
-// and a HUD displaying wall time and Frames-per-second counter (which should be
+// testing compilation and linking with the external libraries. If everything is
+// installed correctly, you should get a glut window with a simple basketball game
+// and a HUD displaying wall time and a Frames-per-second counter (which should be
 // very close to your monitor's refresh rate if v-sync is enabled for your video
-// card. In the terminal window, a message is displayed showing some of your system's
-// environment settings, and a separate message enumerating your GPU's capabilities.
-///////////////////////////////////////////////////////////////////////////////
+// card. In the terminal window, a message is displayed showing some of your
+// system's environment settings, and a separate message enumerating your GPU's
+// capabilities, is a CUDA-capable GPU is found.
+/////////////////////////////////////////////////////////////////////////////////
 
 #include "ARSS.h" // all supporting global, non project-specific entities
 
@@ -40,10 +41,13 @@ int main(int argc, char** argv)
 // Experiment specific functions called from ARSS.cpp
 void CreateExperiment()
 {
+	// This is how you turn on the grid display. (There is also an XY Grid.)
 	gDebug.bXZGridOn=true;
 
+	// This is how you create a ground plane (and save its address in gExp.VIPs).
 	CreateGroundPlane();
 
+	// This is how you create a compound, multi-shape, static actor.
 	PxRigidStatic* basket = gPhysX.mPhysics->createRigidStatic(PxTransform(PxVec3(0)));
 	if (!basket)
 		ncc__error("basket fail!");
@@ -61,12 +65,10 @@ void CreateExperiment()
 
 	gPhysX.mScene->addActor(*basket);
 	
-	gColors.colorBucket.push_back(vector<GLubyte>(3));
-	gColors.colorBucket.back()[0]=ncc::rgb::yLightYellow[0];
-	gColors.colorBucket.back()[1]=ncc::rgb::yLightYellow[1];
-	gColors.colorBucket.back()[2]=ncc::rgb::yLightYellow[2];
-	sboard->userData=&(gColors.colorBucket.back()[0]);
+	// We saved the pointers to the shapes we wish to color separately, with a call to the convenience function...
+	ColorShape(sboard, ncc::rgb::yLightYellow);
 
+	// ... or manually (in case we wish to be efficient with duplicate colors).
 	gColors.colorBucket.push_back(vector<GLubyte>(3));
 	gColors.colorBucket.back()[0]=ncc::rgb::grBlack[0];
 	gColors.colorBucket.back()[1]=ncc::rgb::grBlack[1];
@@ -75,6 +77,7 @@ void CreateExperiment()
 	shoopel2->userData=&(gColors.colorBucket.back()[0]);
 	shoopel3->userData=&(gColors.colorBucket.back()[0]);
 
+	// We signal that the experiment is ready for simulation by setting this flag.
 	gSim.isRunning = true;
 }
 void RebootExperiment()
@@ -116,11 +119,7 @@ void FireAction()
 	if (ball)
 	{
 		ball->setLinearVelocity(gCamera.forward*2.5);
-		gColors.colorBucket.push_back(vector<GLubyte>(3));
-		gColors.colorBucket.back()[0]=ncc::rgb::oDarkOrange[0];
-		gColors.colorBucket.back()[1]=ncc::rgb::oDarkOrange[1];
-		gColors.colorBucket.back()[2]=ncc::rgb::oDarkOrange[2];
-		ball->userData=&(gColors.colorBucket.back()[0]);
+		ColorActor(ball, ncc::rgb::oDarkOrange);
 	}
 	gBall=ball;
 

@@ -1247,6 +1247,14 @@ void ColorActor(PxActor* actor, const GLubyte* color)
 	gColors.colorBucket.back()[2]=color[2];
 	actor->userData=&(gColors.colorBucket.back()[0]);
 }
+void ColorShape(PxShape* shape, const GLubyte* color)
+{
+	gColors.colorBucket.push_back(vector<GLubyte>(3));
+	gColors.colorBucket.back()[0]=color[0];
+	gColors.colorBucket.back()[1]=color[1];
+	gColors.colorBucket.back()[2]=color[2];
+	shape->userData=&(gColors.colorBucket.back()[0]);
+}
 void AddCamera()
 {
 	gCameraLoop.push_back(gCamera);

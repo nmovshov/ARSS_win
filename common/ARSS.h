@@ -270,6 +270,7 @@ void RightArrowAction();
 void RenderActors();
 void DrawActor(PxRigidActor* actor);
 void ColorActor(PxActor*,const GLubyte*);
+void ColorShape(PxShape*,const GLubyte*);
 
 // Shape drawing routine defined in Drawers.cpp
 //void DrawShape(PxShape*);
