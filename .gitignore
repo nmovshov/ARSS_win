@@ -12,6 +12,11 @@
 *.la
 *.a
 
-# Visual Studio local files
+# Visual Studio local files and directories
 *.opensdf
 *.sdf
+*.suo
+Debug/
+Release/
+Production/
+ipch/
