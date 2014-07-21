@@ -29,6 +29,7 @@ namespace rox
 		PxReal boxSize;
 		PxReal spinOmega;
 		bool   bSpin;
+		int	   nbDishSegments;
 	} params;
 
 	struct {

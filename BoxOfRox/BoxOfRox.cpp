@@ -69,6 +69,7 @@ bool ConfigExperimentOptions()
 		rox::eBoxDesign = rox::eAOSAT2;
 	else
 		rox::eBoxDesign = rox::eBAD_BOX_DESIGN;
+	rox::params.nbDishSegments = ncc::GetIntPropertyFromINIFile("box","nb_dish_segments",8,gRun.iniFile.c_str());
 
 	// Parameters for the regolith
 	ncc::GetStrPropertyFromINIFile("regolith","regolith_type","uniform",buf,MAX_CHARS_PER_NAME,gRun.iniFile.c_str());
@@ -537,6 +538,47 @@ void rox::CreateAOSAT2()
 	gColors.colorBucket.back()[2] = ncc::rgb::rRed[2];
 	rox::VIPs.ldoor->userData = &(gColors.colorBucket.back()[0]);
 	rox::VIPs.rdoor->userData = &(gColors.colorBucket.back()[0]);
+
+	// Concave dishes (approximate)
+	{
+		int nbSegments = rox::params.nbDishSegments;
+		PxReal R, X, theta, dtheta, dl;
+		R = 1.5*U;
+		X = PxSqrt(R*R - U*U/4);
+		theta = PxAcos(X/R);
+		dtheta = theta/nbSegments;
+		dl = R*dtheta;
+		PxBoxGeometry dishSegGeom(t/2,U/2,dl/2);
+
+		for (int k=0; k<nbSegments; k++)
+		{
+			PxVec3 disp;
+			PxQuat rot;
+			PxReal x, y, z;
+			PxShape* dishSeg;
+			x = R*PxCos(dtheta*k);
+			y = U/2;
+			z = dl + R*PxSin(dtheta*k);
+
+			disp = PxVec3(x,y,z);
+			rot  = PxQuat(-dtheta*k,PxVec3(0,1,0));
+			dishSeg = theBox->createShape(dishSegGeom,*defmat,PxTransform(disp,rot));
+
+			disp = PxVec3(x,y,-z);
+			rot  = PxQuat(dtheta*k,PxVec3(0,1,0));
+			dishSeg = theBox->createShape(dishSegGeom,*defmat,PxTransform(disp,rot));
+
+			disp = PxVec3(-x,y,z);
+			rot  = PxQuat(dtheta*k,PxVec3(0,1,0));
+			dishSeg = theBox->createShape(dishSegGeom,*defmat,PxTransform(disp,rot));
+
+			disp = PxVec3(-x,y,-z);
+			rot  = PxQuat(-dtheta*k,PxVec3(0,1,0));
+			dishSeg = theBox->createShape(dishSegGeom,*defmat,PxTransform(disp,rot));
+			
+		}
+
+	}
 
 	// Name, color, and register the box
 	theBox->setName("#the_box");
