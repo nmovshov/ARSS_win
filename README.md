@@ -1,7 +1,7 @@
 # _WARNING: UNDER CONSTRUCTION, NOT A WORKING PACKAGE_
 # Astrophysical Rubble piles Simulation Software
 
-This is a software package for modeling and simulating small planetary bodies, as collections of discrete, rigid-body grains of irregular shape. The DEM heavy-lifting is provided by NVIDIA's [PhysX](https://developer.nvidia.com/technologies/physx) engine, and the self-gravity module requires a [CUDA](https://developer.nvidia.com/category/zone/cuda-zone) enabled GPU to run. ARSS was developed and used on a Windows PC, exclusively, although some care has been taken to allow porting to other platforms. The PhysX SDK version >3.0 is required for linux and MacOSX, and the crucial binaries are bundled with ARSS, but you may want to obtain the full PhysX SDK to look at the samples etc.
+This is a software package for modeling and simulating small planetary bodies as collections of discrete, rigid-body grains of irregular shape. The DEM heavy-lifting is provided by NVIDIA's [PhysX](https://developer.nvidia.com/technologies/physx) engine, and the self-gravity module requires a [CUDA](https://developer.nvidia.com/category/zone/cuda-zone) enabled GPU to run. ARSS was developed and used on a Windows PC, exclusively, although some care has been taken to allow porting to other platforms. The PhysX SDK version >3.0 is required for linux and MacOSX, and the crucial binaries are bundled with ARSS, but you may want to obtain the full PhysX SDK to look at the samples etc.
 
 Contents of this package
 + `ARSS_win/`  -  The top-level directory
