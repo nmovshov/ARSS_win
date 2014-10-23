@@ -44,7 +44,7 @@ namespace sgp
 
 	void CreateMakeSGPExperiment();
 	void CreateLoadSGPExperiment();
-	void CreateReadSGPExperiment();
+	bool MakeNewSGP();
 	void GravitateSelf();
 	void GravitateOnHost();
 	void GravitateOnDevice();

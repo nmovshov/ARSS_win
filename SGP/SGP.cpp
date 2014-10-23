@@ -193,6 +193,123 @@ void RightArrowAction()
 
 // SGP namespace functions
 void sgp::CreateMakeSGPExperiment()
+{
+	sgp::MakeNewSGP();
+}
+void sgp::CreateLoadSGPExperiment()
+/* 
+ * The strategy for loading is to choose between two branches. If a valid .repx file
+ * is pointed to by the gRun parameter, the scene will be loaded from this file.
+ * Then the physical properties of all dynamic actors will be updated based on current values.
+ * Otherwise, we try to read initial conditions and shape information from ascii files.
+*/
+{
+	if (gRun.loadSceneFromFile.empty())
+	{
+		//TODO: implement reading from ascii file
+		ncc__error("Scene could not be loaded. Check that repx file exists. Experiment aborted.\a");
+	} 
+	else
+	{
+		if (!LoadSceneFromFile(gRun.loadSceneFromFile))
+			ncc__error("Scene could not be loaded. Check that repx file exists. Experiment aborted.\a");
+		PxU32 nbActors = gPhysX.mScene->getNbActors(gPhysX.roles.dynamics);
+		gPhysX.mScene->getActors(gPhysX.roles.dynamics,gPhysX.cast,nbActors);
+		while (nbActors--)
+		{
+			PxRigidDynamic* actor = gPhysX.cast[nbActors]->isRigidDynamic();
+			actor->setAngularDamping(gPhysX.props.angularDamping);
+			actor->setLinearDamping( gPhysX.props.linearDamping );
+			const char* buf = actor->getName();
+			if (buf && strcmp(buf,"size2")==0)
+				ColorActor(actor,ncc::rgb::oDarkOrange);
+			PxRigidDynamicFlags flags = actor->getRigidDynamicFlags();
+			if (flags & PxRigidDynamicFlag::eKINEMATIC)
+			{
+				sgp::VIPs.nucleus = actor;
+				ColorActor(actor,ncc::rgb::rDarkRed);
+			}
+		}
+	}
+}
+void sgp::GravitateSelf()
+{
+	if (gCUDA.cudaCapable)
+		sgp::GravitateOnDevice();
+	else
+		sgp::GravitateOnHost();
+}
+void sgp::GravitateOnHost()
+/*
+ * This is a semi-optimized all-pairs gravity calculation in a single host thread. Not
+ * usually the best option, but a necessary fall back option.
+*/
+{
+	// Prepare
+	PxU32 nbActors = gPhysX.mScene->getActors(gPhysX.roles.dynamics,gPhysX.cast,MAX_ACTORS_PER_SCENE);
+	if (nbActors<2) return;
+	float *bodies = new float[4*nbActors];
+	float *forces = new float[3*nbActors];
+	if (bodies==NULL || forces==NULL)
+		ncc__error("Error allocating memory for body/forces arrays.");
+
+	// Linearize actor positions
+	for (PxU32 k=0; k<nbActors; k++)
+	{
+		PxRigidDynamic* actor = gPhysX.cast[k]->isRigidDynamic();
+		PxTransform pose = actor->getGlobalPose().transform(actor->getCMassLocalPose());
+		PxVec3 pos = pose.p;
+		bodies[4*k+0] = actor->getMass();
+		bodies[4*k+1] = pos.x;
+		bodies[4*k+2] = pos.y;
+		bodies[4*k+3] = pos.z;
+	}
+
+	// And now, the N^2 double loop.
+	for (PxU32 j=0; j<nbActors; j++)
+	{
+		forces[3*j+0] = forces[3*j+1] = forces[3*j+2] = 0.0f;
+		for (PxU32 k=0; k<j; k++)
+		{
+			PxReal x = bodies[4*k+1] - bodies[4*j+1];
+			PxReal y = bodies[4*k+2] - bodies[4*j+2];
+			PxReal z = bodies[4*k+3] - bodies[4*j+3];
+
+			float distSqr = x*x + y*y + z*z;
+			float distSix = distSqr*distSqr*distSqr;
+			float invDistCube = 1.0f/sqrtf(distSix);
+
+			float s = sgp::units.bigG * bodies[4*j+0] * bodies[4*k+0] * invDistCube;
+
+			forces[3*j+0] += x*s;
+			forces[3*j+1] += y*s;
+			forces[3*j+2] += z*s;
+			forces[3*k+0] -= x*s;
+			forces[3*k+1] -= y*s;
+			forces[3*k+2] -= z*s;
+		}
+	}
+
+	// Add accumulated forces to actors
+	for (PxU32 k=0; k<nbActors; k++)
+	{
+		PxRigidDynamic* actor = gPhysX.cast[k]->isRigidDynamic();
+		PxVec3 F(forces[3*k+0],forces[3*k+1],forces[3*k+2]);
+		actor->addForce(F);
+	}
+
+	// Clean up
+	delete [] bodies;
+	delete [] forces;
+
+	return;
+}
+void sgp::GravitateOnDevice()
+{
+
+}
+
+bool sgp::MakeNewSGP()
 /*
  * This rubble-pile creation method places grains in a volume of an imaginary
  * sphere, and lets them fall in. The size of the sphere is calculated based on
@@ -291,122 +408,7 @@ void sgp::CreateMakeSGPExperiment()
 			gPhysX.mScene->addActor(*aGrain);
 		}
 	}
-}
-void sgp::CreateLoadSGPExperiment()
-/* 
- * The strategy for loading is to choose between two branches. If a valid .repx file
- * is pointed to by the gRun parameter, the scene will be loaded from this file.
- * Then the physical properties of all dynamic actors will be updated based on current values.
- * Otherwise, we call the sister READ function which will try to read initial conditions
- * and shape information from ascii files.
-*/
-{
-	if (gRun.loadSceneFromFile.empty())
-	{
-		sgp::CreateReadSGPExperiment();
-	} 
-	else
-	{
-		if (!LoadSceneFromFile(gRun.loadSceneFromFile))
-			ncc__error("Scene could not be loaded. Check that repx file exists. Experiment aborted.\a");
-		PxU32 nbActors = gPhysX.mScene->getNbActors(gPhysX.roles.dynamics);
-		gPhysX.mScene->getActors(gPhysX.roles.dynamics,gPhysX.cast,nbActors);
-		while (nbActors--)
-		{
-			PxRigidDynamic* actor = gPhysX.cast[nbActors]->isRigidDynamic();
-			actor->setAngularDamping(gPhysX.props.angularDamping);
-			actor->setLinearDamping( gPhysX.props.linearDamping );
-			const char* buf = actor->getName();
-			if (buf && strcmp(buf,"size2")==0)
-				ColorActor(actor,ncc::rgb::oDarkOrange);
-			PxRigidDynamicFlags flags = actor->getRigidDynamicFlags();
-			if (flags & PxRigidDynamicFlag::eKINEMATIC)
-			{
-				sgp::VIPs.nucleus = actor;
-				ColorActor(actor,ncc::rgb::rDarkRed);
-			}
-		}
-	}
-}
-void sgp::CreateReadSGPExperiment()
-{
-	
-}
-void sgp::GravitateSelf()
-{
-	if (gCUDA.cudaCapable)
-		sgp::GravitateOnDevice();
-	else
-		sgp::GravitateOnHost();
-}
-void sgp::GravitateOnHost()
-/*
- * This is a semi-optimized all-pairs gravity calculation in a single host thread. Not
- * usually the best option, but a necessary fall back option.
-*/
-{
-	// Prepare
-	PxU32 nbActors = gPhysX.mScene->getActors(gPhysX.roles.dynamics,gPhysX.cast,MAX_ACTORS_PER_SCENE);
-	if (nbActors<2) return;
-	float *bodies = new float[4*nbActors];
-	float *forces = new float[3*nbActors];
-	if (bodies==NULL || forces==NULL)
-		ncc__error("Error allocating memory for body/forces arrays.");
-
-	// Linearize actor positions
-	for (PxU32 k=0; k<nbActors; k++)
-	{
-		PxRigidDynamic* actor = gPhysX.cast[k]->isRigidDynamic();
-		PxTransform pose = actor->getGlobalPose().transform(actor->getCMassLocalPose());
-		PxVec3 pos = pose.p;
-		bodies[4*k+0] = actor->getMass();
-		bodies[4*k+1] = pos.x;
-		bodies[4*k+2] = pos.y;
-		bodies[4*k+3] = pos.z;
-	}
-
-	// And now, the N^2 double loop.
-	for (PxU32 j=0; j<nbActors; j++)
-	{
-		forces[3*j+0] = forces[3*j+1] = forces[3*j+2] = 0.0f;
-		for (PxU32 k=0; k<j; k++)
-		{
-			PxReal x = bodies[4*k+1] - bodies[4*j+1];
-			PxReal y = bodies[4*k+2] - bodies[4*j+2];
-			PxReal z = bodies[4*k+3] - bodies[4*j+3];
-
-			float distSqr = x*x + y*y + z*z;
-			float distSix = distSqr*distSqr*distSqr;
-			float invDistCube = 1.0f/sqrtf(distSix);
-
-			float s = sgp::units.bigG * bodies[4*j+0] * bodies[4*k+0] * invDistCube;
-
-			forces[3*j+0] += x*s;
-			forces[3*j+1] += y*s;
-			forces[3*j+2] += z*s;
-			forces[3*k+0] -= x*s;
-			forces[3*k+1] -= y*s;
-			forces[3*k+2] -= z*s;
-		}
-	}
-
-	// Add accumulated forces to actors
-	for (PxU32 k=0; k<nbActors; k++)
-	{
-		PxRigidDynamic* actor = gPhysX.cast[k]->isRigidDynamic();
-		PxVec3 F(forces[3*k+0],forces[3*k+1],forces[3*k+2]);
-		actor->addForce(F);
-	}
-
-	// Clean up
-	delete [] bodies;
-	delete [] forces;
-
-	return;
-}
-void sgp::GravitateOnDevice()
-{
-
+	return true;
 }
 
 // End lint level warnings
