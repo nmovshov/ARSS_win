@@ -1,8 +1,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 // Header file for project SGP. Stands for Self-Gravitating Pile. This project
-// is normally used to load a rubble pile from some source, with some initial conditions,
-// and then let it evolve. There are variants for things like impacting the pile
-// with something.
+// is normally used to load a rubble pile from some source, impose some initial
+// conditions, and then let it evolve.
 //
 // Author: Me (Naor)
 ///////////////////////////////////////////////////////////////////////////////
@@ -11,30 +10,32 @@
 #define SGP_H
 namespace sgp
 {
-	enum {eBAD_EXPERIMENT_TYPE, eMAKE_SGP, eLOAD_SGP, eSHAKE_SGP, eKICK_SGP} eExperimentType;
+	enum {eBAD_EXPERIMENT_TYPE, eMAKE_SGP, eLOAD_SGP} eExperimentType;
 
 	struct {
 		unsigned int systemDiag;
 	} hudMsgs;
 
 	struct {
-		PxReal shakeMagnitude;
-		PxReal kickMagnitude;
 		PxReal nucleusRadius;
+		struct {
+			PxReal abAxesRatio;
+			PxReal bcAxesRatio;
+		} spheroid;
 	} params;
 
 	struct {
 		enum {eBAD_GSD_TYPE, eGSD_UNIFORM, eGSD_BIMODAL} type;
 		PxReal size2;
 		PxReal size1;
-		PxU32  numberRatio;
+		PxU32  numberRatio; // used for bimodal
 		PxU32  totalNumber;
 	} gsd; // grain size distribution
 
 	struct {
 		PxRigidDynamic* nucleus;
-		PxRigidDynamic* kicker;
 	} VIPs;
+
 	struct {
 		PxReal length;
 		PxReal mass;

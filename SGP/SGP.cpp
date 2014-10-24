@@ -1,8 +1,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 // Source file for project SGP. Stands for Self-Gravitating Pile. This project
-// is normally used to load a rubble pile from some source, with some initial conditions,
-// and then let it evolve. There are variants for things like impacting the pile
-// with something.
+// is normally used to load a rubble pile from some source, impose some initial
+// conditions, and then let it evolve.
 //
 // Author: Me (Naor)
 ///////////////////////////////////////////////////////////////////////////////
@@ -59,13 +58,15 @@ bool ConfigExperimentOptions()
 		sgp::eExperimentType = sgp::eMAKE_SGP;
 	else if (strcmp(buf,"load_sgp")==0)
 		sgp::eExperimentType = sgp::eLOAD_SGP;
-	else if	(strcmp(buf,"shake_sgp")==0)
-		sgp::eExperimentType = sgp::eSHAKE_SGP;
-	else if (strcmp(buf,"kick_sgp")==0)
-		sgp::eExperimentType = sgp::eKICK_SGP;
 	else
 		sgp::eExperimentType = sgp::eBAD_EXPERIMENT_TYPE;
 	
+	// Spheroid shape parameters
+	ncc::GetStrPropertyFromINIFile("experiment","spheroid_axes_ratio_ab","1",buf,MAX_CHARS_PER_NAME,gRun.iniFile.c_str());
+	sgp::params.spheroid.abAxesRatio = atof(buf);
+	ncc::GetStrPropertyFromINIFile("experiment","spheroid_axes_ratio_bc","1",buf,MAX_CHARS_PER_NAME,gRun.iniFile.c_str());
+	sgp::params.spheroid.bcAxesRatio = atof(buf);
+
 	// Parameters of the grain size distribution
 	ncc::GetStrPropertyFromINIFile("experiment","gsd_type","uniform",buf,MAX_CHARS_PER_NAME,gRun.iniFile.c_str());
 	if		(strcmp(buf,"uniform")==0)
@@ -85,12 +86,6 @@ bool ConfigExperimentOptions()
 
 	ncc::GetStrPropertyFromINIFile("experiment","nucleus_radius", "0",buf,MAX_CHARS_PER_NAME,gRun.iniFile.c_str());
 	sgp::params.nucleusRadius = atof(buf);
-
-	// Parameters for sgp agitation
-	ncc::GetStrPropertyFromINIFile("experiment","shake_magnitude","0",buf,MAX_CHARS_PER_NAME,gRun.iniFile.c_str());
-	sgp::params.shakeMagnitude = atof(buf);
-	ncc::GetStrPropertyFromINIFile("experiment","kick_magnitude","0",buf,MAX_CHARS_PER_NAME,gRun.iniFile.c_str());
-	sgp::params.kickMagnitude = atof(buf);
 
 	// Code units and scaling
 	ncc::GetStrPropertyFromINIFile("units","big_g","0",buf,MAX_CHARS_PER_NAME,gRun.iniFile.c_str());
@@ -152,15 +147,6 @@ void CreateExperiment()
 		ncc__error("Unknown experiment type. Experiment aborted.\a");
 	}
 	
-	// Move the camera to where you can see TODO: replace with a function call
-	FindExtremers();
-	if (gExp.VIPs.extremers.outmost)
-		gCamera.pos.z = gExp.VIPs.extremers.outmost->getGlobalPose().p.z + 10*gExp.defGrainSize;
-
-	// Start the action
-	gSim.isRunning=true;
-	gSim.bPause=false;
-	gCUDA.cudaCapable=false; // TODO: remove when cuda gravity is implemented
 	RefreshHUD();
 }
 void RebootExperiment()
@@ -193,8 +179,24 @@ void RightArrowAction()
 
 // SGP namespace functions
 void sgp::CreateMakeSGPExperiment()
+/*
+ * Make fresh pile with geometry specified by free parameters. Let it self-gravitate
+ * to a steady state.
+*/
 {
+	// Put rubble elements in initial positions
 	sgp::MakeNewSGP();
+
+	// Move the camera to a good location
+	FindExtremers();
+	if (gExp.VIPs.extremers.outmost)
+		gCamera.pos.z = gExp.VIPs.extremers.outmost->getGlobalPose().p.z + 10*gExp.defGrainSize;
+
+	// Start the action
+	gSim.isRunning=true;
+	gSim.bPause=true;
+	gCUDA.cudaCapable=false; // TODO: remove when CUDA gravity is implemented
+
 }
 void sgp::CreateLoadSGPExperiment()
 /* 
@@ -311,13 +313,16 @@ void sgp::GravitateOnDevice()
 
 bool sgp::MakeNewSGP()
 /*
- * This rubble-pile creation method places grains in a volume of an imaginary
- * sphere, and lets them fall in. The size of the sphere is calculated based on
- * the number and size scale of rubble grains. The individual grain sizes will be
- * drawn from a size distribution (sgp::gsd).
+ * This function creates a rubble pile by placing grains in a volume of an
+ * imaginary spheroid, and lets them fall in. The shape of the spheroid is
+ * adjusted based on the number and size scale of rubble grains. The individual
+ * grain sizes will be drawn from a size distribution (sgp::gsd). An optional
+ * special grain called the nucleus is placed at the center.
  * 
- * In the "uniform" variant, all grains share a convex mesh, just scaled differently.
- * TODO: In the non-uniform variant, grains are generated individually, with a size scale.
+ * In the "uniform" variant, all grains share a convex mesh, just scaled
+ * differently.
+ * TODO: In the non-uniform variant, grains are generated individually, with a
+ * size scale.
  * TODO: Implement more size distributions (currently bimodal)
  * TODOL Implement more nucleus options (currently capsule)
 */
