@@ -62,10 +62,10 @@ bool ConfigExperimentOptions()
 		sgp::eExperimentType = sgp::eBAD_EXPERIMENT_TYPE;
 	
 	// Spheroid shape parameters
-	ncc::GetStrPropertyFromINIFile("experiment","spheroid_axes_ratio_ab","1",buf,MAX_CHARS_PER_NAME,gRun.iniFile.c_str());
-	sgp::params.spheroid.abAxesRatio = atof(buf);
-	ncc::GetStrPropertyFromINIFile("experiment","spheroid_axes_ratio_bc","1",buf,MAX_CHARS_PER_NAME,gRun.iniFile.c_str());
-	sgp::params.spheroid.bcAxesRatio = atof(buf);
+	ncc::GetStrPropertyFromINIFile("experiment","ellipsoid_axes_ratio_ab","1",buf,MAX_CHARS_PER_NAME,gRun.iniFile.c_str());
+	sgp::params.ellipsoid.abAxesRatio = atof(buf);
+	ncc::GetStrPropertyFromINIFile("experiment","ellipsoid_axes_ratio_bc","1",buf,MAX_CHARS_PER_NAME,gRun.iniFile.c_str());
+	sgp::params.ellipsoid.bcAxesRatio = atof(buf);
 
 	// Parameters of the grain size distribution
 	ncc::GetStrPropertyFromINIFile("experiment","gsd_type","uniform",buf,MAX_CHARS_PER_NAME,gRun.iniFile.c_str());

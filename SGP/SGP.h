@@ -21,7 +21,7 @@ namespace sgp
 		struct {
 			PxReal abAxesRatio;
 			PxReal bcAxesRatio;
-		} spheroid;
+		} ellipsoid;
 	} params;
 
 	struct {
