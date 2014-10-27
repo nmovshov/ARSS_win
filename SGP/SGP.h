@@ -20,7 +20,7 @@ namespace sgp
 		PxReal nucleusRadius;
 		struct {
 			PxReal abAxesRatio;
-			PxReal bcAxesRatio;
+			PxReal acAxesRatio;
 		} ellipsoid;
 	} params;
 

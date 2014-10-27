@@ -64,8 +64,8 @@ bool ConfigExperimentOptions()
 	// Spheroid shape parameters
 	ncc::GetStrPropertyFromINIFile("experiment","ellipsoid_axes_ratio_ab","1",buf,MAX_CHARS_PER_NAME,gRun.iniFile.c_str());
 	sgp::params.ellipsoid.abAxesRatio = atof(buf);
-	ncc::GetStrPropertyFromINIFile("experiment","ellipsoid_axes_ratio_bc","1",buf,MAX_CHARS_PER_NAME,gRun.iniFile.c_str());
-	sgp::params.ellipsoid.bcAxesRatio = atof(buf);
+	ncc::GetStrPropertyFromINIFile("experiment","ellipsoid_axes_ratio_ac","1",buf,MAX_CHARS_PER_NAME,gRun.iniFile.c_str());
+	sgp::params.ellipsoid.acAxesRatio = atof(buf);
 
 	// Parameters of the grain size distribution
 	ncc::GetStrPropertyFromINIFile("experiment","gsd_type","uniform",buf,MAX_CHARS_PER_NAME,gRun.iniFile.c_str());
@@ -335,7 +335,8 @@ bool sgp::MakeNewSGP()
 	vector<PxVec3> positions(sgp::gsd.totalNumber);
 	PxReal safeDL = PxMax(sgp::gsd.size1,sgp::gsd.size2) * 2.06;
 
-	PxReal r = sgp::params.nucleusRadius, teta = 0, phi = 0; // the center is reserved for a kinematic nucleus
+	PxReal r = sgp::params.nucleusRadius, teta = 0, phi = 0; // the center is reserved for an optional kinematic nucleus
+	PxU32 lastLayerOccupancy = 0;
 	for (PxU32 k=0; k<positions.size(); k++)
 	{
 		PxReal dr = 0, dteta = 0, dphi=0;
@@ -357,13 +358,22 @@ bool sgp::MakeNewSGP()
 		if (teta == 0) {
 			dr = safeDL;
 			r += dr;
+			lastLayerOccupancy = 0;
 		}
 
 		PxReal x = r * sin(teta) * cos(phi);
-		PxReal y = r * sin(teta) * sin(phi);
-		PxReal z = r * cos(teta);
+		PxReal y = (1/sgp::params.ellipsoid.abAxesRatio) * r * sin(teta) * sin(phi);
+		PxReal z = (1/sgp::params.ellipsoid.acAxesRatio) * r * cos(teta);
 		positions[k] = PxVec3(x,y,z);
+		lastLayerOccupancy++;
 	}
+
+	// shave the last layer
+	while (lastLayerOccupancy--)
+	{
+		positions.pop_back();
+	}
+	sgp::gsd.totalNumber = positions.size();
 
 	// place the nucleus
 	if (sgp::params.nucleusRadius)
