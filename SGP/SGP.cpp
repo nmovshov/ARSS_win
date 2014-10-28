@@ -103,11 +103,13 @@ void CustomizeGLUT()
 }
 void CustomizeHUD()
 {
-
+	sgp::hudMsgs.nbActors = gHUD.hud.AddElement("Element count = ",0.8,0.04);
 }
 void RefreshCustomHUDElements()
 {
-
+	char buf[MAX_CHARS_PER_NAME];
+	sprintf(buf,"Element count = %u",gPhysX.mScene->getNbActors(gPhysX.roles.dynamics));
+	gHUD.hud.SetElement(sgp::hudMsgs.nbActors,buf);
 }
 void FireAction()
 {
@@ -118,7 +120,14 @@ void FireAction()
 }
 void LogExperiment()
 {
-
+	switch (sgp::eExperimentType)
+	{
+	case sgp::eMAKE_SGP:
+		break;
+	case sgp::eBAD_EXPERIMENT_TYPE: // intentional fall through
+	default:
+		ncc__error("Unkown experiment type. Nothing logged.");
+	}
 }
 void PrintDebug()
 {

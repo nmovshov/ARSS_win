@@ -14,6 +14,7 @@ namespace sgp
 
 	struct {
 		unsigned int systemDiag;
+		unsigned int nbActors;
 	} hudMsgs;
 
 	struct {
