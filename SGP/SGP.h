@@ -13,8 +13,10 @@ namespace sgp
 	enum {eBAD_EXPERIMENT_TYPE, eMAKE_SGP, eLOAD_SGP} eExperimentType;
 
 	struct {
-		unsigned int systemDiag;
-		unsigned int nbActors;
+		unsigned int systemDiag1;
+		unsigned int systemDiag2;
+		unsigned int systemDiag3;
+		unsigned int systemDiag4;
 	} hudMsgs;
 
 	struct {
@@ -50,5 +52,6 @@ namespace sgp
 	void GravitateSelf();
 	void GravitateOnHost();
 	void GravitateOnDevice();
+	void RefreshMakeSGPHUD();
 };
 #endif

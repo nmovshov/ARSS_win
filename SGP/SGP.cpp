@@ -103,13 +103,23 @@ void CustomizeGLUT()
 }
 void CustomizeHUD()
 {
-	sgp::hudMsgs.nbActors = gHUD.hud.AddElement("Element count = ",0.8,0.04);
+	sgp::hudMsgs.systemDiag1 = gHUD.hud.AddElement("",0.72,0.04);
+	sgp::hudMsgs.systemDiag2 = gHUD.hud.AddElement("",0.72,0.08);
+	sgp::hudMsgs.systemDiag3 = gHUD.hud.AddElement("",0.72,0.12);
+	sgp::hudMsgs.systemDiag4 = gHUD.hud.AddElement("",0.72,0.16);
 }
 void RefreshCustomHUDElements()
 {
-	char buf[MAX_CHARS_PER_NAME];
-	sprintf(buf,"Element count = %u",gPhysX.mScene->getNbActors(gPhysX.roles.dynamics));
-	gHUD.hud.SetElement(sgp::hudMsgs.nbActors,buf);
+	switch (sgp::eExperimentType)
+	{
+	case sgp::eMAKE_SGP:
+		sgp::RefreshMakeSGPHUD();
+		break;
+	case sgp::eBAD_EXPERIMENT_TYPE: // intentional fall through
+	default:
+		break;
+
+	}
 }
 void FireAction()
 {
@@ -127,6 +137,7 @@ void LogExperiment()
 	case sgp::eBAD_EXPERIMENT_TYPE: // intentional fall through
 	default:
 		ncc__error("Unkown experiment type. Nothing logged.");
+		break;
 	}
 }
 void PrintDebug()
@@ -142,7 +153,6 @@ void RenderOtherStuff()
 }
 void CreateExperiment()
 {
-	gDebug.bXYGridOn=true;
 	switch (sgp::eExperimentType)
 	{
 	case sgp::eMAKE_SGP:
@@ -433,6 +443,26 @@ bool sgp::MakeNewSGP()
 		}
 	}
 	return true;
+}
+
+void sgp::RefreshMakeSGPHUD()
+{
+	char buf[MAX_CHARS_PER_NAME];
+
+	// Rubble element count
+	sprintf(buf,"Element count = %u",gPhysX.mScene->getNbActors(gPhysX.roles.dynamics));
+	gHUD.hud.SetElement(sgp::hudMsgs.systemDiag1,buf);
+
+	// Ellipsoid dimensions
+	FindExtremers();
+
+	PxReal a = gExp.VIPs.extremers.rightmost->getGlobalPose().p.x - gExp.VIPs.extremers.leftmost->getGlobalPose().p.x;
+	PxReal b = gExp.VIPs.extremers.outmost->getGlobalPose().p.z - gExp.VIPs.extremers.inmost->getGlobalPose().p.z;
+	PxReal c = gExp.VIPs.extremers.upmost->getGlobalPose().p.y - gExp.VIPs.extremers.downmost->getGlobalPose().p.y;
+	sprintf(buf,"Ellipsoid a/b axes ratio = %-8.2f",a/b);
+	gHUD.hud.SetElement(sgp::hudMsgs.systemDiag2,buf);
+	sprintf(buf,"Ellipsoid a/c axes ratio = %-8.2f",a/c);
+	gHUD.hud.SetElement(sgp::hudMsgs.systemDiag3,buf);
 }
 
 // End lint level warnings
