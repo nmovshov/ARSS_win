@@ -133,10 +133,11 @@ void LogExperiment()
 	switch (sgp::eExperimentType)
 	{
 	case sgp::eMAKE_SGP:
+		sgp::LogMakeSGPExperiment();
 		break;
 	case sgp::eBAD_EXPERIMENT_TYPE: // intentional fall through
 	default:
-		ncc__error("Unkown experiment type. Nothing logged.");
+		ncc__warning("Unkown experiment type. Nothing logged.");
 		break;
 	}
 }
@@ -463,6 +464,11 @@ void sgp::RefreshMakeSGPHUD()
 	gHUD.hud.SetElement(sgp::hudMsgs.systemDiag2,buf);
 	sprintf(buf,"Ellipsoid a/c axes ratio = %-8.2f",a/c);
 	gHUD.hud.SetElement(sgp::hudMsgs.systemDiag3,buf);
+}
+
+void sgp::LogMakeSGPExperiment()
+{
+	printf("Log\n");
 }
 
 // End lint level warnings

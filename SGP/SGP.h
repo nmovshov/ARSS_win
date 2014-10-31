@@ -53,5 +53,6 @@ namespace sgp
 	void GravitateOnHost();
 	void GravitateOnDevice();
 	void RefreshMakeSGPHUD();
+	void LogMakeSGPExperiment();
 };
 #endif
