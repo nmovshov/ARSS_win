@@ -65,6 +65,7 @@ struct arss_glut_hud {
 	HUD hud;
 	unsigned int FPS;
 	unsigned int WALL_TIME;
+	unsigned int CODE_TIME;
 	unsigned int DBG_MSG;
 	unsigned int PAUSED;
 	unsigned int HELP;

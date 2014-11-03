@@ -160,11 +160,12 @@ bool InitHUD()
 {
 	// Set up ARSS-wide HUD elements
 	gHUD.FPS		= gHUD.hud.AddElement("FPS = ",0.04,0.04);
-	gHUD.WALL_TIME	= gHUD.hud.AddElement("Wall time = ", 0.04,0.08);
+	gHUD.WALL_TIME	= gHUD.hud.AddElement("Wall time = ",0.04,0.08);
+	gHUD.CODE_TIME  = gHUD.hud.AddElement("Code time = ",0.04,0.12);
 	gHUD.DBG_MSG	= gHUD.hud.AddElement("",0.5,0.66);
 	gHUD.PAUSED		= gHUD.hud.AddElement("",0.4,0.5);
 	gHUD.HELP       = gHUD.hud.AddElement("",0.4,0.2);
-	gHUD.CAMERA     = gHUD.hud.AddElement("Camera 0",0.04,0.12);
+	gHUD.CAMERA     = gHUD.hud.AddElement("Camera 0",0.04,0.16);
 
 	// Set up experiment specific HUD elements
 	CustomizeHUD();
@@ -575,18 +576,30 @@ void AdvanceSimulation(PxReal dt)
 }
 void RefreshHUD()
 {
-	char s[256];
-	sprintf(s,"Wall time = %u",gSim.wallTime/1000U);
-	gHUD.hud.SetElement(gHUD.WALL_TIME,s);
-	sprintf(s,"FPS = %5.1f",gSim.fps);
-	gHUD.hud.SetElement(gHUD.FPS,s);
+	char buf[256];
+
+	// Wall time
+	sprintf(buf,"Wall time = %u",gSim.wallTime/1000U);
+	gHUD.hud.SetElement(gHUD.WALL_TIME,buf);
+
+	// Code time
+	sprintf(buf,"Code time = %0.3g (dt = %g)",gSim.codeTime,gSim.timeStep);
+	gHUD.hud.SetElement(gHUD.CODE_TIME,buf);
+
+	// FPS
+	sprintf(buf,"FPS = %5.1f",gSim.fps);
+	gHUD.hud.SetElement(gHUD.FPS,buf);
+
+	// Paused
 	if (gSim.bPause)
-		sprintf(s,"PAUSED - Hit `p' to unpause");
+		sprintf(buf,"PAUSED - Hit `p' to unpause");
 	else
-		sprintf(s,"");
-	gHUD.hud.SetElement(gHUD.PAUSED,s);
-	sprintf(s,"Camera %d",gCamera.liveCamera);
-	gHUD.hud.SetElement(gHUD.CAMERA,s);
+		sprintf(buf,"");
+	gHUD.hud.SetElement(gHUD.PAUSED,buf);
+
+	// Camera
+	sprintf(buf,"Camera %d",gCamera.liveCamera);
+	gHUD.hud.SetElement(gHUD.CAMERA,buf);
 
 	RefreshCustomHUDElements(); // Project specific HUD elements, implemented in project source
 }
