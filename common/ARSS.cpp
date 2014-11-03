@@ -758,7 +758,7 @@ void UpdateIntegralsOfMotion()
 	}
 	if (M_system) {
 		PxReal perUnitMass=(1.0f/M_system);
-		gExp.IOMs.systemCM *= perUnitMass;
+		gExp.IOMs.systemCM *= perUnitMass; // CM location in world frame
 		gExp.IOMs.systemLM *= perUnitMass;
 		gExp.IOMs.systemKE *= perUnitMass;
 		gExp.IOMs.systemAM *= perUnitMass;

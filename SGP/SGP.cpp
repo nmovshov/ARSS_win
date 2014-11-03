@@ -217,8 +217,8 @@ void sgp::CreateMakeSGPExperiment()
 	{
 		ostringstream header;
 		header << "# This is the run log of " << gRun.baseName << endl;
-		header << "# Columns are:" << endl;
-		header << "# [time (code units)]    [SGP a/b axes ratio]    [SGP a/c axes ratio]" << endl;
+		header << "# Columns are (values in code units):" << endl;
+		header << "# [time]    [SGP a/b axes ratio]    [SGP a/c axes ratio]" << endl;
 		ofstream fbuf(gRun.outFile.c_str(),ios::trunc);
 		if (!fbuf.is_open())
 			ncc__error("Could not start a log. Experiment aborted.\a\n");
@@ -406,7 +406,6 @@ bool sgp::MakeNewSGP()
 	{
 		positions.pop_back();
 	}
-	sgp::gsd.totalNumber = positions.size();
 
 	// place the nucleus
 	if (sgp::params.nucleusRadius)
@@ -469,10 +468,15 @@ void sgp::RefreshMakeSGPHUD()
 
 	// Ellipsoid dimensions
 	FindExtremers();
-
-	PxReal a = gExp.VIPs.extremers.rightmost->getGlobalPose().p.x - gExp.VIPs.extremers.leftmost->getGlobalPose().p.x;
-	PxReal b = gExp.VIPs.extremers.outmost->getGlobalPose().p.z - gExp.VIPs.extremers.inmost->getGlobalPose().p.z;
-	PxReal c = gExp.VIPs.extremers.upmost->getGlobalPose().p.y - gExp.VIPs.extremers.downmost->getGlobalPose().p.y;
+	PxVec3 rRight = gExp.VIPs.extremers.rightmost->getGlobalPose().transform(gExp.VIPs.extremers.rightmost->getCMassLocalPose()).p;
+	PxVec3 rLeft  = gExp.VIPs.extremers.leftmost->getGlobalPose().transform(gExp.VIPs.extremers.leftmost->getCMassLocalPose()).p;
+	PxVec3 rUp    = gExp.VIPs.extremers.upmost->getGlobalPose().transform(gExp.VIPs.extremers.upmost->getCMassLocalPose()).p;
+	PxVec3 rDown  = gExp.VIPs.extremers.downmost->getGlobalPose().transform(gExp.VIPs.extremers.downmost->getCMassLocalPose()).p;
+	PxVec3 rIn    = gExp.VIPs.extremers.inmost->getGlobalPose().transform(gExp.VIPs.extremers.inmost->getCMassLocalPose()).p;
+	PxVec3 rOut   = gExp.VIPs.extremers.outmost->getGlobalPose().transform(gExp.VIPs.extremers.outmost->getCMassLocalPose()).p;
+	PxReal a = rRight.x - rLeft.x;
+	PxReal b = rOut.z - rIn.z;
+	PxReal c = rUp.y - rDown.y;
 	sprintf(buf,"Ellipsoid a/b axes ratio = %-8.2f",a/b);
 	gHUD.hud.SetElement(sgp::hudMsgs.systemDiag2,buf);
 	sprintf(buf,"Ellipsoid a/c axes ratio = %-8.2f",a/c);
@@ -481,10 +485,16 @@ void sgp::RefreshMakeSGPHUD()
 
 void sgp::LogMakeSGPExperiment()
 {
+	// Shape information
 	FindExtremers();
 	PxReal a = gExp.VIPs.extremers.rightmost->getGlobalPose().p.x - gExp.VIPs.extremers.leftmost->getGlobalPose().p.x;
 	PxReal b = gExp.VIPs.extremers.outmost->getGlobalPose().p.z - gExp.VIPs.extremers.inmost->getGlobalPose().p.z;
 	PxReal c = gExp.VIPs.extremers.upmost->getGlobalPose().p.y - gExp.VIPs.extremers.downmost->getGlobalPose().p.y;
+
+	// Potential energy information
+	UpdateIntegralsOfMotion();
+
+	// Format and write it to  log
 	char buf[MAX_CHARS_PER_NAME];
 	sprintf(buf,"%f    %f    %f",gSim.codeTime,a/b,a/c);
 	ncc::logEntry(gRun.outFile.c_str(),buf);
