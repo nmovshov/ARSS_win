@@ -280,10 +280,10 @@ bool InitCUDA(int devToUse)
 	switch (err)
 	{
 	case cudaErrorInsufficientDriver:
-		ncc__warning("\aA CUDA driver is not installed, or the installed driver is too old.\n\tFalling back on software mode.");
+		ncc__warning("A CUDA driver is not installed, or the installed driver is too old.\n\tFalling back on software mode.");
 		break;
 	case cudaErrorNoDevice:
-		printf("\aNo CUDA capable device detected.\n\tFalling back on software mode.");
+		printf("No CUDA capable device detected.\n\tFalling back on software mode.");
 		break;
 	case cudaSuccess:
 		success=true;

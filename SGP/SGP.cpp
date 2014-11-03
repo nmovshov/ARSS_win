@@ -212,6 +212,19 @@ void sgp::CreateMakeSGPExperiment()
 	if (gExp.VIPs.extremers.outmost)
 		gCamera.pos.z = gExp.VIPs.extremers.outmost->getGlobalPose().p.z + 10*gExp.defGrainSize;
 
+	// Start a log
+	if (gRun.outputFrequency)
+	{
+		ostringstream header;
+		header << "# This is the run log of " << gRun.baseName << endl;
+		header << "# Columns are:" << endl;
+		header << "# [time (code units)]    [SGP a/b axes ratio]    [SGP a/c axes ratio]" << endl;
+		ofstream fbuf(gRun.outFile.c_str(),ios::trunc);
+		if (!fbuf.is_open())
+			ncc__error("Could not start a log. Experiment aborted.\a\n");
+		fbuf << header.str() << endl;
+	}
+
 	// Start the action
 	gSim.isRunning=true;
 	gSim.bPause=true;
@@ -468,7 +481,13 @@ void sgp::RefreshMakeSGPHUD()
 
 void sgp::LogMakeSGPExperiment()
 {
-	printf("Log\n");
+	FindExtremers();
+	PxReal a = gExp.VIPs.extremers.rightmost->getGlobalPose().p.x - gExp.VIPs.extremers.leftmost->getGlobalPose().p.x;
+	PxReal b = gExp.VIPs.extremers.outmost->getGlobalPose().p.z - gExp.VIPs.extremers.inmost->getGlobalPose().p.z;
+	PxReal c = gExp.VIPs.extremers.upmost->getGlobalPose().p.y - gExp.VIPs.extremers.downmost->getGlobalPose().p.y;
+	char buf[MAX_CHARS_PER_NAME];
+	sprintf(buf,"%f    %f    %f",gSim.codeTime,a/b,a/c);
+	ncc::logEntry(gRun.outFile.c_str(),buf);
 }
 
 // End lint level warnings

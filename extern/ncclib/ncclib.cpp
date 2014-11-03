@@ -951,7 +951,10 @@ bool logEntry(const char* filename, const char* entry, bool newlog)
 	if (newlog) // make sure file doesn't already exist
 	{
 		ifstream logfile(filename);
-		if (logfile.is_open()) return false; // file will be closed by ~ifstream
+		if (logfile.is_open()) {
+			ncc__warning("File already exists and will not be overwritten. Nothing logged.");
+			return false; // file will be closed by ~ifstream
+		}
 	}
 	ofstream logfile(filename, ios::app);
 	if (!logfile.is_open()) return false;
