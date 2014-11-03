@@ -44,9 +44,11 @@
 // 	      c-style file I/O.
 // 	  4c) RSReadMatrixFromFile(). A reasonably safe matrix reader using c++ STL.
 // 	      But it doesn't work with gcc. Better to use Load instead anyway.
-//        4d) load(). A reasonably safe matrix reader using nr3 matrix types. This
-//            is the recommended function for the basic task of reading in data
-//            in a rectangular array.
+//    4d) load(). A reasonably safe matrix reader using nr3 matrix types. This
+//        is the recommended function for the basic task of reading in data
+//        in a rectangular array.
+//    4e) logEntry(). A pedestrian convenience function that appends one line to an
+//        ascii file.
 // 	
 // 	 5) VEC3F and VEC3D. Rudimentary public access Cartesian 3-vector class.
 //
@@ -944,6 +946,20 @@ parameter indicates success.
 	return true;
 } // END LOAD
 
+bool logEntry(const char* filename, const char* entry, bool newlog)
+{
+	if (newlog) // make sure file doesn't already exist
+	{
+		ifstream logfile(filename);
+		if (logfile.is_open()) return false; // file will be closed by ~ifstream
+	}
+	ofstream logfile(filename, ios::app);
+	if (!logfile.is_open()) return false;
+	logfile << entry << endl;
+	logfile.close();
+
+	return true;
+} // LOGENTRY
 // Classes
 
 // VEC3F - A rudimentary public access Cartesian 3-vector class.
