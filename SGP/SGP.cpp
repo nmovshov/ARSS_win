@@ -107,6 +107,7 @@ void CustomizeHUD()
 	sgp::hudMsgs.systemDiag2 = gHUD.hud.AddElement("",0.72,0.08);
 	sgp::hudMsgs.systemDiag3 = gHUD.hud.AddElement("",0.72,0.12);
 	sgp::hudMsgs.systemDiag4 = gHUD.hud.AddElement("",0.72,0.16);
+	sgp::hudMsgs.systemDiag5 = gHUD.hud.AddElement("",0.72,0.20);
 }
 void RefreshCustomHUDElements()
 {
@@ -218,7 +219,7 @@ void sgp::CreateMakeSGPExperiment()
 		ostringstream header;
 		header << "# This is the run log of " << gRun.baseName << endl;
 		header << "# Columns are (values in code units):" << endl;
-		header << "# [time]    [SGP a/b axes ratio]    [SGP a/c axes ratio]    [system binding energy]" << endl;
+		header << "# [time]    [SGP a axis]    [SGP a/b axes ratio]    [SGP a/c axes ratio]    [system binding energy]" << endl;
 		ofstream fbuf(gRun.outFile.c_str(),ios::trunc);
 		if (!fbuf.is_open())
 			ncc__error("Could not start a log. Experiment aborted.\a\n");
@@ -476,15 +477,17 @@ void sgp::RefreshMakeSGPHUD()
 	PxReal a = rRight.x - rLeft.x;
 	PxReal b = rOut.z - rIn.z;
 	PxReal c = rUp.y - rDown.y;
-	sprintf(buf,"Ellipsoid a/b axes ratio = %-8.2f",a/b);
+	sprintf(buf,"Ellipsoid a axis = %g",a);
 	gHUD.hud.SetElement(sgp::hudMsgs.systemDiag2,buf);
-	sprintf(buf,"Ellipsoid a/c axes ratio = %-8.2f",a/c);
+	sprintf(buf,"Ellipsoid a/b axes ratio = %-8.2f",a/b);
 	gHUD.hud.SetElement(sgp::hudMsgs.systemDiag3,buf);
+	sprintf(buf,"Ellipsoid a/c axes ratio = %-8.2f",a/c);
+	gHUD.hud.SetElement(sgp::hudMsgs.systemDiag4,buf);
 
 	// Gravitational binding energy
 	PxReal V = sgp::SystemPotentialEnergy();
 	sprintf(buf,"PE_tot = %g",V);
-	gHUD.hud.SetElement(sgp::hudMsgs.systemDiag4,buf);
+	gHUD.hud.SetElement(sgp::hudMsgs.systemDiag5,buf);
 }
 void sgp::LogMakeSGPExperiment()
 {
@@ -505,7 +508,7 @@ void sgp::LogMakeSGPExperiment()
 
 	// Format and write it to  log
 	char buf[MAX_CHARS_PER_NAME];
-	sprintf(buf,"%f    %f    %f    %g",gSim.codeTime,a/b,a/c,V);
+	sprintf(buf,"%f    %g    %f    %f    %g",gSim.codeTime,a,a/b,a/c,V);
 	ncc::logEntry(gRun.outFile.c_str(),buf);
 }
 physx::PxReal sgp::SystemPotentialEnergy()

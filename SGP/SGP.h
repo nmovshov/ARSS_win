@@ -17,6 +17,7 @@ namespace sgp
 		unsigned int systemDiag2;
 		unsigned int systemDiag3;
 		unsigned int systemDiag4;
+		unsigned int systemDiag5;
 	} hudMsgs;
 
 	struct {
