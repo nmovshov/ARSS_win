@@ -686,17 +686,17 @@ bool ConfigARSSOptions()
 	if (strcmp(buf,"on")==0) gDebug.bXZGridOn = true;
 
 	// PhysX options
-	ncc::GetStrPropertyFromINIFile("PhysX","sleep_threshold",     "-1",buf,MAX_CHARS_PER_NAME,gRun.iniFile.c_str()); // default is scaled
+	ncc::GetStrPropertyFromINIFile("PhysX","sleep_threshold",     "-1",buf,MAX_CHARS_PER_NAME,gRun.iniFile.c_str()); // default = 0.00005*velocityScale^2 (per actor)
 	gPhysX.props.sleepThreshold = atof(buf);
-	ncc::GetStrPropertyFromINIFile("PhysX","bounce_threshold",    "-1",buf,MAX_CHARS_PER_NAME,gRun.iniFile.c_str()); // default NOT scaled (=2)
+	ncc::GetStrPropertyFromINIFile("PhysX","bounce_threshold",    "-1",buf,MAX_CHARS_PER_NAME,gRun.iniFile.c_str()); // default = 0.2*velocityScale (per scene)
 	gPhysX.props.bounceThreshold = atof(buf);
-	ncc::GetStrPropertyFromINIFile("PhysX","linear_damping",      "-1",buf,MAX_CHARS_PER_NAME,gRun.iniFile.c_str()); // default is zero
+	ncc::GetStrPropertyFromINIFile("PhysX","linear_damping",      "-1",buf,MAX_CHARS_PER_NAME,gRun.iniFile.c_str()); // default = 0 (per actor)
 	gPhysX.props.linearDamping = atof(buf);
-	ncc::GetStrPropertyFromINIFile("PhysX","angular_damping",     "-1",buf,MAX_CHARS_PER_NAME,gRun.iniFile.c_str()); // default is NOT scaled (=0.05)
+	ncc::GetStrPropertyFromINIFile("PhysX","angular_damping",     "-1",buf,MAX_CHARS_PER_NAME,gRun.iniFile.c_str()); // default = 0.05 (per actor)
 	gPhysX.props.angularDamping = atof(buf);
-	ncc::GetStrPropertyFromINIFile("PhysX","max_angular_velocity","-1",buf,MAX_CHARS_PER_NAME,gRun.iniFile.c_str()); // default is NOT scaled (=7)
+	ncc::GetStrPropertyFromINIFile("PhysX","max_angular_velocity","-1",buf,MAX_CHARS_PER_NAME,gRun.iniFile.c_str()); // default = 7 (per actor)
 	gPhysX.props.maxAngularVelocity = atof(buf);
-	ncc::GetStrPropertyFromINIFile("PhysX","skin_width",          "-1",buf,MAX_CHARS_PER_NAME,gRun.iniFile.c_str()); // default is scaled
+	ncc::GetStrPropertyFromINIFile("PhysX","skin_width",          "-1",buf,MAX_CHARS_PER_NAME,gRun.iniFile.c_str()); // default = 0.02*lengthScale (per shape)
 	gPhysX.props.skinWidth = atof(buf);
 
 	// Scaling parameters
