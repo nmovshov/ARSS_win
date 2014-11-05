@@ -218,7 +218,7 @@ void sgp::CreateMakeSGPExperiment()
 		ostringstream header;
 		header << "# This is the run log of " << gRun.baseName << endl;
 		header << "# Columns are (values in code units):" << endl;
-		header << "# [time]    [SGP a/b axes ratio]    [SGP a/c axes ratio]" << endl;
+		header << "# [time]    [SGP a/b axes ratio]    [SGP a/c axes ratio]    [system binding energy]" << endl;
 		ofstream fbuf(gRun.outFile.c_str(),ios::trunc);
 		if (!fbuf.is_open())
 			ncc__error("Could not start a log. Experiment aborted.\a\n");
@@ -343,7 +343,6 @@ void sgp::GravitateOnDevice()
 {
 
 }
-
 bool sgp::MakeNewSGP()
 /*
  * This function creates a rubble pile by placing grains in a volume of an
@@ -457,7 +456,6 @@ bool sgp::MakeNewSGP()
 	}
 	return true;
 }
-
 void sgp::RefreshMakeSGPHUD()
 {
 	char buf[MAX_CHARS_PER_NAME];
@@ -481,23 +479,76 @@ void sgp::RefreshMakeSGPHUD()
 	gHUD.hud.SetElement(sgp::hudMsgs.systemDiag2,buf);
 	sprintf(buf,"Ellipsoid a/c axes ratio = %-8.2f",a/c);
 	gHUD.hud.SetElement(sgp::hudMsgs.systemDiag3,buf);
-}
 
+	// Gravitational binding energy
+	PxReal V = sgp::SystemPotentialEnergy();
+	sprintf(buf,"PE_tot = %g",V);
+	gHUD.hud.SetElement(sgp::hudMsgs.systemDiag4,buf);
+}
 void sgp::LogMakeSGPExperiment()
 {
 	// Shape information
 	FindExtremers();
-	PxReal a = gExp.VIPs.extremers.rightmost->getGlobalPose().p.x - gExp.VIPs.extremers.leftmost->getGlobalPose().p.x;
-	PxReal b = gExp.VIPs.extremers.outmost->getGlobalPose().p.z - gExp.VIPs.extremers.inmost->getGlobalPose().p.z;
-	PxReal c = gExp.VIPs.extremers.upmost->getGlobalPose().p.y - gExp.VIPs.extremers.downmost->getGlobalPose().p.y;
+	PxVec3 rRight = gExp.VIPs.extremers.rightmost->getGlobalPose().transform(gExp.VIPs.extremers.rightmost->getCMassLocalPose()).p;
+	PxVec3 rLeft  = gExp.VIPs.extremers.leftmost->getGlobalPose().transform(gExp.VIPs.extremers.leftmost->getCMassLocalPose()).p;
+	PxVec3 rUp    = gExp.VIPs.extremers.upmost->getGlobalPose().transform(gExp.VIPs.extremers.upmost->getCMassLocalPose()).p;
+	PxVec3 rDown  = gExp.VIPs.extremers.downmost->getGlobalPose().transform(gExp.VIPs.extremers.downmost->getCMassLocalPose()).p;
+	PxVec3 rIn    = gExp.VIPs.extremers.inmost->getGlobalPose().transform(gExp.VIPs.extremers.inmost->getCMassLocalPose()).p;
+	PxVec3 rOut   = gExp.VIPs.extremers.outmost->getGlobalPose().transform(gExp.VIPs.extremers.outmost->getCMassLocalPose()).p;
+	PxReal a = rRight.x - rLeft.x;
+	PxReal b = rOut.z - rIn.z;
+	PxReal c = rUp.y - rDown.y;
 
 	// Potential energy information
-	UpdateIntegralsOfMotion();
+	PxReal V = sgp::SystemPotentialEnergy();
 
 	// Format and write it to  log
 	char buf[MAX_CHARS_PER_NAME];
-	sprintf(buf,"%f    %f    %f",gSim.codeTime,a/b,a/c);
+	sprintf(buf,"%f    %f    %f    %g",gSim.codeTime,a/b,a/c,V);
 	ncc::logEntry(gRun.outFile.c_str(),buf);
+}
+physx::PxReal sgp::SystemPotentialEnergy()
+{
+	// Prepare
+	PxReal V = 0.0;
+	PxU32 nbActors = gPhysX.mScene->getActors(gPhysX.roles.dynamics,gPhysX.cast,MAX_ACTORS_PER_SCENE);
+	if (nbActors<2) return V;
+	float *bodies = new float[4*nbActors];
+	if (bodies==NULL)
+		ncc__error("Error allocating memory for body/forces arrays.");
+
+	// Linearize actor positions/masses
+	for (PxU32 k=0; k<nbActors; k++)
+	{
+		PxRigidDynamic* actor = gPhysX.cast[k]->isRigidDynamic();
+		PxTransform pose = actor->getGlobalPose().transform(actor->getCMassLocalPose());
+		PxVec3 pos = pose.p;
+		bodies[4*k+0] = actor->getMass();
+		bodies[4*k+1] = pos.x;
+		bodies[4*k+2] = pos.y;
+		bodies[4*k+3] = pos.z;
+	}
+
+	// And now, the N^2 double loop.
+	for (PxU32 j=0; j<nbActors; j++)
+	{
+		for (PxU32 k=0; k<j; k++)
+		{
+			PxReal x = bodies[4*k+1] - bodies[4*j+1];
+			PxReal y = bodies[4*k+2] - bodies[4*j+2];
+			PxReal z = bodies[4*k+3] - bodies[4*j+3];
+
+			float distSqr = x*x + y*y + z*z;
+			float invDist = 1.0f/sqrtf(distSqr);
+
+			V -= bodies[4*j+0] * bodies[4*k+0] * invDist; // Multiply by 2*G later...
+		}
+	}
+
+	// Clean up
+	delete [] bodies;
+
+	return 2*sgp::units.bigG*V;
 }
 
 // End lint level warnings

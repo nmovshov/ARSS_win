@@ -54,5 +54,6 @@ namespace sgp
 	void GravitateOnDevice();
 	void RefreshMakeSGPHUD();
 	void LogMakeSGPExperiment();
+	PxReal SystemPotentialEnergy();
 };
 #endif
