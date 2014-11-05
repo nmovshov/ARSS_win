@@ -418,6 +418,17 @@ void IdleCallback()
 		physicsTime = gSim.wallTime;
 		AdvanceSimulation(gSim.timeStep);
 	}
+
+	// Are we done?
+	if (gSim.targetTime && gSim.codeTime >= gSim.targetTime)
+	{
+		gSim.isRunning = false;
+		if (gRun.quitWhenFinished) {
+			ExitCallback();
+			DestroyPhysX();
+			exit(0);
+		}
+	}
 }
 void ReshapeCallback(int w, int h)
 {
@@ -651,9 +662,18 @@ bool ConfigARSSOptions()
 	else
 		gRun.loadSceneFromFile = gRun.workingDirectory + "/" + buf;
 
+	ncc::GetStrPropertyFromINIFile("program","auto_exit","false",buf,MAX_CHARS_PER_NAME,gRun.iniFile.c_str());
+	if (strcmp(buf,"true")==0)
+		gRun.quitWhenFinished = true;
+	else
+		gRun.quitWhenFinished = false;
+
 	// Simulation options group
 	ncc::GetStrPropertyFromINIFile("simulation","time_step","0",buf,MAX_CHARS_PER_NAME,gRun.iniFile.c_str());
 	gSim.timeStep = atof(buf);
+
+	ncc::GetStrPropertyFromINIFile("simulation","target_time","0",buf,MAX_CHARS_PER_NAME,gRun.iniFile.c_str());
+	gSim.targetTime = atof(buf);
 
 	// GLUT options group
 	ncc::GetStrPropertyFromINIFile("glut","z_buffer_far","10",buf,MAX_CHARS_PER_NAME,gRun.iniFile.c_str());

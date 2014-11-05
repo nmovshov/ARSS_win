@@ -84,6 +84,7 @@ struct arss_run {
 	unsigned int captureFrequency;	// frames per screen grab (not yet implemented)
 	unsigned int renderFrequency;	// seconds between render requests
 	unsigned int physicsFrequency;	// maximum FPS, for debugging
+	bool quitWhenFinished;
 };
 extern arss_run gRun;
 // DevIL globals
@@ -139,6 +140,7 @@ struct arss_simulation {
 	bool			isRunning;
 	unsigned int	frame;
 	PxReal			codeTime;
+	PxReal			targetTime;
 	unsigned int	wallTime;
 	PxReal			fps;
 	bool			bPause;
