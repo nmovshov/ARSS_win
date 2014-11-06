@@ -228,7 +228,7 @@ void sgp::CreateMakeSGPExperiment()
 
 	// Start the action
 	gSim.isRunning=true;
-	gSim.bPause=false;
+	gSim.bPause=true;
 	gSim.codeTime = 0.0;
 	gCUDA.cudaCapable=false; // TODO: remove when CUDA gravity is implemented
 
