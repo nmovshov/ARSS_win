@@ -58,6 +58,8 @@ bool ConfigExperimentOptions()
 		sgp::eExperimentType = sgp::eMAKE_SGP;
 	else if (strcmp(buf,"load_sgp")==0)
 		sgp::eExperimentType = sgp::eLOAD_SGP;
+	else if (strcmp(buf,"test_scaling")==0)
+		sgp::eExperimentType = sgp::eTEST_SCALING;
 	else
 		sgp::eExperimentType = sgp::eBAD_EXPERIMENT_TYPE;
 	
@@ -162,6 +164,9 @@ void CreateExperiment()
 		break;
 	case sgp::eLOAD_SGP:
 		sgp::CreateLoadSGPExperiment();
+		break;
+	case sgp::eTEST_SCALING:
+		sgp::CreateTestScalingExperiment();
 		break;
 	case sgp::eBAD_EXPERIMENT_TYPE: // intentional fall through
 	default:
@@ -268,6 +273,24 @@ void sgp::CreateLoadSGPExperiment()
 			}
 		}
 	}
+}
+void sgp::CreateTestScalingExperiment()
+{
+	// Make two balls
+	PxRigidDynamic* ball1 = CreateRubbleGrain(PxVec3(-4,0,0),eSPHERE_GRAIN,1,*gPhysX.mDefaultMaterial);
+	PxRigidDynamic* ball2 = CreateRubbleGrain(PxVec3(+4,0,0),eSPHERE_GRAIN,1,*gPhysX.mDefaultMaterial);
+
+	// Move the camera to a good location
+	gCamera.pos.z = 10*gExp.defGrainSize;
+
+	// Start the action
+	gDebug.bXYGridOn = true;
+	gSim.isRunning=true;
+	gSim.bPause=true;
+	gSim.codeTime = 0.0;
+	gCUDA.cudaCapable=false; // TODO: remove when CUDA gravity is implemented
+
+	return;
 }
 void sgp::GravitateSelf()
 {

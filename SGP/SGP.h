@@ -10,7 +10,7 @@
 #define SGP_H
 namespace sgp
 {
-	enum {eBAD_EXPERIMENT_TYPE, eMAKE_SGP, eLOAD_SGP} eExperimentType;
+	enum {eBAD_EXPERIMENT_TYPE, eMAKE_SGP, eLOAD_SGP, eTEST_SCALING} eExperimentType;
 
 	struct {
 		unsigned int systemDiag1;
@@ -49,6 +49,7 @@ namespace sgp
 
 	void CreateMakeSGPExperiment();
 	void CreateLoadSGPExperiment();
+	void CreateTestScalingExperiment();
 	bool MakeNewSGP();
 	void GravitateSelf();
 	void GravitateOnHost();
