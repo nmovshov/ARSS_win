@@ -420,14 +420,11 @@ void IdleCallback()
 	}
 
 	// Are we done?
-	if (gSim.targetTime && gSim.codeTime >= gSim.targetTime)
-	{
-		gSim.isRunning = false;
-		if (gRun.quitWhenFinished) {
+	if (gSim.targetTime && gSim.codeTime >= gSim.targetTime) gSim.isRunning = false;
+	if (!gSim.isRunning && gRun.quitWhenFinished) {
 			ExitCallback();
 			DestroyPhysX();
 			exit(0);
-		}
 	}
 }
 void ReshapeCallback(int w, int h)
@@ -596,6 +593,8 @@ void RefreshHUD()
 	// Code time
 	sprintf(buf,"Code time = %0.3g (dt = %g)",gSim.codeTime,gSim.timeStep);
 	gHUD.hud.SetElement(gHUD.CODE_TIME,buf);
+	if (!gSim.isRunning)
+		gHUD.hud.SetElementColor(gHUD.CODE_TIME,1.0f,0.0f,0.0f);
 
 	// FPS
 	sprintf(buf,"FPS = %5.1f",gSim.fps);

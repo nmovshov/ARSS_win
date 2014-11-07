@@ -138,9 +138,10 @@ void LogExperiment()
 	case sgp::eMAKE_SGP:
 		sgp::LogMakeSGPExperiment();
 		break;
-	case sgp::eBAD_EXPERIMENT_TYPE: // intentional fall through
-	default:
+	case sgp::eBAD_EXPERIMENT_TYPE:
 		ncc__warning("Unkown experiment type. Nothing logged.");
+		break;
+	default:
 		break;
 	}
 }
