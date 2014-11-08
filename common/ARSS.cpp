@@ -402,7 +402,8 @@ void IdleCallback()
 	}
 
 	// Invoke experiment control
-	ControlExperiment();
+	if (gSim.isRunning)
+		ControlExperiment();
 
 	// Output something
 	if ((gRun.outputFrequency > 0) && (gSim.frame - outputFrame >= gRun.outputFrequency)) {

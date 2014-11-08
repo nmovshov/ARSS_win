@@ -614,12 +614,14 @@ void sgp::ControlTestScalingExperiment()
 	PxReal d = gExp.VIPs.extremers.rightmost->getGlobalPose().p.x - gExp.VIPs.extremers.leftmost->getGlobalPose().p.x;
 	t.push_back(gSim.codeTime);
 	R.push_back(d);
-	if (d < 6.0)
+	if (d < 2.0 + gPhysX.scaling.length*0.04)
 		{
 			gSim.isRunning = false;
 			ofstream fbuf(gRun.outFile.c_str(),ios::app);
-			if (!fbuf.is_open())
-				ncc__error("Could not start a log. Experiment aborted.\a\n");
+			if (!fbuf.is_open()) {
+				ncc__warning("Could not open log. Nothing written!\a\n");
+				return;
+			}
 			fbuf.setf(ios::fixed);
 			for (unsigned int k=0; k<t.size(); k++)
 				fbuf << setw(8) << t[k] << "    " << setw(8) << R[k] << "\n";
