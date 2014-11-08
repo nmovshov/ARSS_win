@@ -152,6 +152,17 @@ void ApplyCustomInteractions()
 {
 	sgp::GravitateSelf();
 }
+void ControlExperiment()
+{
+	switch (sgp::eExperimentType)
+	{
+	case sgp::eTEST_SCALING:
+		sgp::ControlTestScalingExperiment();
+		break;
+	default:
+		break;
+	}
+}
 void RenderOtherStuff()
 {
 
@@ -284,10 +295,23 @@ void sgp::CreateTestScalingExperiment()
 	// Move the camera to a good location
 	gCamera.pos.z = 10*gExp.defGrainSize;
 
+	// Start a log
+	if (gRun.outputFrequency)
+	{
+		ostringstream header;
+		header << "# This is the run log of " << gRun.baseName << endl;
+		header << "# Columns are (values in code units):" << endl;
+		header << "# [t]    [R]" << endl;
+		ofstream fbuf(gRun.outFile.c_str(),ios::trunc);
+		if (!fbuf.is_open())
+			ncc__error("Could not start a log. Experiment aborted.\a\n");
+		fbuf << header.str() << endl;
+	}
+
 	// Start the action
 	gDebug.bXYGridOn = true;
 	gSim.isRunning=true;
-	gSim.bPause=true;
+	gSim.bPause=false;
 	gSim.codeTime = 0.0;
 	gCUDA.cudaCapable=false; // TODO: remove when CUDA gravity is implemented
 
@@ -577,6 +601,30 @@ physx::PxReal sgp::SystemPotentialEnergy()
 	delete [] bodies;
 
 	return 2*sgp::units.bigG*V;
+}
+void sgp::LogTestScalingExperiment()
+{
+
+}
+void sgp::ControlTestScalingExperiment()
+{
+	static vector<PxReal> t;
+	static vector<PxReal> R;
+	FindExtremers();
+	PxReal d = gExp.VIPs.extremers.rightmost->getGlobalPose().p.x - gExp.VIPs.extremers.leftmost->getGlobalPose().p.x;
+	t.push_back(gSim.codeTime);
+	R.push_back(d);
+	if (d < 6.0)
+		{
+			gSim.isRunning = false;
+			ofstream fbuf(gRun.outFile.c_str(),ios::app);
+			if (!fbuf.is_open())
+				ncc__error("Could not start a log. Experiment aborted.\a\n");
+			fbuf.setf(ios::fixed);
+			for (unsigned int k=0; k<t.size(); k++)
+				fbuf << setw(8) << t[k] << "    " << setw(8) << R[k] << "\n";
+			fbuf.close();
+		}
 }
 
 // End lint level warnings

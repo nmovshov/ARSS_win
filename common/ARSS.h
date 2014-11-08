@@ -259,6 +259,7 @@ void RefreshCustomHUDElements();
 void FireAction();
 void PrintDebug();
 void ApplyCustomInteractions();
+void ControlExperiment();
 void RenderOtherStuff();
 void CreateExperiment();
 void RebootExperiment();

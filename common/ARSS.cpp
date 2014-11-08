@@ -401,6 +401,9 @@ void IdleCallback()
 		RefreshHUD();
 	}
 
+	// Invoke experiment control
+	ControlExperiment();
+
 	// Output something
 	if ((gRun.outputFrequency > 0) && (gSim.frame - outputFrame >= gRun.outputFrequency)) {
 		outputFrame = gSim.frame;
