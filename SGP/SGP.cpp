@@ -300,6 +300,7 @@ void sgp::CreateTestScalingExperiment()
 	{
 		ostringstream header;
 		header << "# This is the run log of " << gRun.baseName << endl;
+		header << "# Time step used = " << gSim.timeStep << endl;
 		header << "# Columns are (values in code units):" << endl;
 		header << "# [t]    [R]    [V]" << endl;
 		ofstream fbuf(gRun.outFile.c_str(),ios::trunc);
@@ -617,7 +618,7 @@ void sgp::ControlTestScalingExperiment()
 	t.push_back(gSim.codeTime);
 	R.push_back(d);
 	V.push_back(v);
-	if ((d < 2.0 + gPhysX.scaling.length*0.04 && !gSim.targetTime) || gSim.codeTime >= gSim.targetTime - gSim.timeStep)
+	if (((d < 2.0 + gPhysX.scaling.length*0.04) && !gSim.targetTime) || (gSim.targetTime && (gSim.codeTime >= gSim.targetTime - gSim.timeStep)))
 		{
 			gSim.isRunning = false;
 			ofstream fbuf(gRun.outFile.c_str(),ios::app);
