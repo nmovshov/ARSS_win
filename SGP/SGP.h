@@ -38,6 +38,8 @@ namespace sgp
 
 	struct {
 		PxRigidDynamic* nucleus;
+		PxRigidDynamic* lBall;
+		PxRigidDynamic* rBall;
 	} VIPs;
 
 	struct {

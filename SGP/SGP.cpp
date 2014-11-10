@@ -289,8 +289,8 @@ void sgp::CreateLoadSGPExperiment()
 void sgp::CreateTestScalingExperiment()
 {
 	// Make two balls
-	PxRigidDynamic* ball1 = CreateRubbleGrain(PxVec3(-4,0,0),eSPHERE_GRAIN,1,*gPhysX.mDefaultMaterial);
-	PxRigidDynamic* ball2 = CreateRubbleGrain(PxVec3(+4,0,0),eSPHERE_GRAIN,1,*gPhysX.mDefaultMaterial);
+	sgp::VIPs.lBall = CreateRubbleGrain(PxVec3(-4,0,0),eSPHERE_GRAIN,1,*gPhysX.mDefaultMaterial);
+	sgp::VIPs.rBall = CreateRubbleGrain(PxVec3(+4,0,0),eSPHERE_GRAIN,1,*gPhysX.mDefaultMaterial);
 
 	// Move the camera to a good location
 	gCamera.pos.z = 10*gExp.defGrainSize;
@@ -301,7 +301,7 @@ void sgp::CreateTestScalingExperiment()
 		ostringstream header;
 		header << "# This is the run log of " << gRun.baseName << endl;
 		header << "# Columns are (values in code units):" << endl;
-		header << "# [t]    [R]" << endl;
+		header << "# [t]    [R]    [V]" << endl;
 		ofstream fbuf(gRun.outFile.c_str(),ios::trunc);
 		if (!fbuf.is_open())
 			ncc__error("Could not start a log. Experiment aborted.\a\n");
@@ -610,11 +610,14 @@ void sgp::ControlTestScalingExperiment()
 {
 	static vector<PxReal> t;
 	static vector<PxReal> R;
-	FindExtremers();
-	PxReal d = gExp.VIPs.extremers.rightmost->getGlobalPose().p.x - gExp.VIPs.extremers.leftmost->getGlobalPose().p.x;
+	static vector<PxReal> V;
+
+	PxReal d = sgp::VIPs.rBall->getGlobalPose().p.x - sgp::VIPs.lBall->getGlobalPose().p.x;
+	PxReal v = sgp::VIPs.rBall->getLinearVelocity().x - sgp::VIPs.lBall->getLinearVelocity().x;
 	t.push_back(gSim.codeTime);
 	R.push_back(d);
-	if (d < 2.0 + gPhysX.scaling.length*0.04)
+	V.push_back(v);
+	if ((d < 2.0 + gPhysX.scaling.length*0.04 && !gSim.targetTime) || gSim.codeTime >= gSim.targetTime - gSim.timeStep)
 		{
 			gSim.isRunning = false;
 			ofstream fbuf(gRun.outFile.c_str(),ios::app);
@@ -624,7 +627,7 @@ void sgp::ControlTestScalingExperiment()
 			}
 			fbuf.setf(ios::fixed);
 			for (unsigned int k=0; k<t.size(); k++)
-				fbuf << setw(8) << t[k] << "    " << setw(8) << R[k] << "\n";
+				fbuf << setw(8) << t[k] << "    " << setw(8) << R[k] << "    " << setw(8) << V[k] << "\n";
 			fbuf.close();
 		}
 }
