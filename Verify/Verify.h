@@ -17,17 +17,21 @@
 #define VERIFY_H
 namespace verify
 {
-enum {eBAD_EXPERIMENT_TYPE, eCOLLIDER, eINCLINER, eTUMBLER, eTUMBLERS} eExperimentType;
+enum {eBAD_EXPERIMENT_TYPE, eCOLLIDER, eINCLINER, eTUMBLER, eTUMBLERS, eBALL_ON_GROUND} eExperimentType;
+
 PxReal spinMag; // Spin magnitude for target in collider experiment
 PxReal kickMag; // Kick magnitude for bullet in collider experiment
+
 PxTransform R1, R0; // throwaway transform holders with static duration
-PxVec3 V; // throwaway vector with static duration
+PxVec3 V;           // throwaway vector with static duration
+
 struct {
 	unsigned int actorDiag;
 	unsigned int systemDiag1;
 	unsigned int systemDiag2;
 	unsigned int systemDiag3;
 } hudMsgs;
+
 struct {
 	PxRigidDynamic* bullet;
 	PxRigidDynamic* target;
@@ -35,16 +39,19 @@ struct {
 	vector <PxRigidDynamic*> Tumblers;
 	PxRigidDynamic* incliner;
 } VIPs;
+
 struct {
 	PxVec3 w;
 	PxVec3 L_now, L_true;
 	PxReal K_now, K_true;
 	PxRigidDynamic* handle;
 } tumbler;
+
 struct {
 	int inc;
 	PxRigidDynamic* handle;
 } incliner;
+
 void CreateColliderExperiment();
 void CreateTumblerExperiment();
 void CreateTumblersExperiment();

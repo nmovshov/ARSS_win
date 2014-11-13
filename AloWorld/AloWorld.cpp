@@ -91,6 +91,10 @@ void LogExperiment()
 {
 
 }
+void ControlExperiment()
+{
+
+}
 void CustomizeScene(PxSceneDesc &sceneDesc)
 {
 	sceneDesc.gravity=PxVec3(0.0,-2.8,0.0);

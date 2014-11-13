@@ -92,6 +92,10 @@ void LogExperiment()
 		ncc__error("Could not access output file. Experiment aborted.\a");
 	}
 }
+void ControlExperiment()
+{
+
+}
 void CustomizeScene(PxSceneDesc &sceneDesc)
 {
 	
