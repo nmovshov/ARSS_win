@@ -69,6 +69,9 @@ void CreateInclinerExperiment();
 void CreateBallOnGroundExperiment();
 void CalcTumblerDynamics();
 void InclineGravity(PxReal deg);
+void LogTumblerExperiment();
+void LogBallOnGroundExperiment();
+void ControlBallOnGroundExperiment();
 };
 
 #endif

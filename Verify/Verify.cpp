@@ -9,9 +9,9 @@
 // * Collider - a collision between shapes of varying complexity, testing the collision
 //              detection and collision resolution in PhysX.
 //
-// * Ball dropped on ground - test of internal gravity in PhysX
+// * Ball on ground - test of internal gravity in PhysX
 //
-// * Ball dropped on ball - test of integration of manually implemented gravity
+// * Ball on ball - test of integration of manually implemented gravity
 //
 // Author: Naor Movshovits (nmovshov at google dot com)
 //////////////////////////////////////////////////////////////////////////////////////////
@@ -81,26 +81,35 @@ void RebootExperiment()
 }
 void LogExperiment()
 {
-	static ofstream fp(gRun.outFile.c_str(),ios::trunc);
-	if (fp.good())
+	switch (verify::eExperimentType)
 	{
-		fp.width(5);
-		fp << gSim.frame << "\t";
-		if (verify::eExperimentType == verify::eTUMBLER || verify::eExperimentType == verify::eTUMBLERS)
-		{
-			UpdateIntegralsOfMotion();
-			fp << setiosflags(ios::fixed);
-			fp << gExp.IOMs.systemAM.x << "\t" << gExp.IOMs.systemAM.y << "\t" << gExp.IOMs.systemAM.z << "\t" << gExp.IOMs.systemMass << endl;
-		}
-	}
-	else
-	{
-		ncc__error("Could not access output file. Experiment aborted.\a");
+	case verify::eTUMBLER:
+	case verify::eTUMBLERS:
+		verify::LogTumblerExperiment();
+		break;
+	case verify::eBALL_ON_GROUND:
+		verify::LogBallOnGroundExperiment();
+		break;
+	case verify::eBAD_EXPERIMENT_TYPE:
+		ncc__warning("Unknown experiment type. Nothing logged.");
+		break;
+	default:
+		break;
 	}
 }
 void ControlExperiment()
 {
-
+	switch (verify::eExperimentType)
+	{
+	case verify::eBALL_ON_GROUND:
+		verify::ControlBallOnGroundExperiment();
+		break;
+	case verify::eBAD_EXPERIMENT_TYPE:
+		ncc__warning("Unknown experiment type.");
+		break;
+	default:
+		break;
+	}
 }
 void CustomizeScene(PxSceneDesc &sceneDesc)
 {
@@ -474,10 +483,70 @@ Drop a ball on the ground. Check integration and proper scaling.
 	gCamera.pos = PxVec3(0,2,6);
 	gDebug.bXZGridOn = true;
 
+	// Start a log
+	if (gRun.outputFrequency)
+	{
+		ostringstream header;
+		header << "# This is the run log of " << gRun.baseName << endl;
+		header << "# Time step used = " << gSim.timeStep << endl;
+		header << "# Columns are (values in code units):" << endl;
+		header << "# [t]    [y]    [v]" << endl;
+		ofstream fbuf(gRun.outFile.c_str(),ios::trunc);
+		if (!fbuf.is_open())
+			ncc__error("Could not start a log. Experiment aborted.\a\n");
+		fbuf << header.str() << endl;
+	}
+
 	// Start the action
 	gSim.isRunning = true;
 	gSim.bPause = false;
 
+}
+void verify::LogTumblerExperiment()
+{
+	static ofstream fp(gRun.outFile.c_str(),ios::trunc);
+	if (fp.good())
+	{
+		fp.width(5);
+		fp << gSim.frame << "\t";
+		if (verify::eExperimentType == verify::eTUMBLER || verify::eExperimentType == verify::eTUMBLERS)
+		{
+			UpdateIntegralsOfMotion();
+			fp << setiosflags(ios::fixed);
+			fp << gExp.IOMs.systemAM.x << "\t" << gExp.IOMs.systemAM.y << "\t" << gExp.IOMs.systemAM.z << "\t" << gExp.IOMs.systemMass << endl;
+		}
+	}
+	else
+	{
+		ncc__error("Could not access output file. Experiment aborted.\a");
+	}
+}
+void verify::LogBallOnGroundExperiment()
+{
+	// Let's do this without worrying about minimizing access to disk - it will be so much easier!
+	ofstream fbuf(gRun.outFile.c_str(),ios::app);
+	if (!fbuf.is_open()) {
+		ncc__warning("Could not open log. Nothing written!\a\n");
+		return;
+	}
+
+	// Collect
+	PxReal t = gSim.codeTime;
+	PxReal y = verify::VIPs.ball1->getGlobalPose().p.y;
+	PxReal v = verify::VIPs.ball1->getLinearVelocity().y;
+
+	// Write
+	fbuf.setf(ios::fixed);
+	fbuf << setw(8) << t << "    " << setw(8) << y << "    " << setw(8) << v << endl;
+	fbuf.close();
+}
+void verify::ControlBallOnGroundExperiment()
+{
+	// Check for stop condition
+	PxReal y = verify::VIPs.ball1->getGlobalPose().p.y;
+	PxReal d = gPhysX.scaling.length*0.04;
+	if ((!gSim.targetTime && ((y - 1) <= d)) || (gSim.targetTime && (gSim.codeTime >= gSim.targetTime - gSim.timeStep)))
+		gSim.isRunning = false;
 }
 
 // End lint level warnings
