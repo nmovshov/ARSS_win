@@ -1,17 +1,20 @@
-///////////////////////////////////////////////////////////////////////////////
-// Source file for project Verify. This project implements a suite of tests of
-// rigid body dynamics in PhysX. Several scenarios can be simulated, that have
-// either an analytic solution or at least a conserved quantity that can be measured.
-// The available tests are:
+//////////////////////////////////////////////////////////////////////////////////////////
+// Source file for project Verify. This project implements a suite of tests of rigid body
+// dynamics in PhysX. Several scenarios can be simulated, that have either an analytic
+// solution or at least a conserved quantity that can be measured. The available tests
+// are:
+//
 // * Slider - a box on an inclined plane, testing the friction model in PhysX
+// 
 // * Collider - a collision between shapes of varying complexity, testing the collision
-// detection and collision resolution in PhysX.
-// 
-// Usage: An options file specifies the type of experiment to run and the experiment
-// parameters.
-// 
-// Author: Me (Naor)
-///////////////////////////////////////////////////////////////////////////////
+//              detection and collision resolution in PhysX.
+//
+// * Ball dropped on ground - test of internal gravity in PhysX
+//
+// * Ball dropped on ball - test of integration of manually implemented gravity
+//
+// Author: Naor Movshovits (nmovshov at google dot com)
+//////////////////////////////////////////////////////////////////////////////////////////
 
 #include "ARSS.h" // all supporting global, non project-specific entities
 #include "Verify.h" // global project-specific entities
@@ -57,6 +60,9 @@ void CreateExperiment()
 		break;
 	case verify::eINCLINER:
 		verify::CreateInclinerExperiment();
+		break;
+	case verify::eBALL_ON_GROUND:
+		verify::CreateBallOnGroundExperiment();
 		break;
 	case verify::eBAD_EXPERIMENT_TYPE: // intentional fall through!
 	default:
@@ -127,6 +133,10 @@ bool ConfigExperimentOptions()
 		verify::eExperimentType=verify::eTUMBLER;
 	else if (strcmp(buf,"tumblers")==0)
 		verify::eExperimentType=verify::eTUMBLERS;
+	else if (strcmp(buf,"ball_on_ground")==0)
+		verify::eExperimentType=verify::eBALL_ON_GROUND;
+	else if (strcmp(buf,"ball_on_ball")==0)
+		verify::eExperimentType=verify::eBALL_ON_BALL;
 	else
 		verify::eExperimentType=verify::eBAD_EXPERIMENT_TYPE;
 
@@ -135,6 +145,12 @@ bool ConfigExperimentOptions()
 	verify::spinMag = atof(buf);
 	ncc::GetStrPropertyFromINIFile("experiment","kick_magnitude","0",buf,MAX_CHARS_PER_NAME,gRun.iniFile.c_str());
 	verify::kickMag = atof(buf);
+
+	// Physical parameters
+	ncc::GetStrPropertyFromINIFile("units","little_g","0",buf,MAX_CHARS_PER_NAME,gRun.iniFile.c_str());
+	verify::units.littleG = atof(buf);
+	ncc::GetStrPropertyFromINIFile("units","big_g","0",buf,MAX_CHARS_PER_NAME,gRun.iniFile.c_str());
+	verify::units.bigG = atof(buf);
 	
 
 	return true;
@@ -195,8 +211,6 @@ void RefreshCustomHUDElements()
 			if (L_err == HUGE_VAL) L_err = 0;
 			sprintf_s(buf,MAX_CHARS_PER_NAME,"DL = %g%%",L_err);
 			gHUD.hud.SetElement(verify::hudMsgs.systemDiag2,buf,scrPos,0.2);
-
-			/* hack (not part of HUD) - record L_err for later*/
 
 			// More actor diagnostics
 
@@ -443,6 +457,27 @@ void verify::InclineGravity( PxReal deg )
 	deg *= PxPi/180.f;
 	PxVec3 g(10*sin(deg),-10*cos(deg),0);
 	gPhysX.mScene->setGravity(g);
+}
+void verify::CreateBallOnGroundExperiment()
+/*
+Drop a ball on the ground. Check integration and proper scaling.
+*/
+{
+	// Make the ground and gravity
+	CreateGroundPlane();
+	gPhysX.mScene->setGravity(PxVec3(0,verify::units.littleG,0));
+
+	// Put a ball in the air
+	verify::VIPs.ball1 = CreateRubbleGrain(PxVec3(0,6,0),eSPHERE_GRAIN,1,*gPhysX.mDefaultMaterial);
+
+	// Move the camera to a better vantage point and turn on a grid
+	gCamera.pos = PxVec3(0,2,6);
+	gDebug.bXZGridOn = true;
+
+	// Start the action
+	gSim.isRunning = true;
+	gSim.bPause = false;
+
 }
 
 // End lint level warnings
