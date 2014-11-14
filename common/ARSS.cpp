@@ -599,6 +599,8 @@ void RefreshHUD()
 	gHUD.hud.SetElement(gHUD.CODE_TIME,buf);
 	if (!gSim.isRunning)
 		gHUD.hud.SetElementColor(gHUD.CODE_TIME,1.0f,0.0f,0.0f);
+	else
+		gHUD.hud.SetElementColor(gHUD.CODE_TIME,1.0f,1.0f,1.0f);
 
 	// FPS
 	sprintf(buf,"FPS = %5.1f",gSim.fps);

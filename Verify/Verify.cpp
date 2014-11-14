@@ -361,6 +361,7 @@ collision. Check conservation of the integrals of motion.
 	// start the action
 	gSim.isRunning=true;
 	gSim.bPause=false;
+	gSim.codeTime = 0.0f;
 	RefreshHUD();
 }
 void verify::CreateTumblerExperiment()
@@ -393,6 +394,7 @@ is not constant. Use this test to constrain the angular momentum error.
 	// Start the action
 	gSim.isRunning=true;
 	gSim.bPause=false;
+	gSim.codeTime = 0.0f;
 	RefreshHUD();
 }
 void verify::CreateTumblersExperiment()
@@ -427,6 +429,7 @@ Create 100 dynamic free tumblers and record the system's total angular momentum.
 	// Start the action
 	gSim.isRunning=true;
 	gSim.bPause=false;
+	gSim.codeTime = 0.0f;
 	RefreshHUD();
 }
 void verify::CreateInclinerExperiment()
@@ -451,6 +454,7 @@ Create a box on a the ground plane. Tilt the gravity vector with the up/down arr
 	// start the action
 	gSim.isRunning=true;
 	gSim.bPause=false;
+	gSim.codeTime = 0.0f;
 	RefreshHUD();
 }
 void verify::CalcTumblerDynamics()
@@ -525,7 +529,7 @@ Drop a ball on the ground. Check integration and proper scaling.
 	// Start the action
 	gSim.isRunning = true;
 	gSim.bPause = false;
-
+	gSim.codeTime = 0.0f;
 }
 void verify::LogTumblerExperiment()
 {
@@ -586,6 +590,7 @@ void verify::CreateSpringerExperiment()
 	// Start the action
 	gSim.isRunning=true;
 	gSim.bPause=true;
+	gSim.codeTime = 0.0f;
 	RefreshHUD();
 }
 void verify::ControlSpringerExperiment()
