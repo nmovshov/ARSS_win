@@ -8,6 +8,8 @@ collider - a rotating target shape and a moving bullet shape colliding. A test o
 
 incliner - a box on an inclined plane. A test of the friction model. Use up/down arrows to incline/decline the plane (actually the gravity vector).
 
+ball_on_ground - a ball of radius 1 dropped from height 6 to test integration accuracy.
+
 Controls:
 WASD to move
 QZ to up/down
