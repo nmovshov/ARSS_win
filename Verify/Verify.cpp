@@ -64,13 +64,13 @@ void CreateExperiment()
 	case verify::eBALL_ON_GROUND:
 		verify::CreateBallOnGroundExperiment();
 		break;
+	case verify::eSPRINGER_EXPERIMENT:
+		verify::CreateSpringerExperiment();
+		break;
 	case verify::eBAD_EXPERIMENT_TYPE: // intentional fall through!
 	default:
 		ncc__error("Unknown experiment type. Experiment aborted.\a");
 	}
-	gSim.isRunning=true;
-	gSim.bPause=false;
-	RefreshHUD();
 }
 void RebootExperiment()
 {
@@ -90,6 +90,9 @@ void LogExperiment()
 	case verify::eBALL_ON_GROUND:
 		verify::LogBallOnGroundExperiment();
 		break;
+	case verify::eSPRINGER_EXPERIMENT:
+		verify::LogSpringerExperiment();
+		break;
 	case verify::eBAD_EXPERIMENT_TYPE:
 		ncc__warning("Unknown experiment type. Nothing logged.");
 		break;
@@ -103,6 +106,9 @@ void ControlExperiment()
 	{
 	case verify::eBALL_ON_GROUND:
 		verify::ControlBallOnGroundExperiment();
+		break;
+	case verify::eSPRINGER_EXPERIMENT:
+		verify::ControlSpringerExperiment();
 		break;
 	case verify::eBAD_EXPERIMENT_TYPE:
 		ncc__warning("Unknown experiment type.");
@@ -144,8 +150,8 @@ bool ConfigExperimentOptions()
 		verify::eExperimentType=verify::eTUMBLERS;
 	else if (strcmp(buf,"ball_on_ground")==0)
 		verify::eExperimentType=verify::eBALL_ON_GROUND;
-	else if (strcmp(buf,"ball_on_ball")==0)
-		verify::eExperimentType=verify::eBALL_ON_BALL;
+	else if (strcmp(buf,"springer")==0)
+		verify::eExperimentType=verify::eSPRINGER_EXPERIMENT;
 	else
 		verify::eExperimentType=verify::eBAD_EXPERIMENT_TYPE;
 
@@ -351,6 +357,11 @@ collision. Check conservation of the integrals of motion.
 
 	verify::VIPs.bullet = bullet;
 	verify::VIPs.target = target;
+
+	// start the action
+	gSim.isRunning=true;
+	gSim.bPause=false;
+	RefreshHUD();
 }
 void verify::CreateTumblerExperiment()
 /*
@@ -378,6 +389,11 @@ is not constant. Use this test to constrain the angular momentum error.
 	verify::tumbler.handle = tumbler;
 	CalcTumblerDynamics();
 	verify::tumbler.L_true = verify::tumbler.L_now;
+
+	// Start the action
+	gSim.isRunning=true;
+	gSim.bPause=false;
+	RefreshHUD();
 }
 void verify::CreateTumblersExperiment()
 /*
@@ -407,6 +423,11 @@ Create 100 dynamic free tumblers and record the system's total angular momentum.
 	}
 
 	gCamera.pos.z = 20;
+
+	// Start the action
+	gSim.isRunning=true;
+	gSim.bPause=false;
+	RefreshHUD();
 }
 void verify::CreateInclinerExperiment()
 /*
@@ -427,6 +448,10 @@ Create a box on a the ground plane. Tilt the gravity vector with the up/down arr
 	}
 	verify::VIPs.incliner = incliner;
 
+	// start the action
+	gSim.isRunning=true;
+	gSim.bPause=false;
+	RefreshHUD();
 }
 void verify::CalcTumblerDynamics()
 {
@@ -547,6 +572,31 @@ void verify::ControlBallOnGroundExperiment()
 	PxReal d = gPhysX.scaling.length*0.04;
 	if ((!gSim.targetTime && ((y - 1) <= d)) || (gSim.targetTime && (gSim.codeTime >= gSim.targetTime - gSim.timeStep)))
 		gSim.isRunning = false;
+}
+void verify::CreateSpringerExperiment()
+/* Swing a mass on a spring. Check integration and scaling.*/
+{
+	// Put a ball at the end of a pulled spring (sold separately)
+	verify::VIPs.ball1 = CreateRubbleGrain(PxVec3(9,0,0),eSPHERE_GRAIN,1,*gPhysX.mDefaultMaterial);
+
+	// Move the camera to a better vantage point and turn on a grid
+	gCamera.pos = PxVec3(0,0,14);
+	gDebug.bXYGridOn = true;
+
+	// Start the action
+	gSim.isRunning=true;
+	gSim.bPause=true;
+	RefreshHUD();
+}
+void verify::ControlSpringerExperiment()
+{
+	// Check for stop condition
+	if ((false) || (gSim.targetTime && (gSim.codeTime >= gSim.targetTime - gSim.timeStep)))
+		gSim.isRunning = false;
+}
+void verify::LogSpringerExperiment()
+{
+
 }
 
 // End lint level warnings

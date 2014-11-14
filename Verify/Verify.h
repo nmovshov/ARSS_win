@@ -20,7 +20,8 @@
 #define VERIFY_H
 namespace verify
 {
-enum {eBAD_EXPERIMENT_TYPE, eCOLLIDER, eINCLINER, eTUMBLER, eTUMBLERS, eBALL_ON_GROUND, eBALL_ON_BALL} eExperimentType;
+enum {eBAD_EXPERIMENT_TYPE, eCOLLIDER, eINCLINER, eTUMBLER, eTUMBLERS, eBALL_ON_GROUND,
+      eSPRINGER_EXPERIMENT} eExperimentType;
 
 PxReal spinMag; // Spin magnitude for target in collider experiment
 PxReal kickMag; // Kick magnitude for bullet in collider experiment
@@ -67,11 +68,14 @@ void CreateTumblerExperiment();
 void CreateTumblersExperiment();
 void CreateInclinerExperiment();
 void CreateBallOnGroundExperiment();
+void CreateSpringerExperiment();
 void CalcTumblerDynamics();
 void InclineGravity(PxReal deg);
 void LogTumblerExperiment();
 void LogBallOnGroundExperiment();
+void LogSpringerExperiment();
 void ControlBallOnGroundExperiment();
+void ControlSpringerExperiment();
 };
 
 #endif
