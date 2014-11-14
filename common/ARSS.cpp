@@ -240,7 +240,7 @@ bool InitPhysX()
 	if (!sceneDesc.filterShader) // provide default filter shader
 		sceneDesc.filterShader = PxDefaultSimulationFilterShader;
 
-	sceneDesc.gravity = PxVec3(0.0f,-9.81f,0.0f); // convenient default, but usually modified later
+	//sceneDesc.gravity = PxVec3(0.0f,-9.81f,0.0f); // convenient default, but usually modified later
 	sceneDesc.flags |= PxSceneFlag::eENABLE_ONE_DIRECTIONAL_FRICTION; // replace default, constraint-based friction, with coulomb friction
 	if (gPhysX.props.bounceThreshold>0) sceneDesc.bounceThresholdVelocity = gPhysX.props.bounceThreshold; // zero bounce threshold is unsustainable
 
