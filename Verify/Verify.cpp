@@ -166,7 +166,8 @@ bool ConfigExperimentOptions()
 	verify::units.littleG = atof(buf);
 	ncc::GetStrPropertyFromINIFile("units","big_g","0",buf,MAX_CHARS_PER_NAME,gRun.iniFile.c_str());
 	verify::units.bigG = atof(buf);
-	
+	ncc::GetStrPropertyFromINIFile("units","spring_k","1",buf,MAX_CHARS_PER_NAME,gRun.iniFile.c_str());
+	verify::units.springK = atof(buf);	
 
 	return true;
 }
@@ -279,6 +280,11 @@ void ApplyCustomInteractions()
 		case verify::eTUMBLERS:
 			UpdateIntegralsOfMotion();
 			verify::tumbler.L_now = gExp.IOMs.systemAM;
+			break;
+		case verify::eSPRINGER_EXPERIMENT:
+			PxReal x = verify::VIPs.ball1->getGlobalPose().p.x; // com pose of a primitive shape (box) is same as actor pose
+			PxReal F = -verify::units.springK*x;
+			verify::VIPs.ball1->addForce(PxVec3(F,0,0));
 			break;
 		}
 	}
@@ -517,6 +523,7 @@ Drop a ball on the ground. Check integration and proper scaling.
 	{
 		ostringstream header;
 		header << "# This is the run log of " << gRun.baseName << endl;
+		header << "# Experiment type: BALL ON GROUND (" << verify::eExperimentType << ")" << endl;
 		header << "# Time step used = " << gSim.timeStep << endl;
 		header << "# Columns are (values in code units):" << endl;
 		header << "# [t]    [y]    [v]" << endl;
@@ -574,34 +581,64 @@ void verify::ControlBallOnGroundExperiment()
 	// Check for stop condition
 	PxReal y = verify::VIPs.ball1->getGlobalPose().p.y;
 	PxReal d = gPhysX.scaling.length*0.04;
-	if ((!gSim.targetTime && ((y - 1) <= d)) || (gSim.targetTime && (gSim.codeTime >= gSim.targetTime - gSim.timeStep)))
+	if (!gSim.targetTime && ((y - 1) <= d))
 		gSim.isRunning = false;
 }
 void verify::CreateSpringerExperiment()
 /* Swing a mass on a spring. Check integration and scaling.*/
 {
-	// Put a ball at the end of a pulled spring (sold separately)
-	verify::VIPs.ball1 = CreateRubbleGrain(PxVec3(9,0,0),eSPHERE_GRAIN,1,*gPhysX.mDefaultMaterial);
+	// Put a box at the end of a pulled spring (sold separately)
+	verify::VIPs.ball1 = CreateRubbleGrain(PxVec3(9,0,0),eBOX_GRAIN,1,*gPhysX.mDefaultMaterial);
 
 	// Move the camera to a better vantage point and turn on a grid
 	gCamera.pos = PxVec3(0,0,14);
 	gDebug.bXYGridOn = true;
 
+	// Start a log
+	if (gRun.outputFrequency)
+	{
+		ostringstream header;
+		header << "# This is the run log of " << gRun.baseName << endl;
+		header << "# Experiment type: SPRINGER (" << verify::eExperimentType << ")" << endl;
+		header << "# Time step used = " << gSim.timeStep << endl;
+		header << "# Columns are (values in code units):" << endl;
+		header << "# [t]    [x]    [v]" << endl;
+		ofstream fbuf(gRun.outFile.c_str(),ios::trunc);
+		if (!fbuf.is_open())
+			ncc__error("Could not start a log. Experiment aborted.\a\n");
+		fbuf << header.str() << endl;
+	}
+
 	// Start the action
 	gSim.isRunning=true;
-	gSim.bPause=true;
+	gSim.bPause=false;
 	gSim.codeTime = 0.0f;
 	RefreshHUD();
 }
 void verify::ControlSpringerExperiment()
 {
-	// Check for stop condition
-	if ((false) || (gSim.targetTime && (gSim.codeTime >= gSim.targetTime - gSim.timeStep)))
+	// Check for stop condition (target time interpreted as number of cycles)
+	if (!gSim.targetTime && (gSim.codeTime >= 2*PxPi/PxSqrt(verify::units.springK)))
 		gSim.isRunning = false;
 }
 void verify::LogSpringerExperiment()
 {
+	// Let's do this without worrying about minimizing access to disk - it will be so much easier!
+	ofstream fbuf(gRun.outFile.c_str(),ios::app);
+	if (!fbuf.is_open()) {
+		ncc__warning("Could not open log. Nothing written!\a\n");
+		return;
+	}
 
+	// Collect
+	PxReal t = gSim.codeTime;
+	PxReal x = verify::VIPs.ball1->getGlobalPose().p.x;
+	PxReal v = verify::VIPs.ball1->getLinearVelocity().x;
+
+	// Write
+	fbuf.setf(ios::fixed);
+	fbuf << setw(8) << t << "    " << setw(8) << x << "    " << setw(8) << v << endl;
+	fbuf.close();
 }
 
 // End lint level warnings

@@ -61,6 +61,7 @@ struct {
 struct {
 	PxReal littleG;
 	PxReal bigG;
+	PxReal springK;
 } units;
 
 void CreateColliderExperiment();
