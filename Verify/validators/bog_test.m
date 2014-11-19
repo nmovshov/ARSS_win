@@ -9,7 +9,7 @@ clc
 
 %% Load data from file
 out_file = '../Verify.out';
-raw = importdata(out_file,' ',4);
+raw = importdata(out_file,' ',headcount(out_file));
 t = raw.data(1:end,1);
 y = raw.data(1:end,2);
 v = raw.data(1:end,3);

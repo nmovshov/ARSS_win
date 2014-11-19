@@ -588,7 +588,7 @@ void verify::CreateSpringerExperiment()
 /* Swing a mass on a spring. Check integration and scaling.*/
 {
 	// Put a box at the end of a pulled spring (sold separately)
-	verify::VIPs.ball1 = CreateRubbleGrain(PxVec3(9,0,0),eBOX_GRAIN,1,*gPhysX.mDefaultMaterial);
+	verify::VIPs.ball1 = CreateRubbleGrain(PxVec3(10,0,0),eBOX_GRAIN,1,*gPhysX.mDefaultMaterial);
 
 	// Move the camera to a better vantage point and turn on a grid
 	gCamera.pos = PxVec3(0,0,14);
