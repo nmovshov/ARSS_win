@@ -12,7 +12,7 @@ ah = [];
 lh = [];
 
 %% Load data from file and do initial processing
-out_file = '../Verify.out';
+out_file = '/Verify.out';
 raw = importdata(out_file,' ',headcount(out_file));
 t = raw.data(1:end,1);
 x = raw.data(1:end,2);
@@ -28,18 +28,18 @@ end
 E_h = 0.5*(v.^2 + k*x.^2 - k*dt*v.*x);
 
 %% Plot position vs. time
-% fh(end+1) = figure;
-% ah(end+1) = axes;
-% hold(ah(end),'all')
-% lh(end+1) = plot(t,x,'linewidth',2);
-% set(lh(end),'displayname','PhysX 3.2')
-% lh(end+1) = plot(t,10*cos(1/k*t),'k--');
-% set(lh(end),'displayname','reality','linewidth',2)
-% title(['Position vs. time (dt = ',num2str(dt),')'])
-% xlabel('t [CU]')
-% ylabel('x [CU]')
-% legend(ah(end),'show','location','se')
-% grid(ah(end),'on')
+fh(end+1) = figure;
+ah(end+1) = axes;
+hold(ah(end),'all')
+lh(end+1) = plot(t,x,'linewidth',2);
+set(lh(end),'displayname','PhysX 3.2')
+lh(end+1) = plot(t,10*cos(1/k*t),'k--');
+set(lh(end),'displayname','reality','linewidth',2)
+title(['Position vs. time (dt = ',num2str(dt),')'])
+xlabel('t [CU]')
+ylabel('x [CU]')
+legend(ah(end),'show','location','se')
+grid(ah(end),'on')
 
 %% Plot energy vs. time
 fh(end+1) = figure;
