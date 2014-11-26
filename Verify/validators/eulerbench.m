@@ -54,16 +54,29 @@ T_be = 0.5*m*v_be.^2;
 V_be = 0.5*k*x_be.^2;
 E_be = T_be + V_be;
 
-%% Leapfrog
-x_lf(1) = A;
-v_lf(1) = 0*si.m/si.s - k/m*x_lf(1)*dt/2;
+%% Half-step
+x_hs(1) = A;
+v_hs(1) = 0*si.m/si.s - k/m*x_hs(1)*dt/2;
 for j=1:nb_steps-1
-    x_lf(j+1) = x_lf(j) + v_lf(j)*dt;
-    v_lf(j+1) = v_lf(j) - k/m*x_lf(j)*dt;
+    x_hs(j+1) = x_hs(j) + v_hs(j)*dt;
+    v_hs(j+1) = v_hs(j) - k/m*x_hs(j)*dt;
 end
-T_lf = 0.5*m*v_lf.^2;
-V_lf = 0.5*k*x_lf.^2;
-E_lf = T_lf + V_lf;
+T_hs = 0.5*m*v_hs.^2;
+V_hs = 0.5*k*x_hs.^2;
+E_hs = T_hs + V_hs;
+
+%% Mid-point
+x_mp(1) = A;
+v_mp(1) = 0*si.m/si.s;
+for j=1:nb_steps-1
+    v_mp(j+1) = v_mp(j) - k/m*x_mp(j)*dt;
+    x_mp(j+1) = x_mp(j) + 0.5*(v_mp(j) + v_mp(j+1))*dt;
+end
+T_mp = 0.5*m*v_mp.^2;
+V_mp = 0.5*k*x_mp.^2;
+E_mp = T_mp + V_mp;
+
+%% Leapfrog
 
 %% Symplectic Euler
 x_se(1) = A;
@@ -98,19 +111,22 @@ t_norm = t/P;
 t_px_norm = t_px/(2*pi);
 x_fe_norm = x_fe/A;
 x_be_norm = x_be/A;
-x_lf_norm = x_lf/A;
+x_hs_norm = x_hs/A;
+x_mp_norm = x_mp/A;
 x_se_norm = x_se/A;
 x_an_norm = x_an/A;
 x_px_norm = x_px/10;
 v_fe_norm = v_fe/w/A;
 v_be_norm = v_be/w/A;
-v_lf_norm = v_lf/w/A;
+v_hs_norm = v_hs/w/A;
+v_mp_norm = v_mp/w/A;
 v_se_norm = v_se/w/A;
 v_an_norm = v_an/w/A;
 v_px_norm = v_px/10;
 E_fe_norm = E_fe/(0.5*k*A^2);
 E_be_norm = E_be/(0.5*k*A^2);
-E_lf_norm = E_lf/(0.5*k*A^2);
+E_hs_norm = E_hs/(0.5*k*A^2);
+E_mp_norm = E_mp/(0.5*k*A^2);
 E_se_norm = E_se/(0.5*k*A^2);
 E_an_norm = E_an/(0.5*k*A^2);
 E_px_norm = E_px/50;
@@ -124,7 +140,8 @@ hold(ah,'all')
 lh(end+1) = plot(t_norm,x_fe_norm,'linewidth',2,'displayname','forward euler');
 lh(end+1) = plot(t_norm,x_be_norm,'linewidth',2,'displayname','backward euler');
 lh(end+1) = plot(t_norm,x_se_norm,'linewidth',2,'displayname','symplectic euler');
-lh(end+1) = plot(t_norm,x_lf_norm,'linewidth',2,'displayname','leap-frog');
+lh(end+1) = plot(t_norm,x_hs_norm,'linewidth',2,'displayname','half-step');
+lh(end+1) = plot(t_norm,x_mp_norm,'linewidth',2,'displayname','mid-point');
 lh(end+1) = plot(t_px_norm,x_px_norm,'linewidth',2,'displayname','physx');
 lh(end+1) = plot(t_norm,x_an_norm,'k--','linewidth',1,'displayname','reality'); %#ok<NASGU>
 legend(ah,'location','nw')
@@ -139,7 +156,8 @@ hold(ah,'all')
 lh(end+1) = plot(t_norm,E_fe_norm,'linewidth',2,'displayname','forward euler');
 lh(end+1) = plot(t_norm,E_be_norm,'linewidth',2,'displayname','backward euler');
 lh(end+1) = plot(t_norm,E_se_norm,'linewidth',2,'displayname','symplectic euler');
-lh(end+1) = plot(t_norm,E_lf_norm,'linewidth',2,'displayname','leap-frog');
+lh(end+1) = plot(t_norm,E_hs_norm,'linewidth',2,'displayname','half-step');
+lh(end+1) = plot(t_norm,E_mp_norm,'linewidth',2,'displayname','mid-point');
 lh(end+1) = plot(t_px_norm,E_px_norm,'linewidth',2,'displayname','physx');
 lh(end+1) = plot(t_norm,E_an_norm,'k--','linewidth',1,'displayname','reality');
 legend(ah,'location','nw')
