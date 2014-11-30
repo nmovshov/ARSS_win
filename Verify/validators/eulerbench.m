@@ -56,10 +56,10 @@ E_be = T_be + V_be;
 
 %% Half-step
 x_hs(1) = A;
-v_hs(1) = 0*si.m/si.s - k/m*x_hs(1)*dt/2;
+v_hs(1) = 0*si.m/si.s - k/m*x_hs(1)*dt/2; % v_1/2
 for j=1:nb_steps-1
-    x_hs(j+1) = x_hs(j) + v_hs(j)*dt;
-    v_hs(j+1) = v_hs(j) - k/m*x_hs(j)*dt;
+    v_hs(j+1) = v_hs(j) - k/m*x_hs(j)*dt; % v_j+1/2
+    x_hs(j+1) = x_hs(j) + v_hs(j+1)*dt;
 end
 T_hs = 0.5*m*v_hs.^2;
 V_hs = 0.5*k*x_hs.^2;
