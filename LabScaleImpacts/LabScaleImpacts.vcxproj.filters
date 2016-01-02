@@ -37,10 +37,10 @@
     <ClInclude Include="..\common\HUD.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\extern\ncclib\ncclib.h">
+    <ClInclude Include="LabScaleImpacts.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="LabScaleImpacts.h">
+    <ClInclude Include="..\extern\ncclib\ncclib.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
