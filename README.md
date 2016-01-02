@@ -2,8 +2,8 @@
 # Astrophysical Rubble piles Simulation Software
 
 This is a software package for modeling and simulating small planetary bodies as
-collections of discrete, rigid-body grains of irregular shape. The DEM heavy-
-lifting is provided by NVIDIA's
+collections of discrete, rigid-body grains of irregular shape. The DEM
+heavy-lifting is provided by NVIDIA's
 [PhysX](https://developer.nvidia.com/technologies/physx) engine, and the self-
 gravity module requires a [CUDA](https://developer.nvidia.com/category/zone/cuda-
 zone) enabled GPU to run. ARSS was developed and used on a Windows PC,
