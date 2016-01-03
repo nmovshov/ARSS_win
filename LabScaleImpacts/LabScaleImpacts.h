@@ -21,17 +21,17 @@ PxVec3 V;           // throwaway vector
 
 // Really dumb way to implement hud messages; but it works
 struct {
-	unsigned int actorDiag;
-	unsigned int systemDiag1;
-	unsigned int systemDiag2;
-	unsigned int systemDiag3;
+    unsigned int actorDiag;
+    unsigned int systemDiag1;
+    unsigned int systemDiag2;
+    unsigned int systemDiag3;
 } hudMsgs;
 
 // Named actors
 struct {
-	PxRigidDynamic* bullet;
-	PxRigidDynamic* target;
-	PxRigidDynamic* ball1;
+    PxRigidDynamic* bullet;
+    PxRigidDynamic* target;
+    PxRigidDynamic* ball1;
 } VIPs;
 
 
@@ -39,9 +39,7 @@ struct {
 
 // Units
 struct {
-	PxReal littleG;
-	PxReal bigG;
-	PxReal springK;
+    PxReal littleG;
 } units;
 
 void CreateSpringerExperiment();
