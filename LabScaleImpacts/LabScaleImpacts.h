@@ -42,11 +42,9 @@ struct {
     PxReal littleG;
 } units;
 
-void CreateSpringerExperiment();
-void CalcTumblerDynamics();
-void InclineGravity(PxReal deg);
-void LogSpringerExperiment();
-void ControlSpringerExperiment();
+void CreateHolsapple1Experiment();
+void LogHolsapple1Experiment();
+void ControlHolsapple1Experiment();
 };
 
 #endif

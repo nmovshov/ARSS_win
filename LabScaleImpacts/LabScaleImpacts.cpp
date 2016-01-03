@@ -40,7 +40,7 @@ void CreateExperiment()
     switch (labscale::eExperimentType)
     {
     case labscale::eHOLSAPPLE_1:
-        labscale::CreateSpringerExperiment();
+        labscale::CreateHolsapple1Experiment();
         break;
     case labscale::eBAD_EXPERIMENT_TYPE: // intentional fall through!
     default:
@@ -59,7 +59,7 @@ void LogExperiment()
     switch (labscale::eExperimentType)
     {
     case labscale::eHOLSAPPLE_1:
-        labscale::LogSpringerExperiment();
+        labscale::LogHolsapple1Experiment();
         break;
     case labscale::eBAD_EXPERIMENT_TYPE:
         ncc__warning("Unknown experiment type. Nothing logged.");
@@ -73,7 +73,7 @@ void ControlExperiment()
     switch (labscale::eExperimentType)
     {
     case labscale::eHOLSAPPLE_1:
-        labscale::ControlSpringerExperiment();
+        labscale::ControlHolsapple1Experiment();
         break;
     case labscale::eBAD_EXPERIMENT_TYPE:
         ncc__warning("Unknown experiment type.");
@@ -196,7 +196,7 @@ void RightArrowAction()
 }
 
 // Project namespace functions
-void labscale::CreateSpringerExperiment()
+void labscale::CreateHolsapple1Experiment()
 /* Swing a mass on a spring. Check integration and scaling.*/
 {
     // Put a box at the end of a pulled spring (sold separately)
@@ -227,13 +227,13 @@ void labscale::CreateSpringerExperiment()
     gSim.codeTime = 0.0f;
     RefreshHUD();
 }
-void labscale::ControlSpringerExperiment()
+void labscale::ControlHolsapple1Experiment()
 {
     // Check for stop condition (target time interpreted as number of cycles)
     if (false)
         gSim.isRunning = false;
 }
-void labscale::LogSpringerExperiment()
+void labscale::LogHolsapple1Experiment()
 {
     // Let's do this without worrying about minimizing access to disk - it will be so much easier!
     ofstream fbuf(gRun.outFile.c_str(),ios::app);
