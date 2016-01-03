@@ -1,0 +1,32 @@
+On Fri, 1 Jan 2016, Keith Holsapple wrote:
+
+
+Hello all:
+
+Many of you are recipients of an email asking for participation in code benchmarking calculations for the Aida mission.  Others have interest in the use of codes as simulation tools.
+
+The Aida benchmarking study is a great idea. As many of you know,  for some time I have been making growling noises over the fact that we have many more code calculations of various types than we have actual experiments, and too often we do not make comparisons.  And we obtain different answers.  It is just too tempting to all of us to report results without actual comparisons.  And, of course, we have many applications where comparisons are not even possible, such as at low G, or at large scale.  That removes the burden of proof..
+
+Several of us participated in a benchmarking study several years ago with Betty Pierazzo, but unfortunately she is no longer with us.  And we never got to the hard calculations.   But lets do more of them.
+
+One of the more basic outstanding unknowns is about the role of continuum versus particle codes: finite difference, finite element, SPH, DEM, PKDGRAV and so forth; and their respective ease and breadth of reasonable application.  Engineers like continuum models, physicists know everything is actually composed of particles at some size scale, so they strive to make models of particles and their interactions.  Some of us know of recent issues of that type for slow impacts on asteroid surfaces.  And there are fundamental questions about the role of the coarseness of the surface.
+
+So here I am being very audacious and inviting participation in a benchmarking study, but for slow impacts and penetrations; and for a very coarse surface. Specifically, I have conducted some experiments that are about as basic as possible, and may be a suitable benchmark for various types of codes.  Or maybe no code approach is useful? Lets find out.  The choice of target was to be as close as possible to the nature of the particle code approaches, but continuum codes might be able to address this problem.
+
+The experiments involved impacts at several m/s of a 1 1/8" diameter steel sphere into a  container of uniform, smooth 0.55" diameter spherical glass spheres at, of course, 1G.  I measured the final penetration depth only.  Obviously the target was very coarse compared to the impactor, with only a 2:1 ratio of impactor diameter to particle diameter.
+
+The container was cylindrical, 10" deep and 12.8" inside diameter.  The glass spheres were poured in and shaken some, but there was no obvious further settling.  The filling depth was 5 3/4" deep from the base to the top of the highest sphere. The surface was smoothed by hand as much as possible.
+
+I haven't yet measured the mass density of the spheres, but they are glass.
+
+So, if you want to contribute, and to test your code of choice, below is a tablet identifying the tests, but with the results omitted.  What would your code say the final penetration depth was?  Or does it predict something else, such as gradual settling?  Or fracture of the target spheres, or results  highly dependent on impact location, or launching  glass spheres all around the lab, or bouncing of the impactor?  Or what?
+
+I will be submitting some aspects of this study to some upcoming conference and would be happy to report your participation and the outcomes.   And I am glad to add your results without names or codes identified if you wish.
+
+Or you can just ignore me and get on with your other more important  work...
+
+Any comments?  Anyone interested?
+
+Cheers,
+
+Keith Holsapple

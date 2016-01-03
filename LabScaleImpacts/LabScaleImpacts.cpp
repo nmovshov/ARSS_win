@@ -40,7 +40,10 @@ void CreateExperiment()
     switch (labscale::eExperimentType)
     {
     case labscale::eHOLSAPPLE1:
-        labscale::CreateHolsapple1Experiment();
+        if (labscale::eExperimentSubtype==labscale::eFILL_BOX)
+            labscale::CreateFillBoxExperiment();
+        else
+            ncc__error("Unknown experiment type. Experiment aborted.\a");
         break;
     case labscale::eBAD_EXPERIMENT_TYPE: // intentional fall through!
     default:
@@ -103,18 +106,24 @@ bool ConfigExperimentOptions()
     // Read in parameters by group, file.ini style
     char buf[MAX_CHARS_PER_NAME];
 
-    // Experiment Type
+    // Experiment type and subtype
     ncc::GetStrPropertyFromINIFile("experiment","experiment_type","",buf,MAX_CHARS_PER_NAME,gRun.iniFile.c_str());
     if      (strcmp(buf,"holsapple1")==0)
-        labscale::eExperimentType=labscale::eHOLSAPPLE1;
-    else if (strcmp(buf,"springer")==0)
         labscale::eExperimentType=labscale::eHOLSAPPLE1;
     else
         labscale::eExperimentType=labscale::eBAD_EXPERIMENT_TYPE;
 
-    // Collider experiment parameters
-    ncc::GetStrPropertyFromINIFile("experiment","spin_magnitude","0",buf,MAX_CHARS_PER_NAME,gRun.iniFile.c_str());
-    //labscale::spinMag = atof(buf);
+    ncc::GetStrPropertyFromINIFile("experiment","experiment_subtype","",buf,MAX_CHARS_PER_NAME,gRun.iniFile.c_str());
+    if (strcmp(buf,"fill_container")==0)
+        labscale::eExperimentSubtype=labscale::eFILL_BOX;
+    else
+        labscale::eExperimentSubtype=labscale::eBAD_EXP_SUBTYPE;
+
+    // Regolith container parameters
+    ncc::GetStrPropertyFromINIFile("container","diameter","1",buf,MAX_CHARS_PER_NAME,gRun.iniFile.c_str());
+    labscale::reg_box.diameter = atof(buf);
+    ncc::GetStrPropertyFromINIFile("container","fill_height","1",buf,MAX_CHARS_PER_NAME,gRun.iniFile.c_str());
+    labscale::reg_box.fillHeight = atof(buf);
 
     // Physical parameters
     ncc::GetStrPropertyFromINIFile("units","little_g","0",buf,MAX_CHARS_PER_NAME,gRun.iniFile.c_str());
@@ -136,8 +145,8 @@ void CustomizeHUD()
 void RefreshCustomHUDElements()
 {
     char buf[MAX_CHARS_PER_NAME];
-    int	  ch2px	    = 18; // hud uses 18pt font
-    float px2width  = 1.0/glutGet(GLUT_WINDOW_WIDTH);
+   // int	  ch2px	    = 18; // hud uses 18pt font
+    //float px2width  = 1.0/glutGet(GLUT_WINDOW_WIDTH);
     float scrPos = glutGet(GLUT_WINDOW_WIDTH);
 
     switch (labscale::eExperimentType)
@@ -251,6 +260,66 @@ void labscale::LogHolsapple1Experiment()
     fbuf.setf(ios::fixed);
     fbuf << setw(8) << t << "    " << setw(8) << x << "    " << setw(8) << v << endl;
     fbuf.close();
+}
+void labscale::CreateFillBoxExperiment()
+/* Put a box on the ground ready to be filled with regolith.*/
+{
+    // Give the lab a floor, with gravity
+    CreateGroundPlane();
+
+    // Put a box on the floor
+    CreateRegolithContainer();
+
+    // Adjust camera, grid, display
+    gCamera.pos.x = 0.0;
+    gCamera.pos.y = 1.0;
+    gCamera.pos.z = 2.0;
+    gDebug.bXZGridOn = true;
+    
+    // Start the action
+    gSim.isRunning=true;
+    gSim.bPause=false;
+    gSim.codeTime = 0.0f;
+    RefreshHUD();
+
+}
+
+void labscale::CreateRegolithContainer()
+{
+    // Geometry variables
+    PxReal box_d = labscale::reg_box.diameter;
+    PxReal box_h = labscale::reg_box.fillHeight*2;
+    PxReal wall_dh = box_d/20;
+
+    // We'll make the regolith container with a kinematic actor
+    PxRigidDynamic* theBox = gPhysX.mPhysics->createRigidDynamic(PxTransform(PxVec3(0,wall_dh,0)));
+    if (!theBox)
+        ncc__error("Actor creation failed!");
+    theBox->setRigidDynamicFlag(PxRigidDynamicFlag::eKINEMATIC, true);
+
+    // Define sides
+    PxBoxGeometry box_bottom(box_d/2,wall_dh/2,box_d/2);
+    PxBoxGeometry box_side(wall_dh/2,box_h/2,box_d/2);
+    PxMaterial* defmat=gPhysX.mDefaultMaterial;
+
+    // Attach the sides, making front wall invisible
+    theBox->createShape(box_bottom,*defmat); // the bottom
+    theBox->createShape(box_side,*defmat,PxTransform(PxVec3(-box_d/2,box_h/2,0),PxQuat(0,PxVec3(0,1,0)))); // left wall
+    theBox->createShape(box_side,*defmat,PxTransform(PxVec3( box_d/2,box_h/2,0),PxQuat(0,PxVec3(0,1,0)))); // right wall
+    theBox->createShape(box_side,*defmat,PxTransform(PxVec3(0,box_h/2,-box_d/2),PxQuat(PxPi/2,PxVec3(0,1,0)))); // back wall
+    PxShape* fwall =  theBox->createShape(box_side,*defmat,PxTransform(PxVec3(0,box_h/2, box_d/2),PxQuat(PxPi/2,PxVec3(0,1,0)))); // front wall
+    fwall->setName("~fwall");
+
+    // Name, color, and register the container
+    theBox->setName("the_box");
+    gColors.colorBucket.push_back(vector<GLubyte>(3));
+    gColors.colorBucket.back()[0] = ncc::rgb::rRed[0];
+    gColors.colorBucket.back()[1] = ncc::rgb::rRed[1];
+    gColors.colorBucket.back()[2] = ncc::rgb::rRed[2];
+    theBox->userData = &(gColors.colorBucket.back()[0]);
+    gPhysX.mScene->addActor(*theBox);
+    labscale::VIPs.container = theBox;
+
 }
 
 // End lint level warnings
