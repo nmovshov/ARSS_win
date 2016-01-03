@@ -39,7 +39,7 @@ void CreateExperiment()
 {
     switch (labscale::eExperimentType)
     {
-    case labscale::eHOLSAPPLE_1:
+    case labscale::eHOLSAPPLE1:
         labscale::CreateHolsapple1Experiment();
         break;
     case labscale::eBAD_EXPERIMENT_TYPE: // intentional fall through!
@@ -58,7 +58,7 @@ void LogExperiment()
 {
     switch (labscale::eExperimentType)
     {
-    case labscale::eHOLSAPPLE_1:
+    case labscale::eHOLSAPPLE1:
         labscale::LogHolsapple1Experiment();
         break;
     case labscale::eBAD_EXPERIMENT_TYPE:
@@ -72,7 +72,7 @@ void ControlExperiment()
 {
     switch (labscale::eExperimentType)
     {
-    case labscale::eHOLSAPPLE_1:
+    case labscale::eHOLSAPPLE1:
         labscale::ControlHolsapple1Experiment();
         break;
     case labscale::eBAD_EXPERIMENT_TYPE:
@@ -105,10 +105,10 @@ bool ConfigExperimentOptions()
 
     // Experiment Type
     ncc::GetStrPropertyFromINIFile("experiment","experiment_type","",buf,MAX_CHARS_PER_NAME,gRun.iniFile.c_str());
-    if      (strcmp(buf,"holsapple_1")==0)
-        labscale::eExperimentType=labscale::eHOLSAPPLE_1;
+    if      (strcmp(buf,"holsapple1")==0)
+        labscale::eExperimentType=labscale::eHOLSAPPLE1;
     else if (strcmp(buf,"springer")==0)
-        labscale::eExperimentType=labscale::eHOLSAPPLE_1;
+        labscale::eExperimentType=labscale::eHOLSAPPLE1;
     else
         labscale::eExperimentType=labscale::eBAD_EXPERIMENT_TYPE;
 
@@ -142,7 +142,7 @@ void RefreshCustomHUDElements()
 
     switch (labscale::eExperimentType)
     {
-    case labscale::eHOLSAPPLE_1:
+    case labscale::eHOLSAPPLE1:
         // Diagnostic stuff
         sprintf_s(buf,MAX_CHARS_PER_NAME,"Diagnostic 1 = %d",42);
         scrPos = 0.8;
@@ -164,7 +164,7 @@ void ApplyCustomInteractions()
     {
         switch (labscale::eExperimentType)
         {
-        case labscale::eHOLSAPPLE_1:
+        case labscale::eHOLSAPPLE1:
             break;
         }
     }
@@ -173,7 +173,7 @@ void RenderOtherStuff()
 {
     switch (labscale::eExperimentType)
     {
-    case labscale::eHOLSAPPLE_1:
+    case labscale::eHOLSAPPLE1:
         //DrawArrow(PxVec3(0),labscale::tumbler.L_now*10 ,0.12,4.0,ncc::rgb::rDarkRed);
         break;
     }

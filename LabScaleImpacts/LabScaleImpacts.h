@@ -13,7 +13,7 @@ namespace labscale
 // Implement different scenarios with different experiment labels. The dispatcher
 // function CreateExperiment will call different routines, basically totally
 // different programs that share mostly just the dispatching and logging mechanism.
-enum {eBAD_EXPERIMENT_TYPE, eHOLSAPPLE_1} eExperimentType;
+enum {eBAD_EXPERIMENT_TYPE, eHOLSAPPLE1} eExperimentType;
 
 // Some throwaway objects with static duration
 PxTransform R1, R0; // throwaway transform holders
