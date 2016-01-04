@@ -46,3 +46,5 @@ Contents of this package:
   header files, and the Visual Studio `.proj` file. Some projects also have data
   files and/or MATLAB script files. Most projects have a `_projectname_.ini` file
   that serves as a template for a run time configuration file.
+
++ `ARSS_win/fragments` - Just code fragments for reference; don't try to compile.
