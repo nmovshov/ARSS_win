@@ -47,6 +47,7 @@ struct {
     int nbGrains;
     PxMaterial *material;
     RubbleGrainType grainType;
+    PxReal materialDensity;
 } regolith;
 
 // Measured and diagnostic quantities

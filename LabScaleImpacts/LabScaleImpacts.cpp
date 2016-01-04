@@ -133,8 +133,10 @@ bool ConfigExperimentOptions()
     labscale::reg_box.fillHeight = atof(buf);
 
     // Regolith parameters
-    ncc::GetStrPropertyFromINIFile("regolith","diameter","0.1",buf,MAX_CHARS_PER_NAME,gRun.iniFile.c_str());
+    ncc::GetStrPropertyFromINIFile("regolith","size","0.0",buf,MAX_CHARS_PER_NAME,gRun.iniFile.c_str());
     labscale::regolith.diameter = atof(buf);
+    ncc::GetStrPropertyFromINIFile("regolith","material_density","0.0",buf,MAX_CHARS_PER_NAME,gRun.iniFile.c_str());
+    labscale::regolith.materialDensity = atof(buf);
     labscale::regolith.nbGrains = ncc::GetIntPropertyFromINIFile("regolith","nb_grains",1,gRun.iniFile.c_str());
 
     // Physical parameters
@@ -149,25 +151,27 @@ void CustomizeGLUT()
 }
 void CustomizeHUD()
 {
-    labscale::hudMsgs.systemDiag1 = gHUD.hud.AddElement("",0.9,0.1);
-    labscale::hudMsgs.systemDiag2 = gHUD.hud.AddElement("",0.9,0.2);
-    labscale::hudMsgs.systemDiag3 = gHUD.hud.AddElement("",0.9,0.3);
-    labscale::hudMsgs.actorDiag   = gHUD.hud.AddElement("",0.9,0.3);
+    labscale::hudMsgs.systemDiag1 = gHUD.hud.AddElement("",0.8,0.04);
+    labscale::hudMsgs.systemDiag2 = gHUD.hud.AddElement("",0.8,0.08);
+    labscale::hudMsgs.systemDiag3 = gHUD.hud.AddElement("",0.8,0.12);
+    labscale::hudMsgs.actorDiag   = gHUD.hud.AddElement("",0.8,0.16);
 }
 void RefreshCustomHUDElements()
 {
     char buf[MAX_CHARS_PER_NAME];
-   // int	  ch2px	    = 18; // hud uses 18pt font
-    //float px2width  = 1.0/glutGet(GLUT_WINDOW_WIDTH);
+    int	  ch2px	    = 18; // hud uses 18pt font
+    float px2width  = 1.0/glutGet(GLUT_WINDOW_WIDTH);
     float scrPos = glutGet(GLUT_WINDOW_WIDTH);
 
     switch (labscale::eExperimentType)
     {
     case labscale::eHOLSAPPLE1:
-        // Diagnostic stuff
-        sprintf_s(buf,MAX_CHARS_PER_NAME,"Diagnostic 1 = %d",42);
-        scrPos = 0.8;
-        gHUD.hud.SetElement(labscale::hudMsgs.systemDiag1,buf,scrPos,0.1);
+        // Diagnostic 1: regolith particles
+        PxU32 nbActors = gPhysX.mScene->getNbActors(gPhysX.roles.dynamics) - 1; // don't count box
+        PxU32 nbSleep = CountSleepers() - 1; // don't count box
+        sprintf_s(buf,MAX_CHARS_PER_NAME,"# particles (sleeping) = %u (%u)",nbActors,nbSleep);
+        scrPos = 1.0 - strlen(buf)*ch2px*px2width*0.5;
+        gHUD.hud.SetElement(labscale::hudMsgs.systemDiag1,buf,scrPos,0.04);
         break;
     }
 }
@@ -250,9 +254,7 @@ void labscale::CreateHolsapple1Experiment()
 }
 void labscale::ControlHolsapple1Experiment()
 {
-    // Check for stop condition (target time interpreted as number of cycles)
-    if (false)
-        gSim.isRunning = false;
+    
 }
 void labscale::LogHolsapple1Experiment()
 {
@@ -281,8 +283,8 @@ void labscale::CreateFillBoxExperiment()
 
     // Adjust camera, grid, display
     gCamera.pos.x = 0.0;
-    gCamera.pos.y = 1.0;
-    gCamera.pos.z = 2.0;
+    gCamera.pos.y = labscale::reg_box.fillHeight*1.4;
+    gCamera.pos.z = labscale::reg_box.diameter*1.6;
     gDebug.bXZGridOn = true;
     
     // Start the action, regolith poured in runtime
@@ -339,7 +341,10 @@ void labscale::ControlFillBoxExperiment()
     if ((gSim.codeTime - poured_time) > 1 && poured < labscale::regolith.nbGrains)
     {
         // Pour a grain
-        CreateRegolithGrain();
+        PxRigidDynamic* grain = CreateRegolithGrain();
+        RandLaunchActor(grain,0.2);
+        PxVec3 v = grain->getLinearVelocity();
+        grain->setLinearVelocity(PxVec3(v.x,0,v.z));
 
         // Account
         poured++;
@@ -352,7 +357,7 @@ PxRigidDynamic * labscale::CreateRegolithGrain()
     // Maybe some day this will have options...
     PxMaterial* defmat = gPhysX.mDefaultMaterial;
     PxReal rad = labscale::regolith.diameter/2;
-    PxRigidDynamic* actor = CreateRubbleGrain(PxVec3(0,1.5*labscale::reg_box.fillHeight,0),eSPHERE_GRAIN,rad,*defmat);
+    PxRigidDynamic* actor = CreateRubbleGrain(PxVec3(0,1.5*labscale::reg_box.fillHeight,0),eSPHERE_GRAIN,rad,*defmat,labscale::regolith.materialDensity);
 
     if (!actor)
         ncc__error("actor creations failed");
