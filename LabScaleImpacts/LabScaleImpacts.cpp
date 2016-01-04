@@ -336,20 +336,29 @@ void labscale::CreateRegolithContainer()
 void labscale::ControlFillBoxExperiment()
 {
     // Pour regolith, one by one every second
-    static int poured = 0;
+    int nbGrains = gPhysX.mScene->getNbActors(gPhysX.roles.dynamics) - 1;
     static PxReal poured_time = 0;
-    if ((gSim.codeTime - poured_time) > 1 && poured < labscale::regolith.nbGrains)
+    if ((gSim.codeTime - poured_time) > 1 && nbGrains < labscale::regolith.nbGrains)
     {
         // Pour a grain
         PxRigidDynamic* grain = CreateRegolithGrain();
-        RandLaunchActor(grain,0.2);
+        RandLaunchActor(grain,2);
         PxVec3 v = grain->getLinearVelocity();
         grain->setLinearVelocity(PxVec3(v.x,0,v.z));
 
-        // Account
-        poured++;
+        // Reset timer
         poured_time = gSim.codeTime;
     }
+
+    // When done save scene and stop
+    if (nbGrains >= labscale::regolith.nbGrains && CountSleepers() == gPhysX.mScene->getNbActors(gPhysX.roles.dynamics))
+    {
+        gSim.isRunning = false;
+        SaveSceneToRepXDump();
+    }
+
+    // Hack if rebooting (F10 was pressed) - not really important
+    if ((gSim.codeTime - poured_time) < 0) poured_time = gSim.codeTime;
 }
 
 PxRigidDynamic * labscale::CreateRegolithGrain()
