@@ -41,6 +41,14 @@ struct {
     PxReal fillHeight;
 } reg_box;
 
+// And regolith
+struct {
+    PxReal diameter;
+    int nbGrains;
+    PxMaterial *material;
+    RubbleGrainType grainType;
+} regolith;
+
 // Measured and diagnostic quantities
 
 // Units
@@ -52,7 +60,9 @@ void CreateHolsapple1Experiment();
 void CreateFillBoxExperiment();
 void LogHolsapple1Experiment();
 void ControlHolsapple1Experiment();
+void ControlFillBoxExperiment();
 void CreateRegolithContainer();
+PxRigidDynamic *CreateRegolithGrain();
 };
 
 #endif

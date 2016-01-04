@@ -37,6 +37,11 @@ int main(int argc, char** argv)
 // Experiment specific functions called from ARSS.cpp
 void CreateExperiment()
 {
+    // All experiments are in lab setup, give the lab a floor with gravity
+    CreateGroundPlane();
+    gPhysX.mScene->setGravity(PxVec3(0,-labscale::units.littleG,0));
+
+    // Now dispatch to specific setup
     switch (labscale::eExperimentType)
     {
     case labscale::eHOLSAPPLE1:
@@ -76,7 +81,9 @@ void ControlExperiment()
     switch (labscale::eExperimentType)
     {
     case labscale::eHOLSAPPLE1:
-        labscale::ControlHolsapple1Experiment();
+        if (labscale::eExperimentSubtype == labscale::eFILL_BOX)
+            labscale::ControlFillBoxExperiment();
+        else ncc__error("Unknown experiment subtype.");
         break;
     case labscale::eBAD_EXPERIMENT_TYPE:
         ncc__warning("Unknown experiment type.");
@@ -124,6 +131,11 @@ bool ConfigExperimentOptions()
     labscale::reg_box.diameter = atof(buf);
     ncc::GetStrPropertyFromINIFile("container","fill_height","1",buf,MAX_CHARS_PER_NAME,gRun.iniFile.c_str());
     labscale::reg_box.fillHeight = atof(buf);
+
+    // Regolith parameters
+    ncc::GetStrPropertyFromINIFile("regolith","diameter","0.1",buf,MAX_CHARS_PER_NAME,gRun.iniFile.c_str());
+    labscale::regolith.diameter = atof(buf);
+    labscale::regolith.nbGrains = ncc::GetIntPropertyFromINIFile("regolith","nb_grains",1,gRun.iniFile.c_str());
 
     // Physical parameters
     ncc::GetStrPropertyFromINIFile("units","little_g","0",buf,MAX_CHARS_PER_NAME,gRun.iniFile.c_str());
@@ -264,9 +276,6 @@ void labscale::LogHolsapple1Experiment()
 void labscale::CreateFillBoxExperiment()
 /* Put a box on the ground ready to be filled with regolith.*/
 {
-    // Give the lab a floor, with gravity
-    CreateGroundPlane();
-
     // Put a box on the floor
     CreateRegolithContainer();
 
@@ -276,7 +285,7 @@ void labscale::CreateFillBoxExperiment()
     gCamera.pos.z = 2.0;
     gDebug.bXZGridOn = true;
     
-    // Start the action
+    // Start the action, regolith poured in runtime
     gSim.isRunning=true;
     gSim.bPause=false;
     gSim.codeTime = 0.0f;
@@ -320,6 +329,34 @@ void labscale::CreateRegolithContainer()
     gPhysX.mScene->addActor(*theBox);
     labscale::VIPs.container = theBox;
 
+}
+
+void labscale::ControlFillBoxExperiment()
+{
+    // Pour regolith, one by one every second
+    static int poured = 0;
+    static PxReal poured_time = 0;
+    if ((gSim.codeTime - poured_time) > 1 && poured < labscale::regolith.nbGrains)
+    {
+        // Pour a grain
+        CreateRegolithGrain();
+
+        // Account
+        poured++;
+        poured_time = gSim.codeTime;
+    }
+}
+
+PxRigidDynamic * labscale::CreateRegolithGrain()
+{
+    // Maybe some day this will have options...
+    PxMaterial* defmat = gPhysX.mDefaultMaterial;
+    PxReal rad = labscale::regolith.diameter/2;
+    PxRigidDynamic* actor = CreateRubbleGrain(PxVec3(0,1.5*labscale::reg_box.fillHeight,0),eSPHERE_GRAIN,rad,*defmat);
+
+    if (!actor)
+        ncc__error("actor creations failed");
+    return actor;
 }
 
 // End lint level warnings
