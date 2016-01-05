@@ -177,17 +177,24 @@ void RefreshCustomHUDElements()
     float px2width  = 1.0/glutGet(GLUT_WINDOW_WIDTH);
     float scrPos = glutGet(GLUT_WINDOW_WIDTH);
 
-    switch (labscale::eExperimentType)
+    if (labscale::eExperimentType == labscale::eHOLSAPPLE1 && labscale::eExperimentSubtype == labscale::eFILL_BOX)
     {
-    case labscale::eHOLSAPPLE1:
-        // Diagnostic 1: regolith particles
-        PxU32 nbActors = gPhysX.mScene->getNbActors(gPhysX.roles.dynamics) - 1; // don't count box
-        PxU32 nbSleep = CountSleepers() - 1; // don't count box
-        sprintf_s(buf,MAX_CHARS_PER_NAME,"# particles (sleeping) = %u (%u)",nbActors,nbSleep);
-        scrPos = 1.0 - strlen(buf)*ch2px*px2width*0.5;
-        gHUD.hud.SetElement(labscale::hudMsgs.systemDiag1,buf,scrPos,0.04);
-        break;
+		// Diagnostic 1: regolith particles
+		PxU32 nbActors = gPhysX.mScene->getNbActors(gPhysX.roles.dynamics) - 1; // don't count the box
+		PxU32 nbSleep = CountSleepers() - 1; // don't count the box
+		sprintf_s(buf,MAX_CHARS_PER_NAME,"# particles (sleeping) = %u (%u)",nbActors,nbSleep);
+		scrPos = 1.0 - strlen(buf)*ch2px*px2width*0.5;
+		gHUD.hud.SetElement(labscale::hudMsgs.systemDiag1,buf,scrPos,0.04);
+
+		// Diagnostic 2: fill height
+		PxReal boxFloor = labscale::VIPs.container->getGlobalPose().p.y + labscale::reg_box.diameter/20; // width hard coded for now :(
+		FindExtremers();
+		PxReal regolith_surface = gExp.VIPs.extremers.upmost->getGlobalPose().p.y - boxFloor + labscale::regolith.diameter/2;
+		sprintf_s(buf,MAX_CHARS_PER_NAME,"Fill height = %f cm (%d layers)",regolith_surface*100,int(regolith_surface/labscale::regolith.diameter));
+		scrPos = 1.0 - strlen(buf)*ch2px*px2width*0.5;
+		gHUD.hud.SetElement(labscale::hudMsgs.systemDiag2,buf,scrPos,0.08);
     }
+    
 }
 void FireAction()
 {
@@ -353,7 +360,6 @@ void labscale::CreateFillBoxExperiment()
     RefreshHUD();
 
 }
-
 void labscale::CreateRegolithContainer()
 {
     // Geometry variables
@@ -362,7 +368,7 @@ void labscale::CreateRegolithContainer()
     PxReal wall_dh = box_d/20;
 
     // We'll make the regolith container with a kinematic actor
-    PxRigidDynamic* theBox = gPhysX.mPhysics->createRigidDynamic(PxTransform(PxVec3(0,wall_dh,0)));
+    PxRigidDynamic* theBox = gPhysX.mPhysics->createRigidDynamic(PxTransform(PxVec3(0,0.05*wall_dh,0)));
     if (!theBox)
         ncc__error("Actor creation failed!");
     theBox->setRigidDynamicFlag(PxRigidDynamicFlag::eKINEMATIC, true);
@@ -373,7 +379,7 @@ void labscale::CreateRegolithContainer()
     PxMaterial* defmat=gPhysX.mDefaultMaterial;
 
     // Attach the sides, making front wall invisible
-    theBox->createShape(box_bottom,*defmat); // the bottom
+    theBox->createShape(box_bottom,*defmat,PxTransform(PxVec3(0,wall_dh/2,0))); // the bottom
     theBox->createShape(box_side,*defmat,PxTransform(PxVec3(-box_d/2,box_h/2,0),PxQuat(0,PxVec3(0,1,0)))); // left wall
     theBox->createShape(box_side,*defmat,PxTransform(PxVec3( box_d/2,box_h/2,0),PxQuat(0,PxVec3(0,1,0)))); // right wall
     theBox->createShape(box_side,*defmat,PxTransform(PxVec3(0,box_h/2,-box_d/2),PxQuat(PxPi/2,PxVec3(0,1,0)))); // back wall
