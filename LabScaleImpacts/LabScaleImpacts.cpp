@@ -239,10 +239,16 @@ void labscale::CreatePenetratorExperiment()
     // Load pre-settled regolith or create empty container
     if (gRun.loadSceneFromFile.empty())
         labscale::CreateRegolithContainer();
+    else
+        LoadSceneFromFile(gRun.loadSceneFromFile);
 
-    // Ready, aim impactor, will fire when all is quiet
-    PxMaterial* steel = gPhysX.mDefaultMaterial;
-    PxReal rho = 8000;
+    // Create impactor material (steel, for now)
+    PxMaterial* steel = gPhysX.mPhysics->createMaterial(0.5, 0.5, 0.5);
+    if (!steel)
+        ncc__error("\aPxPhysics::createMaterial() failed!");
+    PxReal rho = labscale::impactor.materialDensity;
+
+    // Ready, aim impactor (will fire when all is quiet)
     PxReal radius = labscale::impactor.diameter/2;
     labscale::VIPs.ball1 = CreateRubbleGrain(PxVec3(0,labscale::reg_box.fillHeight*1.6,0),eSPHERE_GRAIN,radius,*steel,rho);
 
@@ -353,7 +359,6 @@ void labscale::CreateRegolithContainer()
     labscale::VIPs.container = theBox;
 
 }
-
 void labscale::ControlFillBoxExperiment()
 {
     // Pour regolith, one by one every second
@@ -381,13 +386,12 @@ void labscale::ControlFillBoxExperiment()
     // Hack if rebooting (F10 was pressed) - not really important
     if ((gSim.codeTime - poured_time) < 0) poured_time = gSim.codeTime;
 }
-
 PxRigidDynamic * labscale::CreateRegolithGrain()
 {
-    // Maybe some day this will have options...
-    PxMaterial* defmat = gPhysX.mDefaultMaterial;
-    PxReal rad = labscale::regolith.diameter/2;
-    PxRigidDynamic* actor = CreateRubbleGrain(PxVec3(0,1.5*labscale::reg_box.fillHeight,0),eSPHERE_GRAIN,rad,*defmat,labscale::regolith.materialDensity);
+    PxMaterial* glass = gPhysX.mPhysics->createMaterial(0.5, 0.5, 0.5); // "glass"
+    PxReal radius = labscale::regolith.diameter/2;
+    PxReal rho = labscale::regolith.materialDensity;
+    PxRigidDynamic* actor = CreateRubbleGrain(PxVec3(0,1.5*labscale::reg_box.fillHeight,0),eSPHERE_GRAIN,radius,*glass,rho);
 
     if (!actor)
         ncc__error("actor creations failed");
