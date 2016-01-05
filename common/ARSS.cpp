@@ -561,6 +561,13 @@ void ProcessCameraControls()
 		case 'z':
 			gCamera.pos -= gCamera.up * gCamera.speed * dt;
 			break;
+		case '+':
+			gCamera.speed *= 1.1;
+			gControls.keys[k] = false; // The SHIFT messes up the release?
+			break;
+		case '-':
+			gCamera.speed *= 0.9;
+			break;
 		}
 	}
 }
