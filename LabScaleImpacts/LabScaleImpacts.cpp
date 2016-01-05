@@ -47,6 +47,8 @@ void CreateExperiment()
     case labscale::eHOLSAPPLE1:
         if (labscale::eExperimentSubtype==labscale::eFILL_BOX)
             labscale::CreateFillBoxExperiment();
+        else if (labscale::eExperimentSubtype==labscale::ePENETRATOR)
+            labscale::CreatePenetratorExperiment();
         else
             ncc__error("Unknown experiment type. Experiment aborted.\a");
         break;
@@ -83,6 +85,8 @@ void ControlExperiment()
     case labscale::eHOLSAPPLE1:
         if (labscale::eExperimentSubtype == labscale::eFILL_BOX)
             labscale::ControlFillBoxExperiment();
+        else if (labscale::eExperimentSubtype == labscale::ePENETRATOR)
+            labscale::ControlPenetratorExperiment();
         else ncc__error("Unknown experiment subtype.");
         break;
     case labscale::eBAD_EXPERIMENT_TYPE:
@@ -121,8 +125,10 @@ bool ConfigExperimentOptions()
         labscale::eExperimentType=labscale::eBAD_EXPERIMENT_TYPE;
 
     ncc::GetStrPropertyFromINIFile("experiment","experiment_subtype","",buf,MAX_CHARS_PER_NAME,gRun.iniFile.c_str());
-    if (strcmp(buf,"fill_container")==0)
+    if      (strcmp(buf,"fill_container")==0)
         labscale::eExperimentSubtype=labscale::eFILL_BOX;
+    else if (strcmp(buf,"penetrator")==0)
+        labscale::eExperimentSubtype=labscale::ePENETRATOR;
     else
         labscale::eExperimentSubtype=labscale::eBAD_EXP_SUBTYPE;
 
@@ -133,11 +139,17 @@ bool ConfigExperimentOptions()
     labscale::reg_box.fillHeight = atof(buf);
 
     // Regolith parameters
-    ncc::GetStrPropertyFromINIFile("regolith","size","0.0",buf,MAX_CHARS_PER_NAME,gRun.iniFile.c_str());
+    ncc::GetStrPropertyFromINIFile("regolith","diameter","0.0",buf,MAX_CHARS_PER_NAME,gRun.iniFile.c_str());
     labscale::regolith.diameter = atof(buf);
     ncc::GetStrPropertyFromINIFile("regolith","material_density","0.0",buf,MAX_CHARS_PER_NAME,gRun.iniFile.c_str());
     labscale::regolith.materialDensity = atof(buf);
     labscale::regolith.nbGrains = ncc::GetIntPropertyFromINIFile("regolith","nb_grains",1,gRun.iniFile.c_str());
+
+    // Impactor parameters
+    ncc::GetStrPropertyFromINIFile("impactor","diameter","0.0",buf,MAX_CHARS_PER_NAME,gRun.iniFile.c_str());
+    labscale::impactor.diameter = atof(buf);
+    ncc::GetStrPropertyFromINIFile("impactor","material_density","0.0",buf,MAX_CHARS_PER_NAME,gRun.iniFile.c_str());
+    labscale::impactor.materialDensity = atof(buf);
 
     // Physical parameters
     ncc::GetStrPropertyFromINIFile("units","little_g","0",buf,MAX_CHARS_PER_NAME,gRun.iniFile.c_str());
@@ -221,22 +233,31 @@ void RightArrowAction()
 }
 
 // Project namespace functions
-void labscale::CreateHolsapple1Experiment()
-/* Swing a mass on a spring. Check integration and scaling.*/
+void labscale::CreatePenetratorExperiment()
+/* Throw a steel ball at glass regolith; measure penetration depth.*/
 {
-    // Put a box at the end of a pulled spring (sold separately)
-    labscale::VIPs.ball1 = CreateRubbleGrain(PxVec3(10,0,0),eBOX_GRAIN,1,*gPhysX.mDefaultMaterial);
+    // Load pre-settled regolith or create empty container
+    if (gRun.loadSceneFromFile.empty())
+        labscale::CreateRegolithContainer();
 
-    // Move the camera to a better vantage point and turn on a grid
-    gCamera.pos = PxVec3(0,0,14);
-    gDebug.bXYGridOn = true;
+    // Ready, aim impactor, will fire when all is quiet
+    PxMaterial* steel = gPhysX.mDefaultMaterial;
+    PxReal rho = 8000;
+    PxReal radius = labscale::impactor.diameter/2;
+    labscale::VIPs.ball1 = CreateRubbleGrain(PxVec3(0,labscale::reg_box.fillHeight*1.6,0),eSPHERE_GRAIN,radius,*steel,rho);
+
+    // Adjust camera, grid, display
+    gCamera.pos.x = 0.0;
+    gCamera.pos.y = labscale::reg_box.fillHeight*1.4;
+    gCamera.pos.z = labscale::reg_box.diameter*1.6;
+    gDebug.bXZGridOn = true;
 
     // Start a log
     if (gRun.outputFrequency)
     {
         ostringstream header;
         header << "# This is the run log of " << gRun.baseName << endl;
-        header << "# Experiment type: SPRINGER (" << labscale::eExperimentType << ")" << endl;
+        header << "# Experiment type: HOLSAPPLE1 (" << labscale::eExperimentType << ")" << endl;
         header << "# Time step used = " << gSim.timeStep << endl;
         header << "# Columns are (values in code units):" << endl;
         header << "# [t]    [x]    [v]" << endl;
@@ -252,7 +273,7 @@ void labscale::CreateHolsapple1Experiment()
     gSim.codeTime = 0.0f;
     RefreshHUD();
 }
-void labscale::ControlHolsapple1Experiment()
+void labscale::ControlPenetratorExperiment()
 {
     
 }
