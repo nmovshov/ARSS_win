@@ -1305,6 +1305,19 @@ void CycleCamera()
 	gCamera = gCameraLoop[liveCameraIdx];
 	gCamera.liveCamera = liveCameraIdx;
 }
+PxActor* FindNamedActor(string name)
+{
+	// Return pointer to first actor with given name (names are not unique)
+	PxU32 nbActors = gPhysX.mScene->getNbActors(gPhysX.roles.dynamics);
+	gPhysX.mScene->getActors(gPhysX.roles.dynamics,gPhysX.cast,nbActors);
+	while (nbActors--)
+	{
+		PxRigidDynamic* actor = gPhysX.cast[nbActors]->isRigidDynamic();
+		if (strcmp(actor->getName(),name.c_str())==0)
+			return actor;
+	}
+	return NULL;
+}
 
 // End lint level warnings
 #ifdef LINT

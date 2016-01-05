@@ -233,6 +233,7 @@ void AddCamera();
 void CycleCamera();
 void ReCenterActors();
 void FindExtremers();
+PxActor* FindNamedActor(string name);
 bool SaveSceneToRepXDump();
 bool LoadSceneFromFile(string sceneFile, bool dynamicsOnly=false);
 PxRigidDynamic* CreateRubbleGrain(PxVec3 startPosition, RubbleGrainType grainType, PxReal sizeScale, PxMaterial& material, PxReal density=1, bool isUniform=true, PxReal sizeScatter=1.0, vector<PxVec3> *verts=NULL);
