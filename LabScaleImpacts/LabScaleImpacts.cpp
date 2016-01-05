@@ -327,7 +327,18 @@ void labscale::CreateFillBoxExperiment()
 /* Put a box on the ground ready to be filled with regolith.*/
 {
     // Put a box on the floor
-    CreateRegolithContainer();
+	if (gRun.loadSceneFromFile.empty())
+		CreateRegolithContainer();
+	else
+	{
+		if(!LoadSceneFromFile(gRun.loadSceneFromFile)) ncc__error("Failed to load partially filed box.\a\n");
+		PxActor* theBox = FindNamedActor("#the_box");
+		if (theBox)
+		{
+			ColorActor(theBox,ncc::rgb::rRed);
+			labscale::VIPs.container = theBox->isRigidDynamic();
+		}
+	}
 
     // Adjust camera, grid, display
     gCamera.pos.x = 0.0;
@@ -370,12 +381,8 @@ void labscale::CreateRegolithContainer()
     fwall->setName("~fwall");
 
     // Name, color, and register the container
-    theBox->setName("the_box");
-    gColors.colorBucket.push_back(vector<GLubyte>(3));
-    gColors.colorBucket.back()[0] = ncc::rgb::rRed[0];
-    gColors.colorBucket.back()[1] = ncc::rgb::rRed[1];
-    gColors.colorBucket.back()[2] = ncc::rgb::rRed[2];
-    theBox->userData = &(gColors.colorBucket.back()[0]);
+	theBox->setName("#the_box");
+    ColorActor(theBox, ncc::rgb::rRed);
     gPhysX.mScene->addActor(*theBox);
     labscale::VIPs.container = theBox;
 
