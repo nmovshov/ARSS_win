@@ -51,6 +51,7 @@ struct {
 struct {
     PxReal diameter;
     PxReal materialDensity;
+    PxReal speed;
     RubbleGrainType grainType;
 } impactor;
 

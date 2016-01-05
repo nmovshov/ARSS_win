@@ -150,6 +150,8 @@ bool ConfigExperimentOptions()
     labscale::impactor.diameter = atof(buf);
     ncc::GetStrPropertyFromINIFile("impactor","material_density","0.0",buf,MAX_CHARS_PER_NAME,gRun.iniFile.c_str());
     labscale::impactor.materialDensity = atof(buf);
+    ncc::GetStrPropertyFromINIFile("impactor","speed","0.0",buf,MAX_CHARS_PER_NAME,gRun.iniFile.c_str());
+    labscale::impactor.speed = atof(buf);
 
     // Physical parameters
     ncc::GetStrPropertyFromINIFile("units","little_g","0",buf,MAX_CHARS_PER_NAME,gRun.iniFile.c_str());
@@ -251,6 +253,8 @@ void labscale::CreatePenetratorExperiment()
     // Ready, aim impactor (will fire when all is quiet)
     PxReal radius = labscale::impactor.diameter/2;
     labscale::VIPs.ball1 = CreateRubbleGrain(PxVec3(0,labscale::reg_box.fillHeight*1.6,0),eSPHERE_GRAIN,radius,*steel,rho);
+    labscale::VIPs.ball1->setName("impactor");
+    labscale::VIPs.ball1->setRigidDynamicFlag(PxRigidDynamicFlag::eKINEMATIC, true);
 
     // Adjust camera, grid, display
     gCamera.pos.x = 0.0;
@@ -266,7 +270,7 @@ void labscale::CreatePenetratorExperiment()
         header << "# Experiment type: HOLSAPPLE1 (" << labscale::eExperimentType << ")" << endl;
         header << "# Time step used = " << gSim.timeStep << endl;
         header << "# Columns are (values in code units):" << endl;
-        header << "# [t]    [x]    [v]" << endl;
+        header << "# [t]    [x]    [y]    [z]" << endl;
         ofstream fbuf(gRun.outFile.c_str(),ios::trunc);
         if (!fbuf.is_open())
             ncc__error("Could not start a log. Experiment aborted.\a\n");
@@ -281,7 +285,24 @@ void labscale::CreatePenetratorExperiment()
 }
 void labscale::ControlPenetratorExperiment()
 {
-    
+    static bool pre = true;
+    // Wait until everyone is asleep - 
+    if (CountSleepers() == gPhysX.mScene->getNbActors(gPhysX.roles.dynamics))
+    {
+        // then fire, if you haven't already...
+        if (pre)
+        {
+            labscale::VIPs.ball1->setRigidDynamicFlag(PxRigidDynamicFlag::eKINEMATIC, false);
+            labscale::VIPs.ball1->setLinearVelocity(PxVec3(0, -1, 0)*labscale::impactor.speed);
+            pre = false;
+        }
+        // ... in which case you're done.
+        else
+        {
+            gSim.isRunning = false;
+            SaveSceneToRepXDump();
+        }
+    }
 }
 void labscale::LogHolsapple1Experiment()
 {
@@ -392,6 +413,7 @@ PxRigidDynamic * labscale::CreateRegolithGrain()
     PxReal radius = labscale::regolith.diameter/2;
     PxReal rho = labscale::regolith.materialDensity;
     PxRigidDynamic* actor = CreateRubbleGrain(PxVec3(0,1.5*labscale::reg_box.fillHeight,0),eSPHERE_GRAIN,radius,*glass,rho);
+    actor->setName("regolith");
 
     if (!actor)
         ncc__error("actor creations failed");
