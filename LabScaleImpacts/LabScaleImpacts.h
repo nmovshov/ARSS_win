@@ -64,7 +64,7 @@ struct {
 
 void CreatePenetratorExperiment();
 void CreateFillBoxExperiment();
-void LogHolsapple1Experiment();
+void LogPenetratorExperiment();
 void ControlPenetratorExperiment();
 void ControlFillBoxExperiment();
 void CreateRegolithContainer();

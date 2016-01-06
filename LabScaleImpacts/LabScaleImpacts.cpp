@@ -65,17 +65,8 @@ void RebootExperiment()
 }
 void LogExperiment()
 {
-    switch (labscale::eExperimentType)
-    {
-    case labscale::eHOLSAPPLE1:
-        labscale::LogHolsapple1Experiment();
-        break;
-    case labscale::eBAD_EXPERIMENT_TYPE:
-        ncc__warning("Unknown experiment type. Nothing logged.");
-        break;
-    default:
-        break;
-    }
+    if (labscale::eExperimentType == labscale::eHOLSAPPLE1 && labscale::eExperimentSubtype == labscale::ePENETRATOR)
+        labscale::LogPenetratorExperiment();
 }
 void ControlExperiment()
 {
@@ -319,7 +310,7 @@ void labscale::ControlPenetratorExperiment()
         }
     }
 }
-void labscale::LogHolsapple1Experiment()
+void labscale::LogPenetratorExperiment()
 {
     // Let's do this without worrying about minimizing access to disk - it will be so much easier!
     ofstream fbuf(gRun.outFile.c_str(),ios::app);
@@ -331,11 +322,15 @@ void labscale::LogHolsapple1Experiment()
     // Collect
     PxReal t = gSim.codeTime;
     PxReal x = labscale::VIPs.ball1->getGlobalPose().p.x;
-    PxReal v = labscale::VIPs.ball1->getLinearVelocity().x;
+    PxReal y = labscale::VIPs.ball1->getGlobalPose().p.y;
+    PxReal z = labscale::VIPs.ball1->getGlobalPose().p.z;
 
     // Write
     fbuf.setf(ios::fixed);
-    fbuf << setw(8) << t << "    " << setw(8) << x << "    " << setw(8) << v << endl;
+    fbuf << setw(8) << t << "    ";
+    fbuf << setw(8) << showpos << x << "    ";
+    fbuf << setw(8) << showpos << y << "    ";
+    fbuf << setw(8) << showpos << z << endl;
     fbuf.close();
 }
 void labscale::CreateFillBoxExperiment()
