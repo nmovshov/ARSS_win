@@ -37,8 +37,7 @@ int main(int argc, char** argv)
 // Experiment specific functions called from ARSS.cpp
 void CreateExperiment()
 {
-    // All experiments are in lab setup, give the lab a floor with gravity
-    CreateGroundPlane();
+    // All experiments are in lab setup, give the lab gravity
     gPhysX.mScene->setGravity(PxVec3(0,-labscale::units.littleG,0));
 
     // Now dispatch to specific setup
@@ -249,7 +248,15 @@ void labscale::CreatePenetratorExperiment()
     if (gRun.loadSceneFromFile.empty())
         labscale::CreateRegolithContainer();
     else
-        LoadSceneFromFile(gRun.loadSceneFromFile);
+    {
+        if(!LoadSceneFromFile(gRun.loadSceneFromFile)) ncc__error("Failed to load partially filed box.\a\n");
+        PxActor* theBox = FindNamedActor("the_box");
+        if (theBox)
+        {
+            ColorActor(theBox, ncc::rgb::rRed);
+            labscale::VIPs.container = theBox->isRigidDynamic();
+        }
+    }
 
     // Create impactor material (steel, for now)
     PxMaterial* steel = gPhysX.mPhysics->createMaterial(0.5, 0.5, 0.5);
@@ -262,12 +269,13 @@ void labscale::CreatePenetratorExperiment()
     labscale::VIPs.ball1 = CreateRubbleGrain(PxVec3(0,labscale::reg_box.fillHeight*1.6,0),eSPHERE_GRAIN,radius,*steel,rho);
     labscale::VIPs.ball1->setName("impactor");
     labscale::VIPs.ball1->setRigidDynamicFlag(PxRigidDynamicFlag::eKINEMATIC, true);
+    ColorActor(labscale::VIPs.ball1, ncc::rgb::gDarkOlive);
 
     // Adjust camera, grid, display
     gCamera.pos.x = 0.0;
     gCamera.pos.y = labscale::reg_box.fillHeight*1.4;
     gCamera.pos.z = labscale::reg_box.diameter*1.6;
-    gDebug.bXZGridOn = true;
+    gDebug.bXYGridOn = true;
 
     // Start a log
     if (gRun.outputFrequency)
@@ -339,7 +347,7 @@ void labscale::CreateFillBoxExperiment()
 	else
 	{
 		if(!LoadSceneFromFile(gRun.loadSceneFromFile)) ncc__error("Failed to load partially filed box.\a\n");
-		PxActor* theBox = FindNamedActor("#the_box");
+		PxActor* theBox = FindNamedActor("the_box");
 		if (theBox)
 		{
 			ColorActor(theBox,ncc::rgb::rRed);
@@ -351,7 +359,7 @@ void labscale::CreateFillBoxExperiment()
     gCamera.pos.x = 0.0;
     gCamera.pos.y = labscale::reg_box.fillHeight*1.4;
     gCamera.pos.z = labscale::reg_box.diameter*1.6;
-    gDebug.bXZGridOn = true;
+    gDebug.bXYGridOn = true;
     
     // Start the action, regolith poured in runtime
     gSim.isRunning=true;
@@ -387,7 +395,7 @@ void labscale::CreateRegolithContainer()
     fwall->setName("~fwall");
 
     // Name, color, and register the container
-	theBox->setName("#the_box");
+    theBox->setName("the_box");
     ColorActor(theBox, ncc::rgb::rRed);
     gPhysX.mScene->addActor(*theBox);
     labscale::VIPs.container = theBox;
