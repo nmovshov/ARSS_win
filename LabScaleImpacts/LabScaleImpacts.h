@@ -38,6 +38,7 @@ struct {
 struct {
     PxReal diameter;
     PxReal fillHeight;
+	PxReal pourRate;
 } reg_box;
 
 // And regolith

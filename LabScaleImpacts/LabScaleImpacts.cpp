@@ -127,6 +127,8 @@ bool ConfigExperimentOptions()
     labscale::reg_box.diameter = atof(buf);
     ncc::GetStrPropertyFromINIFile("container","fill_height","1",buf,MAX_CHARS_PER_NAME,gRun.iniFile.c_str());
     labscale::reg_box.fillHeight = atof(buf);
+	ncc::GetStrPropertyFromINIFile("container","pour_rate","1",buf,MAX_CHARS_PER_NAME,gRun.iniFile.c_str());
+	labscale::reg_box.pourRate = atof(buf);
 
     // Regolith parameters
     ncc::GetStrPropertyFromINIFile("regolith","diameter","0.0",buf,MAX_CHARS_PER_NAME,gRun.iniFile.c_str());
@@ -401,7 +403,7 @@ void labscale::ControlFillBoxExperiment()
     // Pour regolith, one by one every second
     int nbGrains = gPhysX.mScene->getNbActors(gPhysX.roles.dynamics) - 1;
     static PxReal poured_time = 0;
-    if ((gSim.wallTime - poured_time) > 500 && nbGrains < labscale::regolith.nbGrains)
+    if ((gSim.codeTime - poured_time) > (1/labscale::reg_box.pourRate) && nbGrains < labscale::regolith.nbGrains)
     {
         // Pour a grain
         PxRigidDynamic* grain = CreateRegolithGrain();
@@ -410,7 +412,7 @@ void labscale::ControlFillBoxExperiment()
         grain->setLinearVelocity(PxVec3(v.x,0,v.z));
 
         // Reset timer
-        poured_time = gSim.wallTime;
+        poured_time = gSim.codeTime;
     }
 
     // When done save scene and stop
@@ -421,7 +423,7 @@ void labscale::ControlFillBoxExperiment()
     }
 
     // Hack if rebooting (F10 was pressed) - not really important
-    //if ((gSim.codeTime - poured_time) < 0) poured_time = gSim.codeTime;
+    if ((gSim.codeTime - poured_time) < 0) poured_time = gSim.codeTime;
 }
 PxRigidDynamic * labscale::CreateRegolithGrain()
 {
