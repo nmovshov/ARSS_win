@@ -228,6 +228,7 @@ void CreateGroundPlane();
 void LogRunStats();
 PxU32 CountSleepers();
 void Reveille();
+void LightsOut();
 void DeadStop();
 void AddCamera();
 void CycleCamera();

@@ -458,7 +458,10 @@ void ProcessAsciiKeys(unsigned char key, int x, int y)
 	case 'g': /*g or ALT-g*/
 		if (glutGetModifiers()==GLUT_ACTIVE_ALT) gDebug.bXYGridOn = !gDebug.bXYGridOn;
 		break;
-	case '?': /*WakeUp*/
+	case '?': /*GoToSleep*/
+		LightsOut();
+		break;
+	case '/': /*WakeUp*/
 		Reveille();
 		break;
 	case 'p': /*Toggle Pause*/
@@ -846,6 +849,18 @@ void Reveille()
 		for (PxU32 k=0; k<nbActors; k++)
 		{
 			(gPhysX.cast[k]->isRigidDynamic())->wakeUp();
+		}
+	}
+}
+void LightsOut()
+{
+	PxU32 nbActors = gPhysX.mScene->getNbActors(gPhysX.roles.dynamics);
+	if (nbActors)
+	{
+		gPhysX.mScene->getActors(gPhysX.roles.dynamics,gPhysX.cast,nbActors);
+		for (PxU32 k=0; k<nbActors; k++)
+		{
+			(gPhysX.cast[k]->isRigidDynamic())->putToSleep();
 		}
 	}
 }
