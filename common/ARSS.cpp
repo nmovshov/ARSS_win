@@ -469,6 +469,9 @@ void ProcessAsciiKeys(unsigned char key, int x, int y)
 		if (glutGetModifiers()==GLUT_ACTIVE_ALT) AddCamera();
 		else CycleCamera();
 		break;
+	case 'h': /*h or ALT-h*/
+		if (glutGetModifiers()==GLUT_ACTIVE_ALT) DeadStop();
+		break;
 	//default: // uncomment to find out unknown ascii codes
 	//	printf("%d\n",key);
 	}
