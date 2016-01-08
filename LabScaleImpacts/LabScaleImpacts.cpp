@@ -299,11 +299,14 @@ void labscale::CreatePenetratorExperiment()
 }
 void labscale::ControlPenetratorExperiment()
 {
-    // Finish when everyone is asleep
-	if (CountSleepers() == gPhysX.mScene->getNbActors(gPhysX.roles.dynamics))
+    // Finish when everyone is asleep, after impact!
+	if (!(labscale::VIPs.ball1->getRigidDynamicFlags() & PxRigidDynamicFlag::eKINEMATIC))
 	{
-	    gSim.isRunning = false;
-	    SaveSceneToRepXDump();
+		if (CountSleepers() == gPhysX.mScene->getNbActors(gPhysX.roles.dynamics))
+		{
+		    gSim.isRunning = false;
+		    SaveSceneToRepXDump();
+		}
 	}
 }
 void labscale::LogPenetratorExperiment()
