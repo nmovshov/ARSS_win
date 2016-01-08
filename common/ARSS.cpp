@@ -891,13 +891,15 @@ void ReCenterActors()
 }
 void FindExtremers()
 {
-	gExp.VIPs.extremers.downmost=gExp.VIPs.extremers.upmost		= NULL;
-	gExp.VIPs.extremers.leftmost=gExp.VIPs.extremers.rightmost	= NULL;
-	gExp.VIPs.extremers.inmost=gExp.VIPs.extremers.outmost		= NULL;
+	gExp.VIPs.extremers.downmost=gExp.VIPs.extremers.upmost    = NULL;
+	gExp.VIPs.extremers.leftmost=gExp.VIPs.extremers.rightmost = NULL;
+	gExp.VIPs.extremers.inmost=gExp.VIPs.extremers.outmost     = NULL;
+	gExp.VIPs.extremers.fastmost=gExp.VIPs.extremers.slowmost  = NULL;
 	if (gPhysX.mScene)
 	{
-		PxReal right	= -PX_MAX_REAL,	up		= -PX_MAX_REAL,	out	= -PX_MAX_REAL;
-		PxReal left		= +PX_MAX_REAL,	down	= +PX_MAX_REAL,	inn	= +PX_MAX_REAL;
+		PxReal right = -PX_MAX_REAL,  up   = -PX_MAX_REAL,  out = -PX_MAX_REAL;
+		PxReal left  = +PX_MAX_REAL,  down = +PX_MAX_REAL,  inn = +PX_MAX_REAL;
+		PxReal slow  = +PX_MAX_REAL,  fast = 0.0;
 		PxU32 nbActors = gPhysX.mScene->getNbActors(gPhysX.roles.dynamics);
 		if (nbActors)
 		{
@@ -907,12 +909,15 @@ void FindExtremers()
 				PxRigidDynamic* anActor = gPhysX.cast[k]->isRigidDynamic();
 				if (anActor==NULL) continue; // shouldn't happen though
 				PxVec3 pos = anActor->getGlobalPose().p;
+				PxReal spd = anActor->getLinearVelocity().magnitudeSquared();
 				if (pos.x > right)	{right = pos.x;	gExp.VIPs.extremers.rightmost = anActor;}
-				if (pos.x < left)	{left = pos.x;	gExp.VIPs.extremers.leftmost = anActor;}
-				if (pos.y > up)		{up = pos.y;	gExp.VIPs.extremers.upmost = anActor;}
-				if (pos.y < down)	{down = pos.y;	gExp.VIPs.extremers.downmost = anActor;}
-				if (pos.z > out)	{out = pos.z;	gExp.VIPs.extremers.outmost = anActor;}
-				if (pos.z < inn)	{inn = pos.z;	gExp.VIPs.extremers.inmost = anActor;}
+				if (pos.x < left)	{left = pos.x;	gExp.VIPs.extremers.leftmost  = anActor;}
+				if (pos.y > up)		{up = pos.y;	gExp.VIPs.extremers.upmost    = anActor;}
+				if (pos.y < down)	{down = pos.y;	gExp.VIPs.extremers.downmost  = anActor;}
+				if (pos.z > out)	{out = pos.z;	gExp.VIPs.extremers.outmost   = anActor;}
+				if (pos.z < inn)	{inn = pos.z;	gExp.VIPs.extremers.inmost    = anActor;}
+				if (spd   < slow)   {slow = spd;    gExp.VIPs.extremers.slowmost  = anActor;}
+				if (spd   > fast)   {fast = spd;    gExp.VIPs.extremers.fastmost  = anActor;}
 			}
 		}
 	}

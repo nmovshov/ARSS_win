@@ -166,6 +166,8 @@ struct arss_experiment {
 			PxRigidDynamic* downmost;
 			PxRigidDynamic* inmost;
 			PxRigidDynamic* outmost;
+			PxRigidDynamic* fastmost;
+			PxRigidDynamic* slowmost;
 		} extremers;
 	} VIPs;
 	struct {
