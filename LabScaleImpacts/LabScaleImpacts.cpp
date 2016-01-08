@@ -190,7 +190,11 @@ void RefreshCustomHUDElements()
 }
 void FireAction()
 {
-    //int x=0;
+    if (labscale::eExperimentType==labscale::eHOLSAPPLE1 && labscale::eExperimentSubtype==labscale::ePENETRATOR)
+    {
+		labscale::VIPs.ball1->setRigidDynamicFlag(PxRigidDynamicFlag::eKINEMATIC, false);
+		labscale::VIPs.ball1->setLinearVelocity(PxVec3(0,-labscale::impactor.speed,0));
+    }
 }
 void PrintDebug()
 {
@@ -257,9 +261,11 @@ void labscale::CreatePenetratorExperiment()
         ncc__error("\aPxPhysics::createMaterial() failed!");
     PxReal rho = labscale::impactor.materialDensity;
 
-    // Ready, aim impactor (will fire when all is quiet)
+    // Ready, aim impactor (will fire manually)
+	FindExtremers(); 
     PxReal radius = labscale::impactor.diameter/2;
-    labscale::VIPs.ball1 = CreateRubbleGrain(PxVec3(0,labscale::reg_box.fillHeight*1.6,0),eSPHERE_GRAIN,radius,*steel,rho);
+	PxReal hLaunch = gExp.VIPs.extremers.upmost->getGlobalPose().p.y*2;
+    labscale::VIPs.ball1 = CreateRubbleGrain(PxVec3(0,hLaunch,0),eSPHERE_GRAIN,radius,*steel,rho);
     labscale::VIPs.ball1->setName("impactor");
     labscale::VIPs.ball1->setRigidDynamicFlag(PxRigidDynamicFlag::eKINEMATIC, true);
     ColorActor(labscale::VIPs.ball1, ncc::rgb::gDarkOlive);
@@ -293,24 +299,12 @@ void labscale::CreatePenetratorExperiment()
 }
 void labscale::ControlPenetratorExperiment()
 {
-    static bool pre = true;
-    // Wait until everyone is asleep - 
-    if (CountSleepers() == gPhysX.mScene->getNbActors(gPhysX.roles.dynamics))
-    {
-        // then fire, if you haven't already...
-        if (pre)
-        {
-            labscale::VIPs.ball1->setRigidDynamicFlag(PxRigidDynamicFlag::eKINEMATIC, false);
-            labscale::VIPs.ball1->setLinearVelocity(PxVec3(0, -1, 0)*labscale::impactor.speed);
-            pre = false;
-        }
-        // ... in which case you're done.
-        else
-        {
-            gSim.isRunning = false;
-            SaveSceneToRepXDump();
-        }
-    }
+    // Finish when everyone is asleep
+	if (CountSleepers() == gPhysX.mScene->getNbActors(gPhysX.roles.dynamics))
+	{
+	    gSim.isRunning = false;
+	    SaveSceneToRepXDump();
+	}
 }
 void labscale::LogPenetratorExperiment()
 {
