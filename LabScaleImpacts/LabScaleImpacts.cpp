@@ -262,9 +262,8 @@ void labscale::CreatePenetratorExperiment()
     PxReal rho = labscale::impactor.materialDensity;
 
     // Ready, aim impactor (will fire manually)
-	FindExtremers(); 
     PxReal radius = labscale::impactor.diameter/2;
-	PxReal hLaunch = gExp.VIPs.extremers.upmost->getGlobalPose().p.y*2;
+	PxReal hLaunch = labscale::reg_box.diameter;
     labscale::VIPs.ball1 = CreateRubbleGrain(PxVec3(0,hLaunch,0),eSPHERE_GRAIN,radius,*steel,rho);
     labscale::VIPs.ball1->setName("impactor");
     labscale::VIPs.ball1->setRigidDynamicFlag(PxRigidDynamicFlag::eKINEMATIC, true);
