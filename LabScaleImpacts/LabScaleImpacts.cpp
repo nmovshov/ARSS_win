@@ -478,7 +478,18 @@ void labscale::CreateTiltBoxExperiment()
 }
 void labscale::ControlTiltBoxExperiment()
 {
-	static PxReal theta = 0.0; // angle from y-axis
+	static PxReal dir = 1;
+	if (labscale::reg_box.bTilt)
+	{
+		PxReal omega = (PxPi/4.0)*labscale::reg_box.tiltRate;
+		PxReal dtau = omega*gSim.timeStep;
+		PxTransform old = labscale::VIPs.container->getGlobalPose();
+		PxReal cur = old.q.getAngle();
+		bool inBounds = (cur <= PxPi/32.0) && (cur >= -PxPi/32.0); // reverse direction?
+		if (!inBounds) dir*=-1;
+		PxTransform rot(PxQuat(dir*dtau, PxVec3(0,0,1)));
+		labscale::VIPs.container->setKinematicTarget(rot*old);
+	}
 }
 
 // End lint level warnings
