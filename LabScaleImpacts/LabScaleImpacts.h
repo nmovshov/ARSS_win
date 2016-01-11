@@ -14,7 +14,7 @@ namespace labscale
 // function CreateExperiment will call different routines, basically totally
 // different programs that share mostly just the dispatching and logging mechanism.
 enum {eBAD_EXPERIMENT_TYPE, eHOLSAPPLE1} eExperimentType;
-enum {eBAD_EXP_SUBTYPE, eFILL_BOX, ePENETRATOR} eExperimentSubtype;
+enum {eBAD_EXP_SUBTYPE, eFILL_BOX, eTILT_BOX, ePENETRATOR} eExperimentSubtype;
 
 // Some throwaway objects with static duration
 PxTransform R1, R0; // throwaway transform holders
@@ -39,6 +39,8 @@ struct {
     PxReal diameter;
     PxReal fillHeight;
 	PxReal pourRate;
+	PxReal tiltRate;
+	bool bTilt;
 } reg_box;
 
 // And regolith
@@ -65,9 +67,11 @@ struct {
 
 void CreatePenetratorExperiment();
 void CreateFillBoxExperiment();
+void CreateTiltBoxExperiment();
 void LogPenetratorExperiment();
 void ControlPenetratorExperiment();
 void ControlFillBoxExperiment();
+void ControlTiltBoxExperiment();
 void CreateRegolithContainer();
 PxRigidDynamic *CreateRegolithGrain();
 };
