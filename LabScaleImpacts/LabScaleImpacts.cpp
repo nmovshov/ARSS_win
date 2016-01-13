@@ -186,11 +186,9 @@ void RefreshCustomHUDElements()
 		scrPos = 1.0 - strlen(buf)*ch2px*px2width*0.5;
 		gHUD.hud.SetElement(labscale::hudMsgs.systemDiag1,buf,scrPos,0.04);
 
-		// Diagnostic 2: fill height
-		PxReal boxFloor = labscale::VIPs.container->getGlobalPose().p.y + labscale::reg_box.diameter/20; // width hard coded for now :(
-		FindExtremers();
-		PxReal regolith_surface = gExp.VIPs.extremers.upmost->getGlobalPose().p.y - boxFloor + labscale::regolith.diameter/2;
-		sprintf_s(buf,MAX_CHARS_PER_NAME,"Fill height = %f cm (%d layers)",regolith_surface*100,int(regolith_surface/labscale::regolith.diameter));
+		// Diagnostic 2: surface level
+        PxReal regSurf = labscale::getRegolithSurface();
+		sprintf_s(buf,MAX_CHARS_PER_NAME,"Regolith surface = %f cm (%d layers)",regSurf*100,int(regSurf/labscale::regolith.diameter));
 		scrPos = 1.0 - strlen(buf)*ch2px*px2width*0.5;
 		gHUD.hud.SetElement(labscale::hudMsgs.systemDiag2,buf,scrPos,0.08);
     }
@@ -490,6 +488,23 @@ void labscale::ControlTiltBoxExperiment()
 		PxTransform rot(PxQuat(dir*dtau, PxVec3(0,0,1)));
 		labscale::VIPs.container->setKinematicTarget(rot*old);
 	}
+}
+PxReal labscale::getRegolithSurface()
+{
+    PxReal boxFloor = labscale::VIPs.container->getGlobalPose().p.y + labscale::reg_box.diameter/20; // width hard coded for now :(
+    PxReal regSurf = -PX_MAX_REAL;
+    PxU32 nbActors = gPhysX.mScene->getActors(gPhysX.roles.dynamics,gPhysX.cast,MAX_ACTORS_PER_SCENE);
+    while (nbActors--)
+    {
+        PxRigidDynamic* actor = gPhysX.cast[nbActors]->isRigidDynamic();
+        if (actor && strcmp(actor->getName(), "regolith") == 0)
+        {
+            PxReal y = actor->getGlobalPose().p.y;
+            if (y>regSurf) regSurf = y;
+        }
+    }
+
+    return (regSurf - boxFloor + labscale::regolith.diameter/2.0);
 }
 
 // End lint level warnings

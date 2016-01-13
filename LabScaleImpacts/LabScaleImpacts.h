@@ -73,6 +73,7 @@ void ControlPenetratorExperiment();
 void ControlFillBoxExperiment();
 void ControlTiltBoxExperiment();
 void CreateRegolithContainer();
+PxReal getRegolithSurface();
 PxRigidDynamic *CreateRegolithGrain();
 };
 
