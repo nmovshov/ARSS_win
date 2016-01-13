@@ -203,7 +203,7 @@ void RefreshCustomHUDElements()
         gHUD.hud.SetElement(labscale::hudMsgs.systemDiag1,buf,scrPos,0.04);
 
         // Diagnostic 2: penetration depth
-        PxReal d = -(labscale::VIPs.ball1->getGlobalPose().p.y - labscale::impactor.diameter/2.0 - labscale::impactor.iniSurface);
+        PxReal d = (labscale::VIPs.ball1->getGlobalPose().p.y - labscale::impactor.diameter/2.0 - labscale::impactor.iniSurface);
         sprintf_s(buf,MAX_CHARS_PER_NAME,"Penetration depth = %f cm",d*100);
         scrPos = 1.0 - strlen(buf)*ch2px*px2width*0.5;
         gHUD.hud.SetElement(labscale::hudMsgs.systemDiag2,buf,scrPos,0.08);
@@ -351,7 +351,7 @@ void labscale::LogPenetratorExperiment()
     PxReal x = labscale::VIPs.ball1->getGlobalPose().p.x;
     PxReal y = labscale::VIPs.ball1->getGlobalPose().p.y;
     PxReal z = labscale::VIPs.ball1->getGlobalPose().p.z;
-    PxReal d = -(y - labscale::impactor.diameter/2.0 - labscale::impactor.iniSurface);
+    PxReal d = y - labscale::impactor.diameter/2.0 - labscale::impactor.iniSurface;
 
     // Write
     fbuf.setf(ios::fixed);
