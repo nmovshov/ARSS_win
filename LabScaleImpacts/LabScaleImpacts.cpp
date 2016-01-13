@@ -187,10 +187,26 @@ void RefreshCustomHUDElements()
 		gHUD.hud.SetElement(labscale::hudMsgs.systemDiag1,buf,scrPos,0.04);
 
 		// Diagnostic 2: surface level
-        PxReal regSurf = labscale::getRegolithSurface();
+        PxReal boxFloor = labscale::VIPs.container->getGlobalPose().p.y + labscale::reg_box.diameter/20; // width hard coded for now :(
+        PxReal regSurf = labscale::getRegolithSurface() - boxFloor;
 		sprintf_s(buf,MAX_CHARS_PER_NAME,"Regolith surface = %f cm (%d layers)",regSurf*100,int(regSurf/labscale::regolith.diameter));
 		scrPos = 1.0 - strlen(buf)*ch2px*px2width*0.5;
 		gHUD.hud.SetElement(labscale::hudMsgs.systemDiag2,buf,scrPos,0.08);
+    }
+
+    if (labscale::eExperimentType == labscale::eHOLSAPPLE1 && labscale::eExperimentSubtype == labscale::ePENETRATOR)
+    {
+        // Diagnostic 1: impactor speed
+        PxReal v = labscale::VIPs.ball1->getLinearVelocity().magnitude();
+        sprintf_s(buf,MAX_CHARS_PER_NAME,"|v| = %f",v);
+        scrPos = 1.0 - strlen(buf)*ch2px*px2width*0.5;
+        gHUD.hud.SetElement(labscale::hudMsgs.systemDiag1,buf,scrPos,0.04);
+
+        // Diagnostic 2: penetration depth
+        PxReal d = -(labscale::VIPs.ball1->getGlobalPose().p.y - labscale::impactor.diameter/2.0 - labscale::impactor.iniSurface);
+        sprintf_s(buf,MAX_CHARS_PER_NAME,"Penetration depth = %f cm",d*100);
+        scrPos = 1.0 - strlen(buf)*ch2px*px2width*0.5;
+        gHUD.hud.SetElement(labscale::hudMsgs.systemDiag2,buf,scrPos,0.08);
     }
     
 }
@@ -279,6 +295,7 @@ void labscale::CreatePenetratorExperiment()
     labscale::VIPs.ball1->setName("impactor");
     labscale::VIPs.ball1->setRigidDynamicFlag(PxRigidDynamicFlag::eKINEMATIC, true);
     ColorActor(labscale::VIPs.ball1, ncc::rgb::gDarkOlive);
+    labscale::impactor.iniSurface = getRegolithSurface(); // target surface in global frame
 
     // Adjust camera, grid, display
     gCamera.pos.x = 0.0;
@@ -293,8 +310,9 @@ void labscale::CreatePenetratorExperiment()
         header << "# This is the run log of " << gRun.baseName << endl;
         header << "# Experiment type: HOLSAPPLE1 (" << labscale::eExperimentType << ")" << endl;
         header << "# Time step used = " << gSim.timeStep << endl;
-        header << "# Columns are (values in code units):" << endl;
-        header << "# [t]    [x]    [y]    [z]" << endl;
+        header << "# Top of regolith surface = " << labscale::impactor.iniSurface << endl;
+        header << "# Columns are (values in code units, d is penetration depth):" << endl;
+        header << "# [t]    [d]    [x]    [y]    [z]" << endl;
         ofstream fbuf(gRun.outFile.c_str(),ios::trunc);
         if (!fbuf.is_open())
             ncc__error("Could not start a log. Experiment aborted.\a\n");
@@ -333,10 +351,12 @@ void labscale::LogPenetratorExperiment()
     PxReal x = labscale::VIPs.ball1->getGlobalPose().p.x;
     PxReal y = labscale::VIPs.ball1->getGlobalPose().p.y;
     PxReal z = labscale::VIPs.ball1->getGlobalPose().p.z;
+    PxReal d = -(y - labscale::impactor.diameter/2.0 - labscale::impactor.iniSurface);
 
     // Write
     fbuf.setf(ios::fixed);
     fbuf << setw(8) << t << "    ";
+    fbuf << setw(8) << showpos << d << "    ";
     fbuf << setw(8) << showpos << x << "    ";
     fbuf << setw(8) << showpos << y << "    ";
     fbuf << setw(8) << showpos << z << endl;
@@ -491,7 +511,6 @@ void labscale::ControlTiltBoxExperiment()
 }
 PxReal labscale::getRegolithSurface()
 {
-    PxReal boxFloor = labscale::VIPs.container->getGlobalPose().p.y + labscale::reg_box.diameter/20; // width hard coded for now :(
     PxReal regSurf = -PX_MAX_REAL;
     PxU32 nbActors = gPhysX.mScene->getActors(gPhysX.roles.dynamics,gPhysX.cast,MAX_ACTORS_PER_SCENE);
     while (nbActors--)
@@ -504,7 +523,7 @@ PxReal labscale::getRegolithSurface()
         }
     }
 
-    return (regSurf - boxFloor + labscale::regolith.diameter/2.0);
+    return (regSurf + labscale::regolith.diameter/2.0);
 }
 
 // End lint level warnings

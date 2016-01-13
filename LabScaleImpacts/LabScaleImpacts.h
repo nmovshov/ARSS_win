@@ -56,6 +56,7 @@ struct {
     PxReal materialDensity;
     PxReal speed;
     RubbleGrainType grainType;
+    PxReal iniSurface;
 } impactor;
 
 // Measured and diagnostic quantities
