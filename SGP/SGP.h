@@ -10,64 +10,64 @@
 #define SGP_H
 namespace sgp
 {
-	// Implement different scenarios with different experiment labels. The dispatcher
-	// function CreateExperiment will call different routines, basically totally
-	// different programs that share mostly just the dispatching and logging mechanism.
-	enum {eBAD_EXPERIMENT_TYPE, eMAKE_SGP, eLOAD_SGP, eTEST_SCALING} eExperimentType;
+    // Implement different scenarios with different experiment labels. The dispatcher
+    // function CreateExperiment will call different routines, basically totally
+    // different programs that share mostly just the dispatching and logging mechanism.
+    enum {eBAD_EXPERIMENT_TYPE, eMAKE_SGP, eLOAD_SGP, eTEST_SCALING} eExperimentType;
 
-	// Some throwaway objects with static duration
-	PxTransform R1, R0; // throwaway transform holders
-	PxVec3 V;           // throwaway vector
+    // Some throwaway objects with static duration
+    PxTransform R1, R0; // throwaway transform holders
+    PxVec3 V;           // throwaway vector
 
-	// Really dumb way to implement hud messages; but it works
-	struct {
-		unsigned int systemDiag1;
-		unsigned int systemDiag2;
-		unsigned int systemDiag3;
-		unsigned int systemDiag4;
-		unsigned int systemDiag5;
-	} hudMsgs;
+    // Really dumb way to implement hud messages; but it works
+    struct {
+        unsigned int systemDiag1;
+        unsigned int systemDiag2;
+        unsigned int systemDiag3;
+        unsigned int systemDiag4;
+        unsigned int systemDiag5;
+    } hudMsgs;
 
-	// Named actors
-	struct {
-		PxRigidDynamic* nucleus;
-		PxRigidDynamic* lBall;
-		PxRigidDynamic* rBall;
-	} VIPs;
+    // Named actors
+    struct {
+        PxRigidDynamic* nucleus;
+        PxRigidDynamic* lBall;
+        PxRigidDynamic* rBall;
+    } VIPs;
 
-	struct {
-		PxReal nucleusRadius;
-		struct {
-			PxReal abAxesRatio;
-			PxReal acAxesRatio;
-		} ellipsoid;
-	} params;
+    struct {
+        PxReal nucleusRadius;
+        struct {
+            PxReal abAxesRatio;
+            PxReal acAxesRatio;
+        } ellipsoid;
+    } params;
 
-	struct {
-		enum {eBAD_GSD_TYPE, eGSD_UNIFORM, eGSD_BIMODAL} type;
-		PxReal size2;
-		PxReal size1;
-		PxU32  numberRatio; // used for bimodal
-		PxU32  totalNumber;
-	} gsd; // grain size distribution
+    struct {
+        enum {eBAD_GSD_TYPE, eGSD_UNIFORM, eGSD_BIMODAL} type;
+        PxReal size2;
+        PxReal size1;
+        PxU32  numberRatio; // used for bimodal
+        PxU32  totalNumber;
+    } gsd; // grain size distribution
 
-	// Units
-	struct {
-		PxReal bigG;
-	} units;
+    // Units
+    struct {
+        PxReal bigG;
+    } units;
 
-	// Namespace functions
-	void CreateMakeSGPExperiment();
-	void CreateLoadSGPExperiment();
-	void CreateTestScalingExperiment();
-	bool MakeNewSGP();
-	void GravitateSelf();
-	void GravitateOnHost();
-	void GravitateOnDevice();
-	void RefreshMakeSGPHUD();
-	void LogMakeSGPExperiment();
-	void LogTestScalingExperiment();
-	void ControlTestScalingExperiment();
-	PxReal SystemPotentialEnergy();
+    // Namespace functions
+    void CreateMakeSGPExperiment();
+    void CreateLoadSGPExperiment();
+    void CreateTestScalingExperiment();
+    bool MakeNewSGP();
+    void GravitateSelf();
+    void GravitateOnHost();
+    void GravitateOnDevice();
+    void RefreshMakeSGPHUD();
+    void LogMakeSGPExperiment();
+    void LogTestScalingExperiment();
+    void ControlTestScalingExperiment();
+    PxReal SystemPotentialEnergy();
 };
 #endif

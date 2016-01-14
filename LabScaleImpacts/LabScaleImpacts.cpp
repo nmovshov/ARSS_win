@@ -48,8 +48,8 @@ void CreateExperiment()
             labscale::CreateFillBoxExperiment();
         else if (labscale::eExperimentSubtype==labscale::ePENETRATOR)
             labscale::CreatePenetratorExperiment();
-		else if (labscale::eExperimentSubtype==labscale::eTILT_BOX)
-			labscale::CreateTiltBoxExperiment();
+        else if (labscale::eExperimentSubtype==labscale::eTILT_BOX)
+            labscale::CreateTiltBoxExperiment();
         else
             ncc__error("Unknown experiment type. Experiment aborted.\a");
         break;
@@ -77,8 +77,8 @@ void ControlExperiment()
     case labscale::eHOLSAPPLE1:
         if (labscale::eExperimentSubtype == labscale::eFILL_BOX)
             labscale::ControlFillBoxExperiment();
-		else if (labscale::eExperimentSubtype == labscale::eTILT_BOX)
-			labscale::ControlTiltBoxExperiment();
+        else if (labscale::eExperimentSubtype == labscale::eTILT_BOX)
+            labscale::ControlTiltBoxExperiment();
         else if (labscale::eExperimentSubtype == labscale::ePENETRATOR)
             labscale::ControlPenetratorExperiment();
         else ncc__error("Unknown experiment subtype.");
@@ -121,8 +121,8 @@ bool ConfigExperimentOptions()
     ncc::GetStrPropertyFromINIFile("experiment","experiment_subtype","",buf,MAX_CHARS_PER_NAME,gRun.iniFile.c_str());
     if      (strcmp(buf,"fill_container")==0)
         labscale::eExperimentSubtype=labscale::eFILL_BOX;
-	else if (strcmp(buf,"tilt_container")==0)
-		labscale::eExperimentSubtype=labscale::eTILT_BOX;
+    else if (strcmp(buf,"tilt_container")==0)
+        labscale::eExperimentSubtype=labscale::eTILT_BOX;
     else if (strcmp(buf,"penetrator")==0)
         labscale::eExperimentSubtype=labscale::ePENETRATOR;
     else
@@ -133,10 +133,10 @@ bool ConfigExperimentOptions()
     labscale::reg_box.diameter = atof(buf);
     ncc::GetStrPropertyFromINIFile("container","fill_height","1",buf,MAX_CHARS_PER_NAME,gRun.iniFile.c_str());
     labscale::reg_box.fillHeight = atof(buf);
-	ncc::GetStrPropertyFromINIFile("container","pour_rate","1",buf,MAX_CHARS_PER_NAME,gRun.iniFile.c_str());
-	labscale::reg_box.pourRate = atof(buf);
-	ncc::GetStrPropertyFromINIFile("container","tilt_rate","1",buf,MAX_CHARS_PER_NAME,gRun.iniFile.c_str());
-	labscale::reg_box.tiltRate = atof(buf);
+    ncc::GetStrPropertyFromINIFile("container","pour_rate","1",buf,MAX_CHARS_PER_NAME,gRun.iniFile.c_str());
+    labscale::reg_box.pourRate = atof(buf);
+    ncc::GetStrPropertyFromINIFile("container","tilt_rate","1",buf,MAX_CHARS_PER_NAME,gRun.iniFile.c_str());
+    labscale::reg_box.tiltRate = atof(buf);
 
     // Regolith parameters
     ncc::GetStrPropertyFromINIFile("regolith","diameter","0.0",buf,MAX_CHARS_PER_NAME,gRun.iniFile.c_str());
@@ -179,19 +179,19 @@ void RefreshCustomHUDElements()
 
     if (labscale::eExperimentType == labscale::eHOLSAPPLE1 && labscale::eExperimentSubtype == labscale::eFILL_BOX)
     {
-		// Diagnostic 1: regolith particles
-		PxU32 nbActors = gPhysX.mScene->getNbActors(gPhysX.roles.dynamics) - 1; // don't count the box
-		PxU32 nbSleep = CountSleepers() - 1; // don't count the box
-		sprintf_s(buf,MAX_CHARS_PER_NAME,"# particles (sleeping) = %u (%u)",nbActors,nbSleep);
-		scrPos = 1.0 - strlen(buf)*ch2px*px2width*0.5;
-		gHUD.hud.SetElement(labscale::hudMsgs.systemDiag1,buf,scrPos,0.04);
+        // Diagnostic 1: regolith particles
+        PxU32 nbActors = gPhysX.mScene->getNbActors(gPhysX.roles.dynamics) - 1; // don't count the box
+        PxU32 nbSleep = CountSleepers() - 1; // don't count the box
+        sprintf_s(buf,MAX_CHARS_PER_NAME,"# particles (sleeping) = %u (%u)",nbActors,nbSleep);
+        scrPos = 1.0 - strlen(buf)*ch2px*px2width*0.5;
+        gHUD.hud.SetElement(labscale::hudMsgs.systemDiag1,buf,scrPos,0.04);
 
-		// Diagnostic 2: surface level
+        // Diagnostic 2: surface level
         PxReal boxFloor = labscale::VIPs.container->getGlobalPose().p.y + labscale::reg_box.diameter/20; // width hard coded for now :(
         PxReal regSurf = labscale::getRegolithSurface() - boxFloor;
-		sprintf_s(buf,MAX_CHARS_PER_NAME,"Regolith surface = %f cm (%d layers)",regSurf*100,int(regSurf/labscale::regolith.diameter));
-		scrPos = 1.0 - strlen(buf)*ch2px*px2width*0.5;
-		gHUD.hud.SetElement(labscale::hudMsgs.systemDiag2,buf,scrPos,0.08);
+        sprintf_s(buf,MAX_CHARS_PER_NAME,"Regolith surface = %f cm (%d layers)",regSurf*100,int(regSurf/labscale::regolith.diameter));
+        scrPos = 1.0 - strlen(buf)*ch2px*px2width*0.5;
+        gHUD.hud.SetElement(labscale::hudMsgs.systemDiag2,buf,scrPos,0.08);
     }
 
     if (labscale::eExperimentType == labscale::eHOLSAPPLE1 && labscale::eExperimentSubtype == labscale::ePENETRATOR)
@@ -214,14 +214,14 @@ void FireAction()
 {
     if (labscale::eExperimentType==labscale::eHOLSAPPLE1 && labscale::eExperimentSubtype==labscale::ePENETRATOR)
     {
-		labscale::VIPs.ball1->setRigidDynamicFlag(PxRigidDynamicFlag::eKINEMATIC, false);
-		labscale::VIPs.ball1->setLinearVelocity(PxVec3(0,-labscale::impactor.speed,0));
+        labscale::VIPs.ball1->setRigidDynamicFlag(PxRigidDynamicFlag::eKINEMATIC, false);
+        labscale::VIPs.ball1->setLinearVelocity(PxVec3(0,-labscale::impactor.speed,0));
     }
 
-	if (labscale::eExperimentType==labscale::eHOLSAPPLE1 && labscale::eExperimentSubtype==labscale::eTILT_BOX)
-	{
-		labscale::reg_box.bTilt = !labscale::reg_box.bTilt;
-	}
+    if (labscale::eExperimentType==labscale::eHOLSAPPLE1 && labscale::eExperimentSubtype==labscale::eTILT_BOX)
+    {
+        labscale::reg_box.bTilt = !labscale::reg_box.bTilt;
+    }
 }
 void PrintDebug()
 {
@@ -291,7 +291,7 @@ void labscale::CreatePenetratorExperiment()
     // Ready, aim impactor (will fire manually)
     PxReal radius = labscale::impactor.diameter/2;
     labscale::impactor.iniSurface = getRegolithSurface(); // target surface in global frame
-	PxReal hLaunch = labscale::impactor.iniSurface + 4*radius;
+    PxReal hLaunch = labscale::impactor.iniSurface + 4*radius;
     labscale::VIPs.ball1 = CreateRubbleGrain(PxVec3(0,hLaunch,0),eSPHERE_GRAIN,radius,*steel,rho);
     labscale::VIPs.ball1->setName("impactor");
     labscale::VIPs.ball1->setRigidDynamicFlag(PxRigidDynamicFlag::eKINEMATIC, true);
@@ -329,14 +329,14 @@ void labscale::CreatePenetratorExperiment()
 void labscale::ControlPenetratorExperiment()
 {
     // Finish when everyone is asleep, after impact!
-	if (!(labscale::VIPs.ball1->getRigidDynamicFlags() & PxRigidDynamicFlag::eKINEMATIC))
-	{
-		if (CountSleepers() == gPhysX.mScene->getNbActors(gPhysX.roles.dynamics))
-		{
-		    gSim.isRunning = false;
-		    SaveSceneToRepXDump();
-		}
-	}
+    if (!(labscale::VIPs.ball1->getRigidDynamicFlags() & PxRigidDynamicFlag::eKINEMATIC))
+    {
+        if (CountSleepers() == gPhysX.mScene->getNbActors(gPhysX.roles.dynamics))
+        {
+            gSim.isRunning = false;
+            SaveSceneToRepXDump();
+        }
+    }
 }
 void labscale::LogPenetratorExperiment()
 {
@@ -369,18 +369,18 @@ void labscale::CreateFillBoxExperiment()
 /* Put a box on the ground ready to be filled with regolith.*/
 {
     // Put a box on the floor
-	if (gRun.loadSceneFromFile.empty())
-		CreateRegolithContainer();
-	else
-	{
-		if(!LoadSceneFromFile(gRun.loadSceneFromFile)) ncc__error("Failed to load partially filed box.\a\n");
-		PxActor* theBox = FindNamedActor("the_box");
-		if (theBox)
-		{
-			ColorActor(theBox,ncc::rgb::rRed);
-			labscale::VIPs.container = theBox->isRigidDynamic();
-		}
-	}
+    if (gRun.loadSceneFromFile.empty())
+        CreateRegolithContainer();
+    else
+    {
+        if(!LoadSceneFromFile(gRun.loadSceneFromFile)) ncc__error("Failed to load partially filed box.\a\n");
+        PxActor* theBox = FindNamedActor("the_box");
+        if (theBox)
+        {
+            ColorActor(theBox,ncc::rgb::rRed);
+            labscale::VIPs.container = theBox->isRigidDynamic();
+        }
+    }
 
     // Adjust camera, grid, display
     gCamera.pos.x = 0.0;
@@ -470,47 +470,47 @@ PxRigidDynamic * labscale::CreateRegolithGrain()
 void labscale::CreateTiltBoxExperiment()
 /* Tilt the box back and forth to smooth regolith layer*/
 {
-	// Put a box on the floor
-	if (gRun.loadSceneFromFile.empty())
-		CreateRegolithContainer();
-	else
-	{
-		if(!LoadSceneFromFile(gRun.loadSceneFromFile)) ncc__error("Failed to load partially filed box.\a\n");
-		PxActor* theBox = FindNamedActor("the_box");
-		if (theBox)
-		{
-			ColorActor(theBox,ncc::rgb::rRed);
-			labscale::VIPs.container = theBox->isRigidDynamic();
-		}
-	}
+    // Put a box on the floor
+    if (gRun.loadSceneFromFile.empty())
+        CreateRegolithContainer();
+    else
+    {
+        if(!LoadSceneFromFile(gRun.loadSceneFromFile)) ncc__error("Failed to load partially filed box.\a\n");
+        PxActor* theBox = FindNamedActor("the_box");
+        if (theBox)
+        {
+            ColorActor(theBox,ncc::rgb::rRed);
+            labscale::VIPs.container = theBox->isRigidDynamic();
+        }
+    }
 
-	// Adjust camera, grid, display
-	gCamera.pos.x = 0.0;
-	gCamera.pos.y = labscale::reg_box.fillHeight*1.4;
-	gCamera.pos.z = labscale::reg_box.diameter*1.6;
-	gDebug.bXYGridOn = true;
+    // Adjust camera, grid, display
+    gCamera.pos.x = 0.0;
+    gCamera.pos.y = labscale::reg_box.fillHeight*1.4;
+    gCamera.pos.z = labscale::reg_box.diameter*1.6;
+    gDebug.bXYGridOn = true;
 
-	// Start the action, tilt action handled in control function
-	labscale::reg_box.bTilt = false;
-	gSim.isRunning=true;
-	gSim.bPause=false;
-	gSim.codeTime = 0.0f;
-	RefreshHUD();
+    // Start the action, tilt action handled in control function
+    labscale::reg_box.bTilt = false;
+    gSim.isRunning=true;
+    gSim.bPause=false;
+    gSim.codeTime = 0.0f;
+    RefreshHUD();
 }
 void labscale::ControlTiltBoxExperiment()
 {
-	static PxReal dir = 1;
-	if (labscale::reg_box.bTilt)
-	{
-		PxReal omega = (PxPi/4.0)*labscale::reg_box.tiltRate;
-		PxReal dtau = omega*gSim.timeStep;
-		PxTransform old = labscale::VIPs.container->getGlobalPose();
-		PxReal cur = old.q.getAngle();
-		bool inBounds = (cur <= PxPi/32.0) && (cur >= -PxPi/32.0); // reverse direction?
-		if (!inBounds) dir*=-1;
-		PxTransform rot(PxQuat(dir*dtau, PxVec3(0,0,1)));
-		labscale::VIPs.container->setKinematicTarget(rot*old);
-	}
+    static PxReal dir = 1;
+    if (labscale::reg_box.bTilt)
+    {
+        PxReal omega = (PxPi/4.0)*labscale::reg_box.tiltRate;
+        PxReal dtau = omega*gSim.timeStep;
+        PxTransform old = labscale::VIPs.container->getGlobalPose();
+        PxReal cur = old.q.getAngle();
+        bool inBounds = (cur <= PxPi/32.0) && (cur >= -PxPi/32.0); // reverse direction?
+        if (!inBounds) dir*=-1;
+        PxTransform rot(PxQuat(dir*dtau, PxVec3(0,0,1)));
+        labscale::VIPs.container->setKinematicTarget(rot*old);
+    }
 }
 PxReal labscale::getRegolithSurface()
 {
