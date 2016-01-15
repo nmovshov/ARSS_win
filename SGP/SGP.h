@@ -35,21 +35,24 @@ namespace sgp
         PxRigidDynamic* rBall;
     } VIPs;
 
+    // Misc params
     struct {
         PxReal nucleusRadius;
         struct {
             PxReal abAxesRatio;
             PxReal acAxesRatio;
         } ellipsoid;
+        PxReal defaultDensity;
     } params;
 
+    // Grain Size Distribution
     struct {
         enum {eBAD_GSD_TYPE, eGSD_UNIFORM, eGSD_BIMODAL} type;
         PxReal size2;
         PxReal size1;
         PxU32  numberRatio; // used for bimodal
         PxU32  totalNumber;
-    } gsd; // grain size distribution
+    } gsd;
 
     // Units
     struct {

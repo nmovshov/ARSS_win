@@ -288,19 +288,24 @@ void sgp::CreateLoadSGPExperiment()
 }
 void sgp::CreateTestScalingExperiment()
 {
-    // Make two balls
-    sgp::VIPs.lBall = CreateRubbleGrain(PxVec3(-4,0,0),eSPHERE_GRAIN,1,*gPhysX.mDefaultMaterial);
-    sgp::VIPs.rBall = CreateRubbleGrain(PxVec3(+4,0,0),eSPHERE_GRAIN,1,*gPhysX.mDefaultMaterial);
+    // Make two balls, unit radius unit density
+    sgp::VIPs.lBall = CreateRubbleGrain(PxVec3(-4,0,0),eSPHERE_GRAIN,1,*gPhysX.mDefaultMaterial,gExp.defGrainDensity);
+    sgp::VIPs.rBall = CreateRubbleGrain(PxVec3(+4,0,0),eSPHERE_GRAIN,1,*gPhysX.mDefaultMaterial,gExp.defGrainDensity);
 
     // Move the camera to a good location
-    gCamera.pos.z = 10*gExp.defGrainSize;
+    gCamera.pos.z = 10;
 
     // Start a log
     if (gRun.outputFrequency)
     {
         ostringstream header;
         header << "# This is the run log of " << gRun.baseName << endl;
-        header << "# Time step used = " << gSim.timeStep << endl;
+        header << "# Experiment type: TEST_SCALING (" << sgp::eExperimentType << ")" << endl;
+        header << "# Active force: point mass gravity" << endl;
+        header << "# Actors: two unit spheres with rho = " << gExp.defGrainDensity << " (cu)" << endl;
+        header << "# Measured quantities: COM separation, COM relative velocity" << endl;
+        header << "# Time step used = " << gSim.timeStep << " (cu)" << endl;
+        header << "# Scaled G = " << sgp::units.bigG << " (cu)" << endl;
         header << "# Columns are (values in code units):" << endl;
         header << "# [t]    [R]    [V]" << endl;
         ofstream fbuf(gRun.outFile.c_str(),ios::trunc);
@@ -613,12 +618,16 @@ void sgp::ControlTestScalingExperiment()
     static vector<PxReal> R;
     static vector<PxReal> V;
 
+    // Collect measurements
     PxReal d = sgp::VIPs.rBall->getGlobalPose().p.x - sgp::VIPs.lBall->getGlobalPose().p.x;
     PxReal v = sgp::VIPs.rBall->getLinearVelocity().x - sgp::VIPs.lBall->getLinearVelocity().x;
     t.push_back(gSim.codeTime);
     R.push_back(d);
     V.push_back(v);
-    if (((d < 2.0 + gPhysX.scaling.length*0.04) && !gSim.targetTime) || (gSim.targetTime && (gSim.codeTime >= gSim.targetTime - gSim.timeStep)))
+
+    // When done, save measurements
+    PxReal skin =  0.1*gPhysX.mPhysics->getTolerancesScale().length;
+    if (((d < 2.0 + skin) && !gSim.targetTime) || (gSim.targetTime && (gSim.codeTime >= gSim.targetTime - gSim.timeStep)))
         {
             gSim.isRunning = false;
             ofstream fbuf(gRun.outFile.c_str(),ios::app);
