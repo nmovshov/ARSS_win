@@ -138,6 +138,9 @@ void LogExperiment()
     case sgp::eMAKE_SGP:
         sgp::LogMakeSGPExperiment();
         break;
+    case sgp::eTEST_SCALING:
+        sgp::LogTestScalingExperiment();
+        break;
     case sgp::eBAD_EXPERIMENT_TYPE:
         ncc__warning("Unkown experiment type. Nothing logged.");
         break;
@@ -610,36 +613,39 @@ physx::PxReal sgp::SystemPotentialEnergy()
 }
 void sgp::LogTestScalingExperiment()
 {
-
-}
-void sgp::ControlTestScalingExperiment()
-{
     static vector<PxReal> t;
     static vector<PxReal> R;
     static vector<PxReal> V;
 
-    // Collect measurements
-    PxReal d = sgp::VIPs.rBall->getGlobalPose().p.x - sgp::VIPs.lBall->getGlobalPose().p.x;
-    PxReal v = sgp::VIPs.rBall->getLinearVelocity().x - sgp::VIPs.lBall->getLinearVelocity().x;
-    t.push_back(gSim.codeTime);
-    R.push_back(d);
-    V.push_back(v);
+    if (gSim.isRunning) // While running collect measurements
+    {
+	    PxReal d = sgp::VIPs.rBall->getGlobalPose().p.x - sgp::VIPs.lBall->getGlobalPose().p.x;
+	    PxReal v = sgp::VIPs.rBall->getLinearVelocity().x - sgp::VIPs.lBall->getLinearVelocity().x;
+	    t.push_back(gSim.codeTime);
+	    R.push_back(d);
+	    V.push_back(v);
+    } 
+    else // When done, save collected measurements
+    {
+        ofstream fbuf(gRun.outFile.c_str(),ios::app);
+        if (!fbuf.is_open()) {
+            ncc__warning("Could not open log. Nothing written!\a\n");
+            return;
+        }
+        fbuf.setf(ios::fixed);
+        for (unsigned int k=0; k<t.size(); k++)
+            fbuf << setw(8) << t[k] << "    " << setw(8) << R[k] << "    " << setw(8) << V[k] << "\n";
+        fbuf.close();
+    }
 
-    // When done, save measurements
+}
+void sgp::ControlTestScalingExperiment()
+{
+    // Stop just before contact
+    PxReal d = sgp::VIPs.rBall->getGlobalPose().p.x - sgp::VIPs.lBall->getGlobalPose().p.x;
     PxReal skin =  0.1*gPhysX.mPhysics->getTolerancesScale().length;
     if (((d < 2.0 + skin) && !gSim.targetTime) || (gSim.targetTime && (gSim.codeTime >= gSim.targetTime - gSim.timeStep)))
-        {
-            gSim.isRunning = false;
-            ofstream fbuf(gRun.outFile.c_str(),ios::app);
-            if (!fbuf.is_open()) {
-                ncc__warning("Could not open log. Nothing written!\a\n");
-                return;
-            }
-            fbuf.setf(ios::fixed);
-            for (unsigned int k=0; k<t.size(); k++)
-                fbuf << setw(8) << t[k] << "    " << setw(8) << R[k] << "    " << setw(8) << V[k] << "\n";
-            fbuf.close();
-        }
+        gSim.isRunning = false;
 }
 
 // End lint level warnings
