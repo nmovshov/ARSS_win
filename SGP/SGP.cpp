@@ -90,8 +90,14 @@ bool ConfigExperimentOptions()
     sgp::params.nucleusRadius = atof(buf);
 
     // Code units and scaling
-    ncc::GetStrPropertyFromINIFile("units","big_g","0",buf,MAX_CHARS_PER_NAME,gRun.iniFile.c_str());
-    sgp::units.bigG = atof(buf);
+    ncc::GetStrPropertyFromINIFile("units","cu_length","1",buf,MAX_CHARS_PER_NAME,gRun.iniFile.c_str());
+    sgp::cunits.length = atof(buf);
+    ncc::GetStrPropertyFromINIFile("units","cu_mass","1",buf,MAX_CHARS_PER_NAME,gRun.iniFile.c_str());
+    sgp::cunits.mass = atof(buf);
+    ncc::GetStrPropertyFromINIFile("units","cu_time","1",buf,MAX_CHARS_PER_NAME,gRun.iniFile.c_str());
+    sgp::cunits.time = atof(buf);
+    ncc::GetStrPropertyFromINIFile("units","cu_big_g","0",buf,MAX_CHARS_PER_NAME,gRun.iniFile.c_str());
+    sgp::cunits.bigG = atof(buf);
 
     return success;
 }
@@ -301,14 +307,16 @@ void sgp::CreateTestScalingExperiment()
     // Start a log
     if (gRun.outputFrequency)
     {
+        time_t now = time(NULL);
         ostringstream header;
-        header << "# This is the run log of " << gRun.baseName << endl;
+        header << "# This is the run log of " << gRun.baseName << " from " << ctime(&now) << endl;
         header << "# Experiment type: TEST_SCALING (" << sgp::eExperimentType << ")" << endl;
         header << "# Active force: point mass gravity" << endl;
         header << "# Actors: two unit spheres with rho = " << gExp.defGrainDensity << " (cu)" << endl;
         header << "# Measured quantities: COM separation, COM relative velocity" << endl;
         header << "# Time step used = " << gSim.timeStep << " (cu)" << endl;
-        header << "# Scaled G = " << sgp::units.bigG << " (cu)" << endl;
+        header << "# Code units: 1 cu = [" << sgp::cunits.length << " m | " << sgp::cunits.mass << " kg | " << sgp::cunits.time << " s]" << endl;
+        header << "# Scaled G = " << sgp::cunits.bigG << " (cu)" << endl;
         header << "# Columns are (values in code units):" << endl;
         header << "# [t]    [R]    [V]" << endl;
         ofstream fbuf(gRun.outFile.c_str(),ios::trunc);
@@ -373,7 +381,7 @@ void sgp::GravitateOnHost()
             float distSix = distSqr*distSqr*distSqr;
             float invDistCube = 1.0f/sqrtf(distSix);
 
-            float s = sgp::units.bigG * bodies[4*j+0] * bodies[4*k+0] * invDistCube;
+            float s = sgp::cunits.bigG * bodies[4*j+0] * bodies[4*k+0] * invDistCube;
 
             forces[3*j+0] += x*s;
             forces[3*j+1] += y*s;
@@ -609,7 +617,7 @@ physx::PxReal sgp::SystemPotentialEnergy()
     // Clean up
     delete [] bodies;
 
-    return 2*sgp::units.bigG*V;
+    return 2*sgp::cunits.bigG*V;
 }
 void sgp::LogTestScalingExperiment()
 {

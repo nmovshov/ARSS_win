@@ -54,10 +54,13 @@ namespace sgp
         PxU32  totalNumber;
     } gsd;
 
-    // Units
+    // Code units
     struct {
+        PxReal length; // cu length in meters
+        PxReal mass; // cu mass in kg
+        PxReal time; // cu time in seconds
         PxReal bigG;
-    } units;
+    } cunits;
 
     // Namespace functions
     void CreateMakeSGPExperiment();
