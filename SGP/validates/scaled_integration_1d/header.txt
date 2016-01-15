@@ -1,6 +1,6 @@
 Test of the engine's forward integration accuracy
 -------------------------------------------------
-Two solid spheres were set at rest with their centers 8 units apart on the x axis.
-Outout files track their separation and relative velocity over time.
-Runs were made with succesively smaller time steps. The time scale of the dynamics
-in code units is ~30.
+Two unit spheres were set at rest with their centers 8 units apart on the x axis.
+Output files track their separation and relative velocity over time.
+Runs were made with succesively smaller time steps.
+This test shows the limits of a first order forward integrator - it's not great.

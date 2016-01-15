@@ -309,7 +309,7 @@ void sgp::CreateTestScalingExperiment()
     {
         time_t now = time(NULL);
         ostringstream header;
-        header << "# This is the run log of " << gRun.baseName << " from " << ctime(&now) << endl;
+        header << "# This is the run log of " << gRun.baseName << " from " << ctime(&now); // ctime includes a newline
         header << "# Experiment type: TEST_SCALING (" << sgp::eExperimentType << ")" << endl;
         header << "# Active force: point mass gravity" << endl;
         header << "# Actors: two unit spheres with rho = " << gExp.defGrainDensity << " (cu)" << endl;
