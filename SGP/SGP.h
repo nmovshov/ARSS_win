@@ -45,6 +45,12 @@ namespace sgp
         PxReal defaultDensity;
     } params;
 
+    // Parameters for "scaled integration" test
+    struct {
+        PxReal radius;
+        PxU32 dInitial; // initial separation in radii
+    } sclTest;
+
     // Grain Size Distribution
     struct {
         enum {eBAD_GSD_TYPE, eGSD_UNIFORM, eGSD_BIMODAL} type;

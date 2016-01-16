@@ -89,6 +89,12 @@ bool ConfigExperimentOptions()
     ncc::GetStrPropertyFromINIFile("experiment","nucleus_radius", "0",buf,MAX_CHARS_PER_NAME,gRun.iniFile.c_str());
     sgp::params.nucleusRadius = atof(buf);
 
+    // The "scaled integration" tests are not really useful sgp experiments - more like debugging benchmarks
+    ncc::GetStrPropertyFromINIFile("experiment","scl_test_radius", "1",buf,MAX_CHARS_PER_NAME,gRun.iniFile.c_str());
+    sgp::sclTest.radius = atof(buf);
+    ncc::GetStrPropertyFromINIFile("experiment","scl_test_d_ini", "8",buf,MAX_CHARS_PER_NAME,gRun.iniFile.c_str());
+    sgp::sclTest.dInitial = atof(buf);
+
     // Code units and scaling
     ncc::GetStrPropertyFromINIFile("units","cu_length","1",buf,MAX_CHARS_PER_NAME,gRun.iniFile.c_str());
     sgp::cunits.length = atof(buf);
@@ -156,6 +162,7 @@ void LogExperiment()
 }
 void PrintDebug()
 {
+    gCamera;
 }
 void ApplyCustomInteractions()
 {
@@ -298,11 +305,14 @@ void sgp::CreateLoadSGPExperiment()
 void sgp::CreateTestScalingExperiment()
 {
     // Make two balls, unit radius unit density
-    sgp::VIPs.lBall = CreateRubbleGrain(PxVec3(-4,0,0),eSPHERE_GRAIN,1,*gPhysX.mDefaultMaterial,gExp.defGrainDensity);
-    sgp::VIPs.rBall = CreateRubbleGrain(PxVec3(+4,0,0),eSPHERE_GRAIN,1,*gPhysX.mDefaultMaterial,gExp.defGrainDensity);
+    PxReal halfD = sgp::sclTest.dInitial*sgp::sclTest.radius/2;
+    sgp::VIPs.lBall = CreateRubbleGrain(PxVec3(-halfD,0,0),eSPHERE_GRAIN,sgp::sclTest.radius,*gPhysX.mDefaultMaterial,gExp.defGrainDensity);
+    sgp::VIPs.rBall = CreateRubbleGrain(PxVec3(+halfD,0,0),eSPHERE_GRAIN,sgp::sclTest.radius,*gPhysX.mDefaultMaterial,gExp.defGrainDensity);
 
     // Move the camera to a good location
-    gCamera.pos.z = 10;
+    gCamera.pos.z = 1.25*sgp::sclTest.dInitial*sgp::sclTest.radius;
+    gCamera.zBufFar = 2*gCamera.pos.magnitude();
+    gCamera.speed *= sgp::sclTest.radius;
 
     // Start a log
     if (gRun.outputFrequency)
@@ -312,7 +322,7 @@ void sgp::CreateTestScalingExperiment()
         header << "# This is the run log of " << gRun.baseName << " from " << ctime(&now); // ctime includes a newline
         header << "# Experiment type: TEST_SCALING (" << sgp::eExperimentType << ")" << endl;
         header << "# Active force: point mass gravity" << endl;
-        header << "# Actors: two unit spheres with rho = " << gExp.defGrainDensity << " (cu)" << endl;
+        header << "# Actors: two spheres with r = " << sgp::sclTest.radius << " (cu) and rho = " << gExp.defGrainDensity << " (cu)" << endl;
         header << "# Measured quantities: COM separation, COM relative velocity" << endl;
         header << "# Time step used = " << gSim.timeStep << " (cu)" << endl;
         header << "# Code units: 1 cu = [" << sgp::cunits.length << " m | " << sgp::cunits.mass << " kg | " << sgp::cunits.time << " s]" << endl;
@@ -652,7 +662,7 @@ void sgp::ControlTestScalingExperiment()
     // Stop just before contact
     PxReal d = sgp::VIPs.rBall->getGlobalPose().p.x - sgp::VIPs.lBall->getGlobalPose().p.x;
     PxReal skin =  0.1*gPhysX.mPhysics->getTolerancesScale().length;
-    if (((d < 2.0 + skin) && !gSim.targetTime) || (gSim.targetTime && (gSim.codeTime >= gSim.targetTime - gSim.timeStep)))
+    if (((d < 2.0*sgp::sclTest.radius + skin) && !gSim.targetTime) || (gSim.targetTime && (gSim.codeTime >= gSim.targetTime - gSim.timeStep)))
         gSim.isRunning = false;
 }
 

@@ -7,17 +7,17 @@
 % which also contains the code units and G and rho in cu.
 
 clear
-close all
 clc
 
 %% Load data from files and do initial conversions
-out_files = dir('*.out');
+out_files = dir('sgp_nu.out');
 for k = 1:numel(out_files)
     raw = importdata(out_files(k).name,' ',headcount(out_files(k).name));
-    rho = cell2mat(textscan(raw.textdata{4},'%*[^=]%*c%f'));
+    r = cell2mat(textscan(raw.textdata{4},'%*[^=]%*c%f%*[^\n]'));
+    rho = cell2mat(textscan(raw.textdata{4},'%*[^=]%*c%*[^=]%*c%f'));
     bigG = cell2mat(textscan(raw.textdata{8},'%*[^=]%*c%f'));
     dt = cell2mat(textscan(raw.textdata{6},'%*[^=]%*c%f'));
-    M = 4*pi/3*rho;
+    M = 4*pi/3*rho*r^3;
     data(k).dt = dt; %#ok<*SAGROW>
     data(k).t = raw.data(:,1);
     data(k).R = raw.data(:,2);
@@ -37,9 +37,9 @@ for k = 1:numel(data)
 end
 % Add kinetic and potential envelope and a line of fixed energy
 [~,k] = min([data.dt]);
-plot(data(k).t,data(k).K,'k--')
-plot(data(k).t,data(k).U,'k--')
-plot([0,data(k).t(end)],[-bigG*M^2/8,-bigG*M^2/8],'k--')
+plot(data(k).t,data(k).K,'r--','linewidth',2)
+plot(data(k).t,data(k).U,'g--','linewidth',2)
+plot([0,data(k).t(end)],[-bigG*M^2/data(k).R(1),-bigG*M^2/data(k).R(1)],'k--')
 
 %% Touch up and anotate
 xlabel('time [cu]')
