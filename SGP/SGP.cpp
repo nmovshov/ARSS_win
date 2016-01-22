@@ -249,8 +249,13 @@ void sgp::CreateMakeSGPExperiment()
     // Start a log
     if (gRun.outputFrequency)
     {
+        time_t now = time(NULL);
         ostringstream header;
-        header << "# This is the run log of " << gRun.baseName << endl;
+        header << "# This is the run log of " << gRun.baseName << " from " << ctime(&now); // ctime includes a newline
+        header << "# Experiment type: MAKE_SGP (" << sgp::eExperimentType << ")" << endl;
+        header << "# Time step used = " << gSim.timeStep << " (cu)" << endl;
+        header << "# Code units: 1 cu = [" << sgp::cunits.length << " m | " << sgp::cunits.mass << " kg | " << sgp::cunits.time << " s]" << endl;
+        header << "# Scaled G = " << sgp::cunits.bigG << " (cu)" << endl;
         header << "# Columns are (values in code units):" << endl;
         header << "# [time]    [SGP a axis]    [SGP a/b axes ratio]    [SGP a/c axes ratio]    [system binding energy]" << endl;
         ofstream fbuf(gRun.outFile.c_str(),ios::trunc);
