@@ -10,7 +10,7 @@ clear
 clc
 
 %% Load data from files and do initial conversions
-out_files = dir('sgp_nu.out');
+out_files = dir('sgp_cu.out');
 for k = 1:numel(out_files)
     raw = importdata(out_files(k).name,' ',headcount(out_files(k).name));
     r = cell2mat(textscan(raw.textdata{4},'%*[^=]%*c%f%*[^\n]'));
