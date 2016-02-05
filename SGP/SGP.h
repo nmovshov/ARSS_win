@@ -35,7 +35,7 @@ namespace sgp
         PxRigidDynamic* rBall;
     } VIPs;
 
-    // Misc params
+    // Parameters for make_sgp experiment
     struct {
         PxReal nucleusRadius;
         struct {
@@ -43,7 +43,7 @@ namespace sgp
             PxReal acAxesRatio;
         } ellipsoid;
         PxReal defaultDensity;
-    } params;
+    } msgp;
 
     // Parameters for "scaled integration" test
     struct {
@@ -73,6 +73,7 @@ namespace sgp
     void CreateLoadSGPExperiment();
     void CreateTestScalingExperiment();
     bool MakeNewSGP();
+    void MakeLooseRubblePile();
     void GravitateSelf();
     void GravitateOnHost();
     void GravitateOnDevice();

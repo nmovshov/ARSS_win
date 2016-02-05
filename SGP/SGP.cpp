@@ -65,9 +65,9 @@ bool ConfigExperimentOptions()
     
     // Spheroid shape parameters
     ncc::GetStrPropertyFromINIFile("experiment","ellipsoid_axes_ratio_ab","1",buf,MAX_CHARS_PER_NAME,gRun.iniFile.c_str());
-    sgp::params.ellipsoid.abAxesRatio = atof(buf);
+    sgp::msgp.ellipsoid.abAxesRatio = atof(buf);
     ncc::GetStrPropertyFromINIFile("experiment","ellipsoid_axes_ratio_ac","1",buf,MAX_CHARS_PER_NAME,gRun.iniFile.c_str());
-    sgp::params.ellipsoid.acAxesRatio = atof(buf);
+    sgp::msgp.ellipsoid.acAxesRatio = atof(buf);
 
     // Parameters of the grain size distribution
     ncc::GetStrPropertyFromINIFile("experiment","gsd_type","uniform",buf,MAX_CHARS_PER_NAME,gRun.iniFile.c_str());
@@ -87,7 +87,7 @@ bool ConfigExperimentOptions()
     sgp::gsd.numberRatio = ncc::GetIntPropertyFromINIFile("experiment","gsd_number_ratio",1,gRun.iniFile.c_str());
 
     ncc::GetStrPropertyFromINIFile("experiment","nucleus_radius", "0",buf,MAX_CHARS_PER_NAME,gRun.iniFile.c_str());
-    sgp::params.nucleusRadius = atof(buf);
+    sgp::msgp.nucleusRadius = atof(buf);
 
     // The "scaled integration" tests are not really useful sgp experiments - more like debugging benchmarks
     ncc::GetStrPropertyFromINIFile("experiment","scl_test_radius", "1",buf,MAX_CHARS_PER_NAME,gRun.iniFile.c_str());
@@ -238,8 +238,8 @@ void sgp::CreateMakeSGPExperiment()
  * to a steady state.
 */
 {
-    // Put rubble elements in initial positions
-    sgp::MakeNewSGP();
+    // Put rubble elements in initial, loose positions
+    sgp::MakeLooseRubblePile();
 
     // Move the camera to a good location
     FindExtremers();
@@ -425,6 +425,10 @@ void sgp::GravitateOnDevice()
 {
 
 }
+void sgp::MakeLooseRubblePile()
+{
+
+}
 bool sgp::MakeNewSGP()
 /*
  * This function creates a rubble pile by placing grains in a volume of an
@@ -449,7 +453,7 @@ bool sgp::MakeNewSGP()
     vector<PxVec3> positions(sgp::gsd.totalNumber);
     PxReal safeDL = PxMax(sgp::gsd.size1,sgp::gsd.size2) * 2.06;
 
-    PxReal r = sgp::params.nucleusRadius, teta = 0, phi = 0; // the center is reserved for an optional kinematic nucleus
+    PxReal r = sgp::msgp.nucleusRadius, teta = 0, phi = 0; // the center is reserved for an optional kinematic nucleus
     PxU32 lastLayerOccupancy = 0;
     for (PxU32 k=0; k<positions.size(); k++)
     {
@@ -476,8 +480,8 @@ bool sgp::MakeNewSGP()
         }
 
         PxReal x = r * sin(teta) * cos(phi);
-        PxReal y = (1/sgp::params.ellipsoid.abAxesRatio) * r * sin(teta) * sin(phi);
-        PxReal z = (1/sgp::params.ellipsoid.acAxesRatio) * r * cos(teta);
+        PxReal y = (1/sgp::msgp.ellipsoid.abAxesRatio) * r * sin(teta) * sin(phi);
+        PxReal z = (1/sgp::msgp.ellipsoid.acAxesRatio) * r * cos(teta);
         positions[k] = PxVec3(x,y,z);
         lastLayerOccupancy++;
     }
@@ -489,8 +493,8 @@ bool sgp::MakeNewSGP()
     }
 
     // place the nucleus
-    if (sgp::params.nucleusRadius)
-        sgp::VIPs.nucleus = CreateRubbleGrain(PxVec3(0),eCAPSULE_GRAIN,sgp::params.nucleusRadius/2,*gPhysX.mDefaultMaterial);
+    if (sgp::msgp.nucleusRadius)
+        sgp::VIPs.nucleus = CreateRubbleGrain(PxVec3(0),eCAPSULE_GRAIN,sgp::msgp.nucleusRadius/2,*gPhysX.mDefaultMaterial);
     if (sgp::VIPs.nucleus)
     {
         ColorActor(sgp::VIPs.nucleus,ncc::rgb::rDarkRed);
@@ -545,6 +549,8 @@ void sgp::RefreshMakeSGPHUD()
     // Rubble element count
     sprintf(buf,"Element count = %u",gPhysX.mScene->getNbActors(gPhysX.roles.dynamics));
     gHUD.hud.SetElement(sgp::hudMsgs.systemDiag1,buf);
+    if (gPhysX.mScene->getNbActors(gPhysX.roles.dynamics)==0)
+        return;
 
     // Ellipsoid dimensions
     FindExtremers();
