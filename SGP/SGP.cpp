@@ -267,9 +267,13 @@ void sgp::CreateMakeSGPExperiment()
     sgp::MakeLooseRubblePile();
 
     // Move the camera to a good location
+    PxReal looseExtent = 0;
     FindExtremers();
-    if (gExp.VIPs.extremers.outmost)
-        gCamera.pos.z = gExp.VIPs.extremers.outmost->getGlobalPose().p.z + 10*gExp.defGrainSize;
+    if (gExp.VIPs.extremers.rightmost)
+        looseExtent = 2*gExp.VIPs.extremers.rightmost->getGlobalPose().p.x;
+    gCamera.pos.z = looseExtent + 2*sgp::msgp.gsd.sizeScale;
+    gCamera.zBufFar = 2*looseExtent;
+    gCamera.zBufNear = 0.5*sgp::msgp.gsd.sizeScale;
 
     // Start a log
     if (gRun.outputFrequency)
@@ -450,7 +454,7 @@ void sgp::GravitateOnDevice()
 {
 
 }
-void sgp::MakeLooseRubblePile()
+PxU32 sgp::MakeLooseRubblePile()
 /* This function creates a loose rubble pile by placing rubble elements, called
  * grains, inside the volume of an imaginary ellipsoid. There will be ample space
  * between neighboring grains to ensure no initial overlap regardless of (possibly
@@ -464,7 +468,7 @@ void sgp::MakeLooseRubblePile()
  * distribution, but their shapes are optionally randomized.
 */
 {
-    // Begin by calculating required number of grains
+    // 1. Begin by calculating expected number of grains
     PxReal a = sgp::msgp.ellipsoid.longAxis;
     PxReal b = a/sgp::msgp.ellipsoid.abAxesRatio;
     PxReal c = a/sgp::msgp.ellipsoid.acAxesRatio;
@@ -472,6 +476,91 @@ void sgp::MakeLooseRubblePile()
     PxReal rGrain = sgp::msgp.gsd.sizeScale;
     PxReal grainVolume = (rGrain)*(rGrain)*(rGrain);
     PxU32 nbGrains = ellipsoidVolume/grainVolume;
+    if (nbGrains > MAX_ACTORS_PER_SCENE)
+        ncc__error("Too many grains!");
+
+    // 2. Now calculate placement positions (this is the hard part)
+    vector<PxVec3> positions(nbGrains);
+    PxReal safeDL = 2.06*rGrain;
+    PxReal r = safeDL, teta = 0, phi = 0;
+    PxU32 lastLayerOccupancy = 0;
+    for (PxU32 k=0; k<positions.size(); k++)
+    {
+        PxReal dr = 0, dteta = 0, dphi=0;
+        // try advancing on a slice
+        if (teta) {
+            dphi = safeDL/(r*sin(teta));
+            phi += dphi;
+            if (phi > 2*PxPi)
+                phi = 0;
+        }
+        // if not possible, try a stack
+        if (phi == 0) {
+            dteta = safeDL/r;
+            teta += dteta;
+            if (teta > PxPi)
+                teta = 0;
+        }
+        // if not possible, try a radius
+        if (teta == 0) {
+            dr = safeDL;
+            r += dr;
+            lastLayerOccupancy = 0;
+        }
+        // make Cartesian coordinates 
+        PxReal x = r*sin(teta)*cos(phi);
+        PxReal y = (a/b)*r*sin(teta)*sin(phi);
+        PxReal z = (a/c)*r*cos(teta);
+        positions[k] = PxVec3(x,y,z);
+        lastLayerOccupancy++;
+    }
+    // and shave the last layer, for symmetry (symmetry eh...)
+    while (lastLayerOccupancy--)
+    {
+        positions.pop_back();
+    }
+
+    // 3. Finally, create and place the grains
+
+    // Make a random convex mesh
+    vector<PxVec3> verts = MakeRandomVertexList();
+    PxConvexMesh* theMesh = MakePxMeshFromVertexList(verts);
+
+    for (PxU32 k=0; k<positions.size(); k++)
+    {
+        // Create a convex geometry for the next grain
+        PxMeshScale meshScale;
+        meshScale.scale = PxVec3(rGrain);
+        PxMat33 M = meshScale.toMat33();
+        PxConvexMeshGeometry meshGeometry;
+
+        if (sgp::msgp.gsd.type == sgp::msgp.gsd.eGSD_IDENTICAL) // (use a single shape)
+        {
+            meshGeometry = PxConvexMeshGeometry(theMesh,meshScale);
+        } 
+        else // (or make a new shape each time)
+        {
+            vector<PxVec3> newVerts = MakeRandomVertexList();
+            PxConvexMesh* aNewMesh = MakePxMeshFromVertexList(newVerts);
+            meshGeometry = PxConvexMeshGeometry(aNewMesh,meshScale);
+        }
+
+        // Create a convex actor from this geometry and add to the scene
+        PxRigidDynamic* aGrain = PxCreateDynamic(*gPhysX.mPhysics,PxTransform(positions[k]),meshGeometry,*gPhysX.mDefaultMaterial,sgp::msgp.grain.density);
+        if (aGrain)
+        {
+            // (manual override of some dynamic features, we do not normally use this)
+            if (gPhysX.props.sleepThreshold > -1) aGrain->setSleepThreshold(0.5*gPhysX.props.sleepThreshold*gPhysX.props.sleepThreshold);
+            if (gPhysX.props.angularDamping > -1) aGrain->setAngularDamping(gPhysX.props.angularDamping);
+            if (gPhysX.props.linearDamping  > -1) aGrain->setLinearDamping(gPhysX.props.linearDamping);
+
+            aGrain->setName("rubble");
+            RandOrientActor(aGrain);
+            gPhysX.mScene->addActor(*aGrain);
+        }
+    }
+
+    return positions.size();
 }
 bool sgp::MakeNewSGP()
 /* **************OBSOLETE********************

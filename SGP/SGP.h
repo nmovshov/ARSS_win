@@ -81,7 +81,7 @@ namespace sgp
     void CreateLoadSGPExperiment();
     void CreateTestScalingExperiment();
     bool MakeNewSGP();
-    void MakeLooseRubblePile();
+    PxU32 MakeLooseRubblePile();
     void GravitateSelf();
     void GravitateOnHost();
     void GravitateOnDevice();
