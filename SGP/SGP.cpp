@@ -451,11 +451,30 @@ void sgp::GravitateOnDevice()
 
 }
 void sgp::MakeLooseRubblePile()
+/* This function creates a loose rubble pile by placing rubble elements, called
+ * grains, inside the volume of an imaginary ellipsoid. There will be ample space
+ * between neighboring grains to ensure no initial overlap regardless of (possibly
+ * randomized) shape and orientation. The total number of grains will be
+ * calculated from the average grain size and desired size of the final rubble
+ * pile. The initial loose rubble pile is usually allowed to settle under self
+ * gravity and the dimensions of the final aggregate will be only roughly similar
+ * to the specified desired ellipsoid.
+ * 
+ * In the first version all rubble elements are drawn from a uniform size
+ * distribution, but their shapes are optionally randomized.
+*/
 {
-
+    // Begin by calculating required number of grains
+    PxReal a = sgp::msgp.ellipsoid.longAxis;
+    PxReal b = a/sgp::msgp.ellipsoid.abAxesRatio;
+    PxReal c = a/sgp::msgp.ellipsoid.acAxesRatio;
+    PxReal ellipsoidVolume = 4.0/3.0*PxPi*a*b*c;
+    PxReal rGrain = sgp::msgp.gsd.sizeScale;
+    PxReal grainVolume = (rGrain)*(rGrain)*(rGrain);
+    PxU32 nbGrains = ellipsoidVolume/grainVolume;
 }
 bool sgp::MakeNewSGP()
-/*
+/* **************OBSOLETE********************
  * This function creates a rubble pile by placing grains in a volume of an
  * imaginary spheroid, and lets them fall in. The shape of the spheroid is
  * adjusted based on the number and size scale of rubble grains. The individual
