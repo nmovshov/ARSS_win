@@ -781,11 +781,11 @@ void sgp::LogTestScalingExperiment()
 
     if (gSim.isRunning) // While running collect measurements
     {
-	    PxReal d = sgp::VIPs.rBall->getGlobalPose().p.x - sgp::VIPs.lBall->getGlobalPose().p.x;
-	    PxReal v = sgp::VIPs.rBall->getLinearVelocity().x - sgp::VIPs.lBall->getLinearVelocity().x;
-	    t.push_back(gSim.codeTime);
-	    R.push_back(d);
-	    V.push_back(v);
+        PxReal d = sgp::VIPs.rBall->getGlobalPose().p.x - sgp::VIPs.lBall->getGlobalPose().p.x;
+        PxReal v = sgp::VIPs.rBall->getLinearVelocity().x - sgp::VIPs.lBall->getLinearVelocity().x;
+        t.push_back(gSim.codeTime);
+        R.push_back(d);
+        V.push_back(v);
     } 
     else // When done, save collected measurements
     {
