@@ -142,11 +142,11 @@ void CustomizeGLUT()
 }
 void CustomizeHUD()
 {
-    sgp::hudMsgs.systemDiag1 = gHUD.hud.AddElement("",0.72,0.04);
-    sgp::hudMsgs.systemDiag2 = gHUD.hud.AddElement("",0.72,0.08);
-    sgp::hudMsgs.systemDiag3 = gHUD.hud.AddElement("",0.72,0.12);
-    sgp::hudMsgs.systemDiag4 = gHUD.hud.AddElement("",0.72,0.16);
-    sgp::hudMsgs.systemDiag5 = gHUD.hud.AddElement("",0.72,0.20);
+    sgp::hudMsgs.systemDiag1 = gHUD.hud.AddElement("",0.68,0.04);
+    sgp::hudMsgs.systemDiag2 = gHUD.hud.AddElement("",0.68,0.08);
+    sgp::hudMsgs.systemDiag3 = gHUD.hud.AddElement("",0.68,0.12);
+    sgp::hudMsgs.systemDiag4 = gHUD.hud.AddElement("",0.68,0.16);
+    sgp::hudMsgs.systemDiag5 = gHUD.hud.AddElement("",0.68,0.20);
 }
 void RefreshCustomHUDElements()
 {
@@ -699,7 +699,7 @@ void sgp::RefreshMakeSGPHUD()
     PxReal a = rRight.x - rLeft.x;
     PxReal b = rOut.z - rIn.z;
     PxReal c = rUp.y - rDown.y;
-    sprintf(buf,"Ellipsoid a axis = %g",a);
+    sprintf(buf,"Ellipsoid long (\"a\") axis = %0.2g (cu)",a);
     gHUD.hud.SetElement(sgp::hudMsgs.systemDiag2,buf);
     sprintf(buf,"Ellipsoid a/b axes ratio = %-8.2f",a/b);
     gHUD.hud.SetElement(sgp::hudMsgs.systemDiag3,buf);
