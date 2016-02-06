@@ -37,12 +37,20 @@ namespace sgp
 
     // Parameters for make_sgp experiment
     struct {
-        PxReal nucleusRadius;
+        PxReal nucleusRadius; // obsolete
         struct {
-            PxReal abAxesRatio;
-            PxReal acAxesRatio;
+            PxReal longAxis;    // the longest semi-principle-axis, called a
+            PxReal abAxesRatio; // a/b semi-principle-axes ratio
+            PxReal acAxesRatio; // a/c semi-principle-axes ratio
         } ellipsoid;
-        PxReal defaultDensity;
+        struct {
+            enum {eBAD_GSD_TYPE, eGSD_UNIFORM, eGSD_IDENTICAL} type;
+            PxReal sizeScale;
+        } gsd;
+        struct {
+            RubbleGrainType shape;
+            PxReal density;
+        } grain;
     } msgp;
 
     // Parameters for "scaled integration" test
@@ -51,7 +59,7 @@ namespace sgp
         PxU32 dInitial; // initial separation in radii
     } sclTest;
 
-    // Grain Size Distribution
+    // Grain Size Distribution (obsolete now, keeping to not break old code right away)
     struct {
         enum {eBAD_GSD_TYPE, eGSD_UNIFORM, eGSD_BIMODAL} type;
         PxReal size2;

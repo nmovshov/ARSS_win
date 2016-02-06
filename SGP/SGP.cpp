@@ -63,13 +63,37 @@ bool ConfigExperimentOptions()
     else
         sgp::eExperimentType = sgp::eBAD_EXPERIMENT_TYPE;
     
-    // Spheroid shape parameters
-    ncc::GetStrPropertyFromINIFile("experiment","ellipsoid_axes_ratio_ab","1",buf,MAX_CHARS_PER_NAME,gRun.iniFile.c_str());
+    // The make_sgp subgroup includes parameters of the desired ellipsoid shape and rubble elements
+    ncc::GetStrPropertyFromINIFile("experiment:make_sgp","ellipsoid_long_axis","1",buf,MAX_CHARS_PER_NAME,gRun.iniFile.c_str());
+    sgp::msgp.ellipsoid.longAxis = atof(buf);
+    ncc::GetStrPropertyFromINIFile("experiment:make_sgp","ellipsoid_ab_ratio","1",buf,MAX_CHARS_PER_NAME,gRun.iniFile.c_str());
     sgp::msgp.ellipsoid.abAxesRatio = atof(buf);
-    ncc::GetStrPropertyFromINIFile("experiment","ellipsoid_axes_ratio_ac","1",buf,MAX_CHARS_PER_NAME,gRun.iniFile.c_str());
+    ncc::GetStrPropertyFromINIFile("experiment:make_sgp","ellipsoid_ac_ratio","1",buf,MAX_CHARS_PER_NAME,gRun.iniFile.c_str());
     sgp::msgp.ellipsoid.acAxesRatio = atof(buf);
 
-    // Parameters of the grain size distribution
+    ncc::GetStrPropertyFromINIFile("experiment:make_sgp","gsd_size_scale","1",buf,MAX_CHARS_PER_NAME,gRun.iniFile.c_str());
+    sgp::msgp.gsd.sizeScale = atof(buf);
+    ncc::GetStrPropertyFromINIFile("experiment:make_sgp","gsd_type","uniform",buf,MAX_CHARS_PER_NAME,gRun.iniFile.c_str());
+    if (strcmp(buf,"uniform")==0)
+        sgp::msgp.gsd.type = sgp::msgp.gsd.eGSD_UNIFORM;
+    else if (strcmp(buf,"identical")==0)
+        sgp::msgp.gsd.type = sgp::msgp.gsd.eGSD_IDENTICAL;
+    else
+        sgp::msgp.gsd.type = sgp::msgp.gsd.eBAD_GSD_TYPE;
+    
+    ncc::GetStrPropertyFromINIFile("experiment:make_sgp","grain_density","1000",buf,MAX_CHARS_PER_NAME,gRun.iniFile.c_str());
+    sgp::msgp.grain.density = atof(buf);
+    ncc::GetStrPropertyFromINIFile("experiment:make_sgp","grain_shape","convex",buf,MAX_CHARS_PER_NAME,gRun.iniFile.c_str());
+    if (strcmp(buf,"convex")==0)
+        sgp::msgp.grain.shape = eCONVEX_GRAIN;
+    else if (strcmp(buf,"sphere")==0)
+        sgp::msgp.grain.shape = eSPHERE_GRAIN;
+    else
+        sgp::msgp.grain.shape = eBAD_RUBBLE_GRAIN_TYPE;
+    
+
+    // Parameters of the grain size distribution (OBSOLETE REMOVE WHEN READY)
+    /*OBSOLETE gsd group remove when ready*/
     ncc::GetStrPropertyFromINIFile("experiment","gsd_type","uniform",buf,MAX_CHARS_PER_NAME,gRun.iniFile.c_str());
     if		(strcmp(buf,"uniform")==0)
         sgp::gsd.type = sgp::gsd.eGSD_UNIFORM;
@@ -77,6 +101,7 @@ bool ConfigExperimentOptions()
         sgp::gsd.type = sgp::gsd.eGSD_BIMODAL;
     else
         sgp::gsd.type = sgp::gsd.eBAD_GSD_TYPE;
+    /*OBSOLETE gsd group remove when ready*/
 
     ncc::GetStrPropertyFromINIFile("experiment","gsd_size1","1",buf,MAX_CHARS_PER_NAME,gRun.iniFile.c_str());
     sgp::gsd.size1 = atof(buf);
