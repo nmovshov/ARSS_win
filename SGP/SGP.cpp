@@ -274,6 +274,7 @@ void sgp::CreateMakeSGPExperiment()
     gCamera.pos.z = looseExtent + 2*sgp::msgp.gsd.sizeScale;
     gCamera.zBufFar = 2*looseExtent;
     gCamera.zBufNear = 0.5*sgp::msgp.gsd.sizeScale;
+    gCamera.speed = gCamera.speed*sgp::msgp.gsd.sizeScale;
 
     // Start a log
     if (gRun.outputFrequency)
@@ -478,6 +479,8 @@ PxU32 sgp::MakeLooseRubblePile()
     PxU32 nbGrains = ellipsoidVolume/grainVolume;
     if (nbGrains > MAX_ACTORS_PER_SCENE)
         ncc__error("Too many grains!");
+    if (nbGrains < 12)
+        ncc__warning("Too few grains!");
 
     // 2. Now calculate placement positions (this is the hard part)
     vector<PxVec3> positions(nbGrains);
@@ -491,7 +494,7 @@ PxU32 sgp::MakeLooseRubblePile()
         if (teta) {
             dphi = safeDL/(r*sin(teta));
             phi += dphi;
-            if (phi > 2*PxPi)
+            if (phi > (2*PxPi - dphi))
                 phi = 0;
         }
         // if not possible, try a stack
@@ -680,7 +683,7 @@ void sgp::RefreshMakeSGPHUD()
     char buf[MAX_CHARS_PER_NAME];
 
     // Rubble element count
-    sprintf(buf,"Element count = %u",gPhysX.mScene->getNbActors(gPhysX.roles.dynamics));
+    sprintf(buf,"Rubble elements (\"grains\") = %u",gPhysX.mScene->getNbActors(gPhysX.roles.dynamics));
     gHUD.hud.SetElement(sgp::hudMsgs.systemDiag1,buf);
     if (gPhysX.mScene->getNbActors(gPhysX.roles.dynamics)==0)
         return;
