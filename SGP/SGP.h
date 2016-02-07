@@ -26,6 +26,7 @@ namespace sgp
         unsigned int systemDiag3;
         unsigned int systemDiag4;
         unsigned int systemDiag5;
+        unsigned int systemDiag6;
     } hudMsgs;
 
     // Named actors

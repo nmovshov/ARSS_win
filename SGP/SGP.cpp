@@ -147,6 +147,7 @@ void CustomizeHUD()
     sgp::hudMsgs.systemDiag3 = gHUD.hud.AddElement("",0.68,0.12);
     sgp::hudMsgs.systemDiag4 = gHUD.hud.AddElement("",0.68,0.16);
     sgp::hudMsgs.systemDiag5 = gHUD.hud.AddElement("",0.68,0.20);
+    sgp::hudMsgs.systemDiag6 = gHUD.hud.AddElement("",0.68,0.22);
 }
 void RefreshCustomHUDElements()
 {
@@ -287,7 +288,7 @@ void sgp::CreateMakeSGPExperiment()
         header << "# Code units: 1 cu = [" << sgp::cunits.length << " m | " << sgp::cunits.mass << " kg | " << sgp::cunits.time << " s]" << endl;
         header << "# Scaled G = " << sgp::cunits.bigG << " (cu)" << endl;
         header << "# Columns are (values in code units):" << endl;
-        header << "# [time]    [SGP a axis]    [SGP a/b axes ratio]    [SGP a/c axes ratio]    [system binding energy]" << endl;
+        header << "# [time]    [SGP long axis]    [SGP a/b axes ratio]    [SGP a/c axes ratio]    [potential energy]    [kinetic energy]" << endl;
         ofstream fbuf(gRun.outFile.c_str(),ios::trunc);
         if (!fbuf.is_open())
             ncc__error("Could not start a log. Experiment aborted.\a\n");
@@ -708,8 +709,9 @@ void sgp::RefreshMakeSGPHUD()
 
     // Gravitational binding energy
     PxReal V = sgp::SystemPotentialEnergy();
-    sprintf(buf,"PE_tot = %g",V);
+    sprintf(buf,"U = %g (cu)",V);
     gHUD.hud.SetElement(sgp::hudMsgs.systemDiag5,buf);
+    
 }
 void sgp::LogMakeSGPExperiment()
 {
@@ -728,12 +730,16 @@ void sgp::LogMakeSGPExperiment()
     // Potential energy information
     PxReal V = sgp::SystemPotentialEnergy();
 
-    // Format and write it to  log
+    // Kinetic energy information
+    UpdateIntegralsOfMotion();
+    PxReal K = gExp.IOMs.systemKE;
+
+    // Format and write it to log
     char buf[MAX_CHARS_PER_NAME];
-    sprintf(buf,"%f    %g    %f    %f    %g",gSim.codeTime,a,a/b,a/c,V);
+    sprintf(buf,"%f    %g    %f    %f    %g    %g",gSim.codeTime,a,a/b,a/c,V,K);
     ncc::logEntry(gRun.outFile.c_str(),buf);
 }
-physx::PxReal sgp::SystemPotentialEnergy()
+PxReal sgp::SystemPotentialEnergy()
 {
     // Prepare
     PxReal V = 0.0;
@@ -767,14 +773,14 @@ physx::PxReal sgp::SystemPotentialEnergy()
             float distSqr = x*x + y*y + z*z;
             float invDist = 1.0f/sqrtf(distSqr);
 
-            V -= bodies[4*j+0] * bodies[4*k+0] * invDist; // Multiply by 2*G later...
+            V -= bodies[4*j+0] * bodies[4*k+0] * invDist; // Multiply by G later...
         }
     }
 
     // Clean up
     delete [] bodies;
 
-    return 2*sgp::cunits.bigG*V;
+    return sgp::cunits.bigG*V;
 }
 void sgp::LogTestScalingExperiment()
 {
