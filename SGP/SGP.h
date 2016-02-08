@@ -58,6 +58,7 @@ namespace sgp
     struct {
         PxReal radius;
         PxU32 dInitial; // initial separation in radii
+        PxReal density;
     } sclTest;
 
     // Grain Size Distribution (obsolete now, keeping to not break old code right away)

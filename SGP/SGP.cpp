@@ -101,24 +101,23 @@ bool ConfigExperimentOptions()
         sgp::gsd.type = sgp::gsd.eGSD_BIMODAL;
     else
         sgp::gsd.type = sgp::gsd.eBAD_GSD_TYPE;
-    /*OBSOLETE gsd group remove when ready*/
-
     ncc::GetStrPropertyFromINIFile("experiment","gsd_size1","1",buf,MAX_CHARS_PER_NAME,gRun.iniFile.c_str());
     sgp::gsd.size1 = atof(buf);
     ncc::GetStrPropertyFromINIFile("experiment","gsd_size2","1",buf,MAX_CHARS_PER_NAME,gRun.iniFile.c_str());
     sgp::gsd.size2 = atof(buf);
-
     sgp::gsd.totalNumber = ncc::GetIntPropertyFromINIFile("experiment","gsd_total_number",0,gRun.iniFile.c_str());
     sgp::gsd.numberRatio = ncc::GetIntPropertyFromINIFile("experiment","gsd_number_ratio",1,gRun.iniFile.c_str());
-
     ncc::GetStrPropertyFromINIFile("experiment","nucleus_radius", "0",buf,MAX_CHARS_PER_NAME,gRun.iniFile.c_str());
     sgp::msgp.nucleusRadius = atof(buf);
+    /*OBSOLETE gsd group remove when ready*/
 
     // The "scaled integration" tests are not really useful sgp experiments - more like debugging benchmarks
-    ncc::GetStrPropertyFromINIFile("experiment","scl_test_radius", "1",buf,MAX_CHARS_PER_NAME,gRun.iniFile.c_str());
+    ncc::GetStrPropertyFromINIFile("experiment:test_scaling","radius", "1",buf,MAX_CHARS_PER_NAME,gRun.iniFile.c_str());
     sgp::sclTest.radius = atof(buf);
-    ncc::GetStrPropertyFromINIFile("experiment","scl_test_d_ini", "8",buf,MAX_CHARS_PER_NAME,gRun.iniFile.c_str());
+    ncc::GetStrPropertyFromINIFile("experiment:test_scaling","d_ini", "8",buf,MAX_CHARS_PER_NAME,gRun.iniFile.c_str());
     sgp::sclTest.dInitial = atof(buf);
+    ncc::GetStrPropertyFromINIFile("experiment:test_scaling","density", "1000",buf,MAX_CHARS_PER_NAME,gRun.iniFile.c_str());
+    sgp::sclTest.density = atof(buf);
 
     // Code units and scaling
     ncc::GetStrPropertyFromINIFile("units","cu_length","1",buf,MAX_CHARS_PER_NAME,gRun.iniFile.c_str());
@@ -342,8 +341,8 @@ void sgp::CreateTestScalingExperiment()
 {
     // Make two balls, unit radius unit density
     PxReal halfD = sgp::sclTest.dInitial*sgp::sclTest.radius/2;
-    sgp::VIPs.lBall = CreateRubbleGrain(PxVec3(-halfD,0,0),eSPHERE_GRAIN,sgp::sclTest.radius,*gPhysX.mDefaultMaterial,gExp.defGrainDensity);
-    sgp::VIPs.rBall = CreateRubbleGrain(PxVec3(+halfD,0,0),eSPHERE_GRAIN,sgp::sclTest.radius,*gPhysX.mDefaultMaterial,gExp.defGrainDensity);
+    sgp::VIPs.lBall = CreateRubbleGrain(PxVec3(-halfD,0,0),eSPHERE_GRAIN,sgp::sclTest.radius,*gPhysX.mDefaultMaterial,sgp::sclTest.density);
+    sgp::VIPs.rBall = CreateRubbleGrain(PxVec3(+halfD,0,0),eSPHERE_GRAIN,sgp::sclTest.radius,*gPhysX.mDefaultMaterial,sgp::sclTest.density);
 
     // Move the camera to a good location
     gCamera.pos.z = 1.25*sgp::sclTest.dInitial*sgp::sclTest.radius;
@@ -364,7 +363,7 @@ void sgp::CreateTestScalingExperiment()
         header << "# Code units: 1 cu = [" << sgp::cunits.length << " m | " << sgp::cunits.mass << " kg | " << sgp::cunits.time << " s]" << endl;
         header << "# Scaled G = " << sgp::cunits.bigG << " (cu)" << endl;
         header << "# Columns are (values in code units):" << endl;
-        header << "# [t]    [R]    [V]" << endl;
+        header << "# [t]    [R]    [V]    [U]    [K]" << endl;
         ofstream fbuf(gRun.outFile.c_str(),ios::trunc);
         if (!fbuf.is_open())
             ncc__error("Could not start a log. Experiment aborted.\a\n");
@@ -787,14 +786,21 @@ void sgp::LogTestScalingExperiment()
     static vector<PxReal> t;
     static vector<PxReal> R;
     static vector<PxReal> V;
+    static vector<PxReal> U;
+    static vector<PxReal> K;
 
     if (gSim.isRunning) // While running collect measurements
     {
+        UpdateIntegralsOfMotion();
         PxReal d = sgp::VIPs.rBall->getGlobalPose().p.x - sgp::VIPs.lBall->getGlobalPose().p.x;
         PxReal v = sgp::VIPs.rBall->getLinearVelocity().x - sgp::VIPs.lBall->getLinearVelocity().x;
+        PxReal u = sgp::SystemPotentialEnergy();
+        PxReal k = gExp.IOMs.systemKE;
         t.push_back(gSim.codeTime);
         R.push_back(d);
         V.push_back(v);
+        U.push_back(u);
+        K.push_back(k);
     } 
     else // When done, save collected measurements
     {
@@ -805,7 +811,7 @@ void sgp::LogTestScalingExperiment()
         }
         fbuf.setf(ios::fixed);
         for (unsigned int k=0; k<t.size(); k++)
-            fbuf << setw(8) << t[k] << "    " << setw(8) << R[k] << "    " << setw(8) << V[k] << "\n";
+            fbuf << setw(8) << t[k] << "    " << setw(8) << R[k] << "    " << setw(8) << V[k] << "    " << U[k] << "    " << K[k] << "\n";
         fbuf.close();
     }
 
