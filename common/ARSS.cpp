@@ -784,7 +784,7 @@ void UpdateIntegralsOfMotion()
 			PxReal	M_actor = actor->getMass();
 			PxVec3	v_actor = actor->getLinearVelocity(); 
 			PxVec3	w_actor = actor->getAngularVelocity();
-			PxVec3	r_actor = globalPose.p;
+			PxVec3	r_actor = globalPose.transform(actor->getCMassLocalPose()).p;
 			PxMat33 I_actor = PxMat33::createDiagonal(actor->getMassSpaceInertiaTensor()); // in body frame!
 
 			// system mass

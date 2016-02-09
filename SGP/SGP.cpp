@@ -118,6 +118,7 @@ bool ConfigExperimentOptions()
     sgp::sclTest.dInitial = atof(buf);
     ncc::GetStrPropertyFromINIFile("experiment:test_scaling","density", "1000",buf,MAX_CHARS_PER_NAME,gRun.iniFile.c_str());
     sgp::sclTest.density = atof(buf);
+    sgp::sclTest.nballs = ncc::GetIntPropertyFromINIFile("experiment:test_scaling","nballs",2,gRun.iniFile.c_str());
 
     // Code units and scaling
     ncc::GetStrPropertyFromINIFile("units","cu_length","1",buf,MAX_CHARS_PER_NAME,gRun.iniFile.c_str());
@@ -357,7 +358,7 @@ void sgp::CreateTestScalingExperiment()
         header << "# This is the run log of " << gRun.baseName << " from " << ctime(&now); // ctime includes a newline
         header << "# Experiment type: TEST_SCALING (" << sgp::eExperimentType << ")" << endl;
         header << "# Active force: point mass gravity" << endl;
-        header << "# Actors: two spheres with r = " << sgp::sclTest.radius << " (cu) and rho = " << gExp.defGrainDensity << " (cu)" << endl;
+        header << "# Actors: two spheres with r = " << sgp::sclTest.radius << " (cu) and rho = " << sgp::sclTest.density << " (cu)" << endl;
         header << "# Measured quantities: COM separation, COM relative velocity" << endl;
         header << "# Time step used = " << gSim.timeStep << " (cu)" << endl;
         header << "# Code units: 1 cu = [" << sgp::cunits.length << " m | " << sgp::cunits.mass << " kg | " << sgp::cunits.time << " s]" << endl;
@@ -795,7 +796,7 @@ void sgp::LogTestScalingExperiment()
         PxReal d = sgp::VIPs.rBall->getGlobalPose().p.x - sgp::VIPs.lBall->getGlobalPose().p.x;
         PxReal v = sgp::VIPs.rBall->getLinearVelocity().x - sgp::VIPs.lBall->getLinearVelocity().x;
         PxReal u = sgp::SystemPotentialEnergy();
-        PxReal k = gExp.IOMs.systemKE;
+        PxReal k = gExp.IOMs.systemKE*gExp.IOMs.systemMass;
         t.push_back(gSim.codeTime);
         R.push_back(d);
         V.push_back(v);
