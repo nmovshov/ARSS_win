@@ -84,15 +84,17 @@ namespace sgp
     void CreateMakeSGPExperiment();
     void CreateLoadSGPExperiment();
     void CreateTestScalingExperiment();
+    void ControlMakeSGPExperiment();
+    void ControlTestScalingExperiment();
+    void LogMakeSGPExperiment();
+    void LogTestScalingExperiment();
+    void RefreshMakeSGPHUD();
+
     bool MakeNewSGP();
     PxU32 MakeLooseRubblePile();
     void GravitateSelf();
     void GravitateOnHost();
-    void GravitateOnDevice();
-    void RefreshMakeSGPHUD();
-    void LogMakeSGPExperiment();
-    void LogTestScalingExperiment();
-    void ControlTestScalingExperiment();
+    void GravitateOnDevice();    
     PxReal SystemPotentialEnergy();
 };
 #endif

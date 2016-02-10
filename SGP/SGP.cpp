@@ -196,10 +196,14 @@ void ApplyCustomInteractions()
 }
 void ControlExperiment()
 {
+    if (gSim.bPause) return;
     switch (sgp::eExperimentType)
     {
     case sgp::eTEST_SCALING:
         sgp::ControlTestScalingExperiment();
+        break;
+    case sgp::eMAKE_SGP:
+        sgp::ControlMakeSGPExperiment();
         break;
     default:
         break;
@@ -830,6 +834,19 @@ void sgp::ControlTestScalingExperiment()
     PxReal skin =  0.1*gPhysX.mPhysics->getTolerancesScale().length;
     if (((d < 2.0*sgp::sclTest.radius + skin) && !gSim.targetTime) || (gSim.targetTime && (gSim.codeTime >= gSim.targetTime - gSim.timeStep)))
         gSim.isRunning = false;
+}
+void sgp::ControlMakeSGPExperiment()
+{
+    // Finish when sgp settles down
+    PxReal T = gExp.IOMs.systemKE*gExp.IOMs.systemMass;
+    PxReal U = sgp::SystemPotentialEnergy();
+    PxReal X = PxAbs(T/U);
+    PxReal GT = 1.0/PxSqrt(sgp::cunits.bigG*sgp::msgp.grain.density);
+    if (X < 1e-4 || (gSim.codeTime > 4*GT))
+    {
+        SaveSceneToRepXDump();
+        gSim.isRunning = false;
+    }
 }
 
 // End lint level warnings
