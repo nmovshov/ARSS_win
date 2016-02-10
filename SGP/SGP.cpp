@@ -265,7 +265,7 @@ void sgp::CreateMakeSGPExperiment()
 */
 {
     // Put rubble elements in initial, loose positions
-    sgp::MakeLooseRubblePile();
+    sgp::msgp.gsd.nbTotal = sgp::MakeLooseRubblePile();
 
     // Move the camera to a good location
     PxReal looseExtent = 0;
@@ -284,11 +284,13 @@ void sgp::CreateMakeSGPExperiment()
         ostringstream header;
         header << "# This is the run log of " << gRun.baseName << " from " << ctime(&now); // ctime includes a newline
         header << "# Experiment type: MAKE_SGP (" << sgp::eExperimentType << ")" << endl;
+        header << "# Rubble elements: number = " << sgp::msgp.gsd.nbTotal << ";  rho = " << sgp::msgp.grain.density << endl;
+        header << "# Material: eps = " << gPhysX.mDefaultMaterial->getRestitution() << ";  mu = " << gPhysX.mDefaultMaterial->getDynamicFriction() << endl;
         header << "# Time step used = " << gSim.timeStep << " (cu)" << endl;
         header << "# Code units: 1 cu = [" << sgp::cunits.length << " m | " << sgp::cunits.mass << " kg | " << sgp::cunits.time << " s]" << endl;
         header << "# Scaled G = " << sgp::cunits.bigG << " (cu)" << endl;
         header << "# Columns are (values in code units):" << endl;
-        header << "# [time]    [SGP long axis]    [SGP a/b axes ratio]    [SGP a/c axes ratio]    [potential energy]    [kinetic energy]" << endl;
+        header << "# [time]    [long axis]    [a/b axes ratio]    [a/c axes ratio]    [U]    [K]" << endl;
         ofstream fbuf(gRun.outFile.c_str(),ios::trunc);
         if (!fbuf.is_open())
             ncc__error("Could not start a log. Experiment aborted.\a\n");
@@ -732,11 +734,11 @@ void sgp::LogMakeSGPExperiment()
 
     // Kinetic energy information
     UpdateIntegralsOfMotion();
-    PxReal K = gExp.IOMs.systemKE;
+    PxReal K = gExp.IOMs.systemKE*gExp.IOMs.systemMass;
 
     // Format and write it to log
     char buf[MAX_CHARS_PER_NAME];
-    sprintf(buf,"%f    %g    %f    %f    %g    %g",gSim.codeTime,a,a/b,a/c,V,K);
+    sprintf(buf,"%8f    %8g    %8f    %8f    %12.3g    %12.3g",gSim.codeTime,a,a/b,a/c,V,K);
     ncc::logEntry(gRun.outFile.c_str(),buf);
 }
 PxReal sgp::SystemPotentialEnergy()

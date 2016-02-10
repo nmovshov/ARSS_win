@@ -47,6 +47,7 @@ namespace sgp
         struct {
             enum {eBAD_GSD_TYPE, eGSD_UNIFORM, eGSD_IDENTICAL} type;
             PxReal sizeScale;
+            PxU32 nbTotal;
         } gsd;
         struct {
             RubbleGrainType shape;
