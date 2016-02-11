@@ -491,7 +491,7 @@ PxU32 sgp::MakeLooseRubblePile()
 
     // 2. Now calculate placement positions (this is the hard part)
     vector<PxVec3> positions(nbGrains);
-    PxReal safeDL = 2.06*rGrain;
+    PxReal safeDL = 2.06*rGrain*PxMax(a/b, a/c);
     PxReal r = safeDL, teta = 0, phi = 0;
     PxU32 lastLayerOccupancy = 0;
     for (PxU32 k=0; k<positions.size(); k++)
@@ -519,8 +519,8 @@ PxU32 sgp::MakeLooseRubblePile()
         }
         // make Cartesian coordinates 
         PxReal x = r*sin(teta)*cos(phi);
-        PxReal y = (a/b)*r*sin(teta)*sin(phi);
-        PxReal z = (a/c)*r*cos(teta);
+        PxReal y = (b/a)*r*sin(teta)*sin(phi);
+        PxReal z = (c/a)*r*cos(teta);
         positions[k] = PxVec3(x,y,z);
         lastLayerOccupancy++;
     }
