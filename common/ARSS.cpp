@@ -322,7 +322,14 @@ bool InitCUDA(int devToUse)
 }
 bool InitExperiment()
 {
-	CreateExperiment();
+	if (gExp.eUTILITY_EXPERIMENT == gExp.eSCALE_SCENE)
+	{
+        ScaleScene(2);
+	} 
+	else
+	{
+		CreateExperiment();
+	}
 	return true;
 }
 // Cleanup function
@@ -758,6 +765,15 @@ bool ConfigARSSOptions()
 	// Experiment group options common to all ARSS projects - Grain density
 	ncc::GetStrPropertyFromINIFile("experiment","grain_density","1",buf,MAX_CHARS_PER_NAME,gRun.iniFile.c_str());
 	gExp.defGrainDensity = atof(buf);
+
+    // Utility experiments available solution-wide
+    ncc::GetStrPropertyFromINIFile("experiment","experiment_type","",buf,MAX_CHARS_PER_NAME,gRun.iniFile.c_str());
+    if (strcmp(buf,"scale_scene")==0)
+        gExp.eUTILITY_EXPERIMENT = gExp.eSCALE_SCENE;
+    else if (strcmp(buf,"view_scene")==0)
+        gExp.eUTILITY_EXPERIMENT = gExp.eVIEW_SCENE;
+    else
+        gExp.eUTILITY_EXPERIMENT = gExp.eBAD_UTILITY;
 
 
 	return success;
@@ -1241,6 +1257,30 @@ void RandSpinActor(PxRigidDynamic* actor, PxReal spinMag)
 	w *= spinMag;
 	
 	actor->setAngularVelocity(w);
+}
+
+// Solution wide utility experiments
+void ScaleScene(PxReal s)
+/* Load a previously saved scene file and scale all actors by constant factor.*/
+{
+    if (s <= 0)
+        ncc__error("Negative scale factor\n");
+
+    // Load scene
+    if (!LoadSceneFromFile(gRun.loadSceneFromFile))
+        return;
+
+    // Loop over actors and rescale all shapes
+    PxU32 nbActors = gPhysX.mScene->getNbActors(gPhysX.roles.everyone);
+    if (nbActors)
+    {
+        gPhysX.mScene->getActors(gPhysX.roles.everyone,gPhysX.cast,nbActors);
+        for (PxU32 k=0; k<nbActors; k++)
+        {
+            PxRigidActor* actor = gPhysX.cast[k]->isRigidActor();
+            // TODO: IMPLEMENT RESCALING
+        }
+    }
 }
 
 // Rendering functions

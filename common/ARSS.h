@@ -156,6 +156,7 @@ struct arss_experiment {
 	PxReal				defGrainSize;
 	PxReal				defGrainSizeScatter;
 	PxReal				defGrainDensity;
+    enum {eBAD_UTILITY, eSCALE_SCENE, eVIEW_SCENE} eUTILITY_EXPERIMENT;
 	struct {
 		PxActor*	groundPlane;
 		PxActor*	selectedActor;
@@ -273,6 +274,9 @@ void UpArrowAction();
 void DownArrowAction();
 void LeftArrowAction();
 void RightArrowAction();
+
+// Solution-wide utility experiments
+void ScaleScene(PxReal s);
 
 // Rendering functions
 void RenderActors();
