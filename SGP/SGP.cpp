@@ -120,6 +120,19 @@ bool ConfigExperimentOptions()
     sgp::sclTest.density = atof(buf);
     sgp::sclTest.nballs = ncc::GetIntPropertyFromINIFile("experiment:test_scaling","nballs",2,gRun.iniFile.c_str());
 
+    // The diagnostics group keeps track of options used for real-time and/or post pre/post-processing
+    ncc::GetStrPropertyFromINIFile("diagnostics","color_code","off",buf,MAX_CHARS_PER_NAME,gRun.iniFile.c_str());
+    if (strcmp(buf,"off")==0)
+        sgp::diag.eColorCodeType = sgp::diag.eNO_CCODE;
+    else if (strcmp(buf,"gradient")==0)
+        sgp::diag.eColorCodeType = sgp::diag.eGRADIENT;
+    else if (strcmp(buf,"two_layers")==0)
+        sgp::diag.eColorCodeType = sgp::diag.eTWO_LAYER;
+    else if (strcmp(buf,"three_layers")==0)
+        sgp::diag.eColorCodeType = sgp::diag.eTHREE_LAYER;
+    else
+        sgp::diag.eColorCodeType = sgp::diag.eBAD_CCODE;
+
     // Code units and scaling
     ncc::GetStrPropertyFromINIFile("units","cu_length","1",buf,MAX_CHARS_PER_NAME,gRun.iniFile.c_str());
     sgp::cunits.length = atof(buf);
@@ -270,6 +283,10 @@ void sgp::CreateMakeSGPExperiment()
 {
     // Put rubble elements in initial, loose positions
     sgp::msgp.gsd.nbTotal = sgp::MakeLooseRubblePile();
+
+    // Color-code rubble
+    if (sgp::diag.eColorCodeType)
+        sgp::ColorCodeRubblePile();
 
     // Move the camera to a good location
     PxReal looseExtent = 0;
@@ -846,6 +863,45 @@ void sgp::ControlMakeSGPExperiment()
     {
         SaveSceneToRepXDump();
         gSim.isRunning = false;
+    }
+}
+void sgp::ColorCodeRubblePile()
+{
+    // Short-circuit
+    if (sgp::diag.eColorCodeType == sgp::diag.eNO_CCODE)
+        return;
+
+    // Detect shape information
+    UpdateIntegralsOfMotion();
+    FindExtremers();
+    PxVec3 X0 = gExp.IOMs.systemCM;
+    PxVec3 rRight = gExp.VIPs.extremers.rightmost->getGlobalPose().transform(gExp.VIPs.extremers.rightmost->getCMassLocalPose()).p;
+    PxVec3 rLeft  = gExp.VIPs.extremers.leftmost->getGlobalPose().transform(gExp.VIPs.extremers.leftmost->getCMassLocalPose()).p;
+    PxVec3 rUp    = gExp.VIPs.extremers.upmost->getGlobalPose().transform(gExp.VIPs.extremers.upmost->getCMassLocalPose()).p;
+    PxVec3 rDown  = gExp.VIPs.extremers.downmost->getGlobalPose().transform(gExp.VIPs.extremers.downmost->getCMassLocalPose()).p;
+    PxVec3 rIn    = gExp.VIPs.extremers.inmost->getGlobalPose().transform(gExp.VIPs.extremers.inmost->getCMassLocalPose()).p;
+    PxVec3 rOut   = gExp.VIPs.extremers.outmost->getGlobalPose().transform(gExp.VIPs.extremers.outmost->getCMassLocalPose()).p;
+    PxReal a = (rRight.x - rLeft.x)/2;
+    PxReal b = (rOut.z - rIn.z)/2;
+    PxReal c = (rUp.y - rDown.y)/2;
+
+    switch (sgp::diag.eColorCodeType)
+    {
+    case sgp::diag.eTWO_LAYER:
+        // Loop over rubble and color by position
+        PxReal ca = a/2, cb = b/2, cc = c/2; // core semi-axes
+        PxU32 nbActors = gPhysX.mScene->getActors(gPhysX.roles.dynamics,gPhysX.cast,MAX_ACTORS_PER_SCENE);
+        while (nbActors--)
+        {
+            PxRigidDynamic* actor = gPhysX.cast[nbActors]->isRigidDynamic();
+            if (actor->getRigidDynamicFlags() & PxRigidDynamicFlag::eKINEMATIC) continue;
+            PxVec3 pos = actor->getGlobalPose().transform(actor->getCMassLocalPose()).p - X0;
+            bool incore = ((pos.x*pos.x/ca/ca + pos.y*pos.y/cc/cc + pos.z*pos.z/cb/cb) < 1);
+            if (incore)
+                ColorActor(actor, ncc::rgb::wBeige);
+        }
+
+        break;
     }
 }
 

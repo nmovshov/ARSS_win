@@ -80,6 +80,11 @@ namespace sgp
         PxReal bigG;
     } cunits;
 
+    // Diagnostics
+    struct {
+        enum {eBAD_CCODE, eNO_CCODE, eGRADIENT, eTWO_LAYER, eTHREE_LAYER} eColorCodeType;
+    } diag;
+
     // Namespace functions
     void CreateMakeSGPExperiment();
     void CreateLoadSGPExperiment();
@@ -96,5 +101,6 @@ namespace sgp
     void GravitateOnHost();
     void GravitateOnDevice();    
     PxReal SystemPotentialEnergy();
+    void ColorCodeRubblePile();
 };
 #endif
