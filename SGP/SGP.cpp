@@ -287,6 +287,8 @@ void sgp::CreateMakeSGPExperiment()
     // Color-code rubble
     if (sgp::diag.eColorCodeType)
         sgp::ColorCodeRubblePile();
+    else
+        ncc__warning("Unknown color-coding scheme - using default color");
 
     // Move the camera to a good location
     PxReal looseExtent = 0;
@@ -885,9 +887,17 @@ void sgp::ColorCodeRubblePile()
     PxReal b = (rOut.z - rIn.z)/2;
     PxReal c = (rUp.y - rDown.y)/2;
 
-    switch (sgp::diag.eColorCodeType)
+    // Paint actors by scheme (avoiding switch/case this time)
+    if (sgp::diag.eColorCodeType == sgp::diag.eTWO_LAYER) // Half snow, half default
     {
-    case sgp::diag.eTWO_LAYER:
+        // Choose paint for core
+        const GLubyte *color = ncc::rgb::wBeige;
+        gColors.colorBucket.push_back(vector<GLubyte>(3));
+        gColors.colorBucket.back()[0]=color[0];
+        gColors.colorBucket.back()[1]=color[1];
+        gColors.colorBucket.back()[2]=color[2];
+        size_t cCIndex = gColors.colorBucket.size() - 1; // core color index
+
         // Loop over rubble and color by position
         PxReal ca = a/2, cb = b/2, cc = c/2; // core semi-axes
         PxU32 nbActors = gPhysX.mScene->getActors(gPhysX.roles.dynamics,gPhysX.cast,MAX_ACTORS_PER_SCENE);
@@ -898,11 +908,13 @@ void sgp::ColorCodeRubblePile()
             PxVec3 pos = actor->getGlobalPose().transform(actor->getCMassLocalPose()).p - X0;
             bool incore = ((pos.x*pos.x/ca/ca + pos.y*pos.y/cc/cc + pos.z*pos.z/cb/cb) < 1);
             if (incore)
-                ColorActor(actor, ncc::rgb::wBeige);
+            {
+                actor->userData=&(gColors.colorBucket[cCIndex][0]); // yes I know I know :/
+                actor->setName("rubble-core");
+            }
         }
-
-        break;
     }
+        
 }
 
 // End lint level warnings
