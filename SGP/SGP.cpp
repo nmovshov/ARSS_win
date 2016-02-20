@@ -951,6 +951,51 @@ void sgp::ColorCodeRubblePile()
             }
         }
     }
+    if (sgp::diag.eColorCodeType == sgp::diag.eTHREE_LAYER) // Half cotton, half linen, half wool
+    {
+        // Choose paint for core
+        const GLubyte *color = ncc::rgb::oCoral;
+        gColors.colorBucket.push_back(vector<GLubyte>(3));
+        gColors.colorBucket.back()[0]=color[0];
+        gColors.colorBucket.back()[1]=color[1];
+        gColors.colorBucket.back()[2]=color[2];
+        size_t cCIndex = gColors.colorBucket.size() - 1; // core color index
+
+        // Choose paint for mantle
+        color = ncc::rgb::wBeige;
+        gColors.colorBucket.push_back(vector<GLubyte>(3));
+        gColors.colorBucket.back()[0]=color[0];
+        gColors.colorBucket.back()[1]=color[1];
+        gColors.colorBucket.back()[2]=color[2];
+        size_t mCIndex = gColors.colorBucket.size() - 1; // mantle color index
+
+        // Loop over rubble and color by position
+        PxReal ca = a/3, cb = b/3, cc = c/3; // core semi-axes
+        PxReal ma = 2*a/3, mb = 2*b/3, mc = 2*c/3; // mantle semi-axes
+        PxU32 nbActors = gPhysX.mScene->getActors(gPhysX.roles.dynamics,gPhysX.cast,MAX_ACTORS_PER_SCENE);
+        while (nbActors--)
+        {
+            PxRigidDynamic* actor = gPhysX.cast[nbActors]->isRigidDynamic();
+            if (actor->getRigidDynamicFlags() & PxRigidDynamicFlag::eKINEMATIC) continue;
+            PxVec3 pos = actor->getGlobalPose().transform(actor->getCMassLocalPose()).p - X0;
+            bool inmantle = ((pos.x*pos.x/ma/ma + pos.y*pos.y/mc/mc + pos.z*pos.z/mb/mb) < 1);
+            bool incore = ((pos.x*pos.x/ca/ca + pos.y*pos.y/cc/cc + pos.z*pos.z/cb/cb) < 1);
+            if (incore)
+            {
+                actor->userData=&(gColors.colorBucket[cCIndex][0]); // yes I know I know :/
+                actor->setName("rubble-core");
+            }
+            else if (inmantle)
+            {
+                actor->userData=&(gColors.colorBucket[mCIndex][0]); // yes I know I know :/
+                actor->setName("rubble-mantle");
+            }
+            else
+            {
+                actor->setName("rubble-crust");
+            }
+        }
+    }
     else if (sgp::diag.eColorCodeType == sgp::diag.eSURFACE) // surface coat
     {
         // Estimate surface layer thickness (normalized)
