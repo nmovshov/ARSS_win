@@ -334,26 +334,9 @@ void sgp::CreateMakeSGPExperiment()
 }
 void sgp::CreateLoadSGPExperiment()
 {
-    // Load a previously serialized scene  
-    if (!LoadSceneFromFile(gRun.loadSceneFromFile))
+    // Load a previously saved SGP
+    if (!sgp::LoadSGP(gRun.loadSceneFromFile))
         ncc__error("Scene could not be loaded from repx file; experiment aborted.\a");
-
-    // Some dynamics parameters must be overridden actor-by-actor :/
-    PxU32 nbActors = gPhysX.mScene->getActors(gPhysX.roles.dynamics,gPhysX.cast,MAX_ACTORS_PER_SCENE);
-    while (nbActors--)
-    {
-        PxRigidDynamic* actor = gPhysX.cast[nbActors]->isRigidDynamic();
-        if (gPhysX.props.angularDamping > 0)
-            actor->setAngularDamping(gPhysX.props.angularDamping);
-        if (gPhysX.props.linearDamping > 0)
-            actor->setLinearDamping( gPhysX.props.linearDamping );
-    }
-
-    // Color-code rubble
-    if (sgp::diag.eColorCodeType)
-        sgp::ColorCodeRubblePile();
-    else
-        ncc__warning("Unknown color-coding scheme - using default color");
 
     // Move the camera to a good location
     UpdateIntegralsOfMotion();
@@ -1029,6 +1012,32 @@ void sgp::ColorCodeRubblePile()
         }
     }
         
+}
+bool sgp::LoadSGP(string filename)
+/*Load a scene and do some processing specific to SGPs*/
+{
+    // Load a previously serialized scene
+    if (!LoadSceneFromFile(filename))
+        return false;
+
+    // Some dynamics parameters must be overridden actor-by-actor :/
+    PxU32 nbActors = gPhysX.mScene->getActors(gPhysX.roles.dynamics,gPhysX.cast,MAX_ACTORS_PER_SCENE);
+    while (nbActors--)
+    {
+        PxRigidDynamic* actor = gPhysX.cast[nbActors]->isRigidDynamic();
+        if (gPhysX.props.angularDamping > 0)
+            actor->setAngularDamping(gPhysX.props.angularDamping);
+        if (gPhysX.props.linearDamping > 0)
+            actor->setLinearDamping( gPhysX.props.linearDamping );
+    }
+
+    // Color-code rubble
+    if (sgp::diag.eColorCodeType)
+        sgp::ColorCodeRubblePile();
+    else
+        ncc__warning("Unknown color-coding scheme - using default color");
+
+    return true;
 }
 
 // End lint level warnings

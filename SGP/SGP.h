@@ -103,5 +103,6 @@ namespace sgp
     void GravitateOnDevice();    
     PxReal SystemPotentialEnergy();
     void ColorCodeRubblePile();
+    bool LoadSGP(string filename);
 };
 #endif
