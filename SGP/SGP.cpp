@@ -130,8 +130,13 @@ bool ConfigExperimentOptions()
         sgp::diag.eColorCodeType = sgp::diag.eTWO_LAYER;
     else if (strcmp(buf,"three_layers")==0)
         sgp::diag.eColorCodeType = sgp::diag.eTHREE_LAYER;
+    else if (strcmp(buf,"surface")==0)
+        sgp::diag.eColorCodeType = sgp::diag.eSURFACE;
     else
         sgp::diag.eColorCodeType = sgp::diag.eBAD_CCODE;
+
+    ncc::GetStrPropertyFromINIFile("diagnostics","surface_thickness","1",buf,MAX_CHARS_PER_NAME,gRun.iniFile.c_str());
+    sgp::diag.nbSurfaceThickness = atof(buf);
 
     // Code units and scaling
     ncc::GetStrPropertyFromINIFile("units","cu_length","1",buf,MAX_CHARS_PER_NAME,gRun.iniFile.c_str());
@@ -886,6 +891,7 @@ void sgp::ColorCodeRubblePile()
     PxReal a = (rRight.x - rLeft.x)/2;
     PxReal b = (rOut.z - rIn.z)/2;
     PxReal c = (rUp.y - rDown.y)/2;
+    PxU32  nbRubble = gPhysX.mScene->getNbActors(gPhysX.roles.dynamics);
 
     // Paint actors by scheme (avoiding switch/case this time)
     if (sgp::diag.eColorCodeType == sgp::diag.eTWO_LAYER) // Half snow, half default
@@ -911,6 +917,42 @@ void sgp::ColorCodeRubblePile()
             {
                 actor->userData=&(gColors.colorBucket[cCIndex][0]); // yes I know I know :/
                 actor->setName("rubble-core");
+            }
+            else
+            {
+                actor->setName("rubble-mantle");
+            }
+        }
+    }
+    else if (sgp::diag.eColorCodeType == sgp::diag.eSURFACE) // surface coat
+    {
+        // Estimate surface layer thickness (normalized)
+        PxReal s = 1.0 - sgp::diag.nbSurfaceThickness*PxPow(nbRubble,-1.0/3.0);
+
+        // Choose paint for interior (surface will use default color)
+        const GLubyte *color = ncc::rgb::wBeige;
+        gColors.colorBucket.push_back(vector<GLubyte>(3));
+        gColors.colorBucket.back()[0]=color[0];
+        gColors.colorBucket.back()[1]=color[1];
+        gColors.colorBucket.back()[2]=color[2];
+        size_t cCIndex = gColors.colorBucket.size() - 1; // core color index
+
+        // Loop over rubble and color by position
+        PxU32 nbActors = gPhysX.mScene->getActors(gPhysX.roles.dynamics,gPhysX.cast,MAX_ACTORS_PER_SCENE);
+        while (nbActors--)
+        {
+            PxRigidDynamic* actor = gPhysX.cast[nbActors]->isRigidDynamic();
+            if (actor->getRigidDynamicFlags() & PxRigidDynamicFlag::eKINEMATIC) continue;
+            PxVec3 pos = actor->getGlobalPose().transform(actor->getCMassLocalPose()).p - X0;
+            bool incore = ((pos.x*pos.x/a/a + pos.y*pos.y/c/c + pos.z*pos.z/b/b) < s);
+            if (incore)
+            {
+                actor->userData=&(gColors.colorBucket[cCIndex][0]); // yes I know I know :/
+                actor->setName("rubble-interior");
+            }
+            else
+            {
+                actor->setName("rubble-surface");
             }
         }
     }

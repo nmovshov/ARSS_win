@@ -82,7 +82,8 @@ namespace sgp
 
     // Diagnostics
     struct {
-        enum {eBAD_CCODE, eNO_CCODE, eGRADIENT, eTWO_LAYER, eTHREE_LAYER} eColorCodeType;
+        enum {eBAD_CCODE, eNO_CCODE, eGRADIENT, eTWO_LAYER, eTHREE_LAYER, eSURFACE} eColorCodeType;
+        PxReal nbSurfaceThickness;
     } diag;
 
     // Namespace functions
