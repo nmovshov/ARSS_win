@@ -892,18 +892,22 @@ void DeadStop()
 		actor->setAngularVelocity(PxVec3(0));
 	}
 }
-void ReCenterActors()
+void RecenterScene(PxVec3 X /*= PxVec3(0,0,0)*/)
 {
 	UpdateIntegralsOfMotion();
-	PxU32 nbActors = gPhysX.mScene->getNbActors(gPhysX.roles.dynamics);
-	gPhysX.mScene->getActors(gPhysX.roles.dynamics,gPhysX.cast,nbActors);
-	while (nbActors--)
-	{
-		PxRigidDynamic* actor = gPhysX.cast[nbActors]->isRigidDynamic();
-		PxTransform pose = actor->getGlobalPose();
-		pose.p -= gExp.IOMs.systemCM;
-		actor->setGlobalPose(pose);
-	}
+	PxVec3 cmpos = gExp.IOMs.systemCM;
+    RelocateScene(X - cmpos);
+}
+void RelocateScene(PxVec3 d)
+{
+    PxU32 nbActors = gPhysX.mScene->getActors(gPhysX.roles.dynamics,gPhysX.cast,MAX_ACTORS_PER_SCENE);
+    while (nbActors--)
+    {
+        PxRigidDynamic* actor = gPhysX.cast[nbActors]->isRigidDynamic();
+        PxTransform pose = actor->getGlobalPose();
+        pose.p += d;
+        actor->setGlobalPose(pose);
+    }
 }
 void FindExtremers()
 {
