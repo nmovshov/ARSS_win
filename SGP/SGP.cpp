@@ -56,6 +56,8 @@ bool ConfigExperimentOptions()
     ncc::GetStrPropertyFromINIFile("experiment","experiment_type","",buf,MAX_CHARS_PER_NAME,gRun.iniFile.c_str());
     if		(strcmp(buf,"make_sgp")==0)
         sgp::eExperimentType = sgp::eMAKE_SGP;
+    else if (strcmp(buf,"orbit_sgp")==0)
+        sgp::eExperimentType = sgp::eORBIT_SGP;
     else if (strcmp(buf,"load_sgp")==0)
         sgp::eExperimentType = sgp::eLOAD_SGP;
     else if (strcmp(buf,"test_scaling")==0)

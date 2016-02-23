@@ -13,7 +13,7 @@ namespace sgp
     // Implement different scenarios with different experiment labels. The dispatcher
     // function CreateExperiment will call different routines, basically totally
     // different programs that share mostly just the dispatching and logging mechanism.
-    enum {eBAD_EXPERIMENT_TYPE, eMAKE_SGP, eLOAD_SGP, eTEST_SCALING} eExperimentType;
+    enum {eBAD_EXPERIMENT_TYPE, eMAKE_SGP, eLOAD_SGP, eTEST_SCALING, eORBIT_SGP} eExperimentType;
 
     // Some throwaway objects with static duration
     PxTransform R1, R0; // throwaway transform holders
@@ -55,6 +55,15 @@ namespace sgp
         } grain;
     } msgp;
 
+    // Parameters for orbit_sgp experiment
+    struct {
+        enum {eBAD_ORBIT_TYPE, eELLIPTICAL, eHYPERBOLIC} type;
+        PxReal pericenter;
+        PxReal eccentricity;
+        PxReal v_inf;
+        PxReal bigM;
+    } orbit;
+
     // Parameters for "scaled integration" test
     struct {
         PxReal radius;
@@ -89,10 +98,13 @@ namespace sgp
     // Namespace functions
     void CreateMakeSGPExperiment();
     void CreateLoadSGPExperiment();
+    void CreateOrbitSGPExperiment();
     void CreateTestScalingExperiment();
     void ControlMakeSGPExperiment();
+    void ControlOrbitSGPExperiment();
     void ControlTestScalingExperiment();
     void LogMakeSGPExperiment();
+    void LogOrbitSGPExperiment();
     void LogTestScalingExperiment();
     void RefreshMakeSGPHUD();
 
