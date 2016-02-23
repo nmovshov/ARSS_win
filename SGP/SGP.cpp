@@ -174,6 +174,7 @@ void RefreshCustomHUDElements()
     switch (sgp::eExperimentType)
     {
     case sgp::eMAKE_SGP:
+    case sgp::eLOAD_SGP: // intentional fall-through
         sgp::RefreshMakeSGPHUD();
         break;
     case sgp::eBAD_EXPERIMENT_TYPE: // intentional fall through
@@ -266,7 +267,9 @@ void LoadExperiment()
 }
 void UpArrowAction()
 {
-
+    PxVec3 d = gExp.IOMs.systemCM;
+    RelocateScene(d);
+    gCamera.pos += d;
 }
 void DownArrowAction()
 {
@@ -274,11 +277,11 @@ void DownArrowAction()
 }
 void LeftArrowAction()
 {
-
+    RelocateScene(PxVec3(-1,0,0));
 }
 void RightArrowAction()
 {
-
+    RelocateScene(PxVec3(1,0,0));
 }
 
 // SGP namespace functions
@@ -728,7 +731,7 @@ void sgp::RefreshMakeSGPHUD()
 
     // Static numbers: Rubble element count and total mass
     UpdateIntegralsOfMotion();
-    sprintf(buf,"M_tot = %0.2g",gExp.IOMs.systemMass);
+    sprintf(buf,"M_tot = %0.2g; |CoM| = %0.2g",gExp.IOMs.systemMass,gExp.IOMs.systemCM.magnitude());
     gHUD.hud.SetElement(sgp::hudMsgs.systemDiag1,buf);
     sprintf(buf,"Rubble elements (\"grains\") = %u",gPhysX.mScene->getNbActors(gPhysX.roles.dynamics));
     gHUD.hud.SetElement(sgp::hudMsgs.systemDiag2,buf);
