@@ -92,8 +92,29 @@ bool ConfigExperimentOptions()
         sgp::msgp.grain.shape = eSPHERE_GRAIN;
     else
         sgp::msgp.grain.shape = eBAD_RUBBLE_GRAIN_TYPE;
-    
 
+    // The orbit_sgp subgroup includes parameters for orbit selection/generation
+    ncc::GetStrPropertyFromINIFile("experiment:orbit_sgp","big_M","0",buf,MAX_CHARS_PER_NAME,gRun.iniFile.c_str());
+    sgp::orbit.bigM = atof(buf);
+    ncc::GetStrPropertyFromINIFile("experiment:orbit_sgp","pericenter","0",buf,MAX_CHARS_PER_NAME,gRun.iniFile.c_str());
+    sgp::orbit.pericenter = atof(buf);
+    ncc::GetStrPropertyFromINIFile("experiment:orbit_sgp","eccentricity","0",buf,MAX_CHARS_PER_NAME,gRun.iniFile.c_str());
+    sgp::orbit.eccentricity = atof(buf);
+    ncc::GetStrPropertyFromINIFile("experiment:orbit_sgp","v_inf","0",buf,MAX_CHARS_PER_NAME,gRun.iniFile.c_str());
+    sgp::orbit.v_inf = atof(buf);
+    ncc::GetStrPropertyFromINIFile("experiment:orbit_sgp","pregen_orbit","false",buf,MAX_CHARS_PER_NAME,gRun.iniFile.c_str());
+    if (strcmp(buf,"true")==0)
+        sgp::orbit.bPregenOrbit = true;
+    ncc::GetStrPropertyFromINIFile("experiment:orbit_sgp","roche_factor","2",buf,MAX_CHARS_PER_NAME,gRun.iniFile.c_str());
+    sgp::orbit.rocheFactor = atof(buf);
+    ncc::GetStrPropertyFromINIFile("experiment:orbit_sgp","orbit_type","hyperbolic",buf,MAX_CHARS_PER_NAME,gRun.iniFile.c_str());
+    if (strcmp(buf,"hyperbolic")==0)
+        sgp::orbit.type = sgp::orbit.eHYPERBOLIC;
+    else if (strcmp(buf,"elliptical")==0)
+        sgp::orbit.type = sgp::orbit.eELLIPTICAL;
+    else
+        sgp::orbit.type = sgp::orbit.eBAD_ORBIT_TYPE;
+    
     // Parameters of the grain size distribution (OBSOLETE REMOVE WHEN READY)
     /*OBSOLETE gsd group remove when ready*/
     ncc::GetStrPropertyFromINIFile("experiment","gsd_type","uniform",buf,MAX_CHARS_PER_NAME,gRun.iniFile.c_str());

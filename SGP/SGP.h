@@ -34,6 +34,7 @@ namespace sgp
         PxRigidDynamic* nucleus;
         PxRigidDynamic* lBall;
         PxRigidDynamic* rBall;
+        PxRigidDynamic* gravitator;
     } VIPs;
 
     // Parameters for make_sgp experiment
@@ -62,6 +63,8 @@ namespace sgp
         PxReal eccentricity;
         PxReal v_inf;
         PxReal bigM;
+        bool bPregenOrbit;
+        PxReal rocheFactor;
     } orbit;
 
     // Parameters for "scaled integration" test
