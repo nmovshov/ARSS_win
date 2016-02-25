@@ -1081,6 +1081,24 @@ void sgp::CreateOrbitSGPExperiment()
     if (!sgp::LoadSGP(gRun.loadSceneFromFile))
         ncc__error("Could not load SGP from file; experiment aborted.\a");
 
+    // Determine initial conditions
+    if (sgp::orbit.type == sgp::orbit.eELLIPTICAL)
+    {
+        // Determine orbital parameters
+        PxReal q = sgp::orbit.pericenter;
+        PxReal e = sgp::orbit.eccentricity;
+        PxReal a = q/(1 - e); // semi-major axis
+        PxReal Q = a*(1 + e); // apocenter
+        PxReal bigG = sgp::cunits.bigG;
+        PxReal bigM = sgp::orbit.bigM;
+        PxReal P = 2*PxPi*PxSqrt(a*a*a/bigM/bigG);
+
+        // Estimate Roche limit and requested starting distance
+        PxReal rhoBulk = sgp::SGPBulkDensity();
+        PxReal roche = 1.51*PxPow(bigM/rhoBulk,1.0/3.0);
+        PxReal dStart = roche*sgp::orbit.rocheFactor;
+    }
+
     // Create the gravitator - actor representing the primary
     PxRigidDynamic* center = CreateRubbleGrain(PxVec3(-40,0,0),eSPHERE_GRAIN,1,*gPhysX.mDefaultMaterial);
     center->setRigidDynamicFlag(PxRigidDynamicFlag::eKINEMATIC, true);
@@ -1148,6 +1166,29 @@ PxVec3 sgp::FindSGPCenterOfMass()
     UpdateIntegralsOfMotion(true);
     return gExp.IOMs.systemCM;
 }
+PxReal sgp::SGPBulkDensity(bool bRoughGuess/*=true*/)
+{
+    PxReal rhoBulk = 0;
+    UpdateIntegralsOfMotion(true);
+    FindExtremers(true);
+    if (gExp.VIPs.extremers.rightmost)
+    {
+        PxVec3 rRight = gExp.VIPs.extremers.rightmost->getGlobalPose().transform(gExp.VIPs.extremers.rightmost->getCMassLocalPose()).p;
+        PxVec3 rLeft  = gExp.VIPs.extremers.leftmost->getGlobalPose().transform(gExp.VIPs.extremers.leftmost->getCMassLocalPose()).p;
+        PxVec3 rUp    = gExp.VIPs.extremers.upmost->getGlobalPose().transform(gExp.VIPs.extremers.upmost->getCMassLocalPose()).p;
+        PxVec3 rDown  = gExp.VIPs.extremers.downmost->getGlobalPose().transform(gExp.VIPs.extremers.downmost->getCMassLocalPose()).p;
+        PxVec3 rIn    = gExp.VIPs.extremers.inmost->getGlobalPose().transform(gExp.VIPs.extremers.inmost->getCMassLocalPose()).p;
+        PxVec3 rOut   = gExp.VIPs.extremers.outmost->getGlobalPose().transform(gExp.VIPs.extremers.outmost->getCMassLocalPose()).p;
+        PxReal a = (rRight.x - rLeft.x)/2;
+        PxReal b = (rOut.z - rIn.z)/2;
+        PxReal c = (rUp.y - rDown.y)/2;
+        PxReal V = 4.0*PxPi/3.0*a*b*c;
+        
+        rhoBulk = gExp.IOMs.systemMass/V;
+    }
+    return rhoBulk;
+}
+
 
 // End lint level warnings
 #ifdef LINT

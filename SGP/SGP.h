@@ -122,5 +122,6 @@ namespace sgp
     bool LoadSGP(string filename);
     void SpyOnSGP(PxReal f=1.0);
     PxVec3 FindSGPCenterOfMass();
+    PxReal SGPBulkDensity(bool bRoughGuess=true);
 };
 #endif
