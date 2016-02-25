@@ -210,6 +210,10 @@ void FireAction()
     {
         DeadStop();
     }
+    else if (sgp::eExperimentType==sgp::eORBIT_SGP)
+    {
+        sgp::orbit.bTrackingCamera = !sgp::orbit.bTrackingCamera;
+    }
 }
 void LogExperiment()
 {
@@ -247,6 +251,9 @@ void ControlExperiment()
     case sgp::eMAKE_SGP:
         sgp::ControlMakeSGPExperiment();
         break;
+    case sgp::eORBIT_SGP:
+        sgp::ControlOrbitSGPExperiment();
+        break;
     default:
         break;
     }
@@ -264,6 +271,9 @@ void CreateExperiment()
         break;
     case sgp::eLOAD_SGP:
         sgp::CreateLoadSGPExperiment();
+        break;
+    case sgp::eORBIT_SGP:
+        sgp::CreateOrbitSGPExperiment();
         break;
     case sgp::eTEST_SCALING:
         sgp::CreateTestScalingExperiment();
@@ -1064,6 +1074,79 @@ bool sgp::LoadSGP(string filename)
         ncc__warning("Unknown color-coding scheme - using default color");
 
     return true;
+}
+void sgp::CreateOrbitSGPExperiment()
+{
+    // Load a previously saved SGP
+    if (!sgp::LoadSGP(gRun.loadSceneFromFile))
+        ncc__error("Could not load SGP from file; experiment aborted.\a");
+
+    // Create the gravitator - actor representing the primary
+    PxRigidDynamic* center = CreateRubbleGrain(PxVec3(-40,0,0),eSPHERE_GRAIN,1,*gPhysX.mDefaultMaterial);
+    center->setRigidDynamicFlag(PxRigidDynamicFlag::eKINEMATIC, true);
+    center->setMass(sgp::orbit.bigM); // we don't care about the inertia for this kinematic actor
+    ColorActor(center, ncc::rgb::oOrange);
+    sgp::VIPs.gravitator = center;
+
+    // Move the camera to a good location
+    SpyOnSGP();
+
+    // Start a log
+    if (gRun.outputFrequency)
+    {
+        time_t now = time(NULL);
+        ostringstream header;
+        header << "# This is the run log of " << gRun.baseName << " from " << ctime(&now); // ctime includes a newline
+        header << "# Experiment type: ORBIT_SGP (" << sgp::eExperimentType << ")" << endl;
+        ofstream fbuf(gRun.outFile.c_str(),ios::trunc);
+        if (!fbuf.is_open())
+            ncc__error("Could not start a log. Experiment aborted.\a\n");
+        fbuf << header.str() << endl;
+    }
+
+    // Start the action
+    gSim.isRunning=true;
+    gSim.bPause=true;
+    gSim.codeTime = 0.0;
+    gCUDA.cudaCapable=false; // TODO: remove when CUDA gravity is implemented
+}
+void sgp::ControlOrbitSGPExperiment()
+{
+    // Relocate the scene to stay in SGP frame
+    PxVec3 d = sgp::FindSGPCenterOfMass();
+    RelocateScene(-d);
+
+    // Move the camera to a good location
+    if (sgp::orbit.bTrackingCamera)
+        SpyOnSGP();
+}
+void sgp::SpyOnSGP(PxReal f/*=1.0*/)
+{
+    // Move the camera to a good location
+    UpdateIntegralsOfMotion(true);
+    FindExtremers(true);
+    if (gExp.VIPs.extremers.rightmost)
+    {
+        PxVec3 X0 = gExp.IOMs.systemCM;
+        PxVec3 rRight = gExp.VIPs.extremers.rightmost->getGlobalPose().transform(gExp.VIPs.extremers.rightmost->getCMassLocalPose()).p;
+        PxVec3 rLeft  = gExp.VIPs.extremers.leftmost->getGlobalPose().transform(gExp.VIPs.extremers.leftmost->getCMassLocalPose()).p;
+        PxReal pileExtent = (rRight.x - rLeft.x);
+        PxU32  nbRubble = gPhysX.mScene->getNbActors(gPhysX.roles.dynamics);
+        PxReal gsize = PxPow(nbRubble,-1.0/3.0);
+
+        gCamera.pos.x = X0.x;
+        gCamera.pos.y = X0.y;
+        gCamera.pos.z = X0.z + pileExtent + 2*gsize;
+        gCamera.zBufFar = 2*pileExtent;
+        gCamera.zBufNear = 0.5*gsize;
+        gCamera.pos *= f;
+    }
+}
+PxVec3 sgp::FindSGPCenterOfMass()
+{
+    // Right now it's just calling UpdateIntegralsOfMotion(true) so kind of redundant
+    UpdateIntegralsOfMotion(true);
+    return gExp.IOMs.systemCM;
 }
 
 // End lint level warnings

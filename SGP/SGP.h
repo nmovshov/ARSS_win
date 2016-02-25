@@ -64,6 +64,7 @@ namespace sgp
         PxReal v_inf;
         PxReal bigM;
         bool bPregenOrbit;
+        bool bTrackingCamera;
         PxReal rocheFactor;
     } orbit;
 
@@ -119,5 +120,7 @@ namespace sgp
     PxReal SystemPotentialEnergy();
     void ColorCodeRubblePile();
     bool LoadSGP(string filename);
+    void SpyOnSGP(PxReal f=1.0);
+    PxVec3 FindSGPCenterOfMass();
 };
 #endif
