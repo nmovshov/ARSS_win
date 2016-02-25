@@ -778,7 +778,7 @@ bool ConfigARSSOptions()
 
 	return success;
 }
-void UpdateIntegralsOfMotion()
+void UpdateIntegralsOfMotion(bool bIgnoreKinematics/*=false*/)
 {
 	// Reset global values
 	gExp.IOMs.systemAM = PxVec3(0);
@@ -796,6 +796,7 @@ void UpdateIntegralsOfMotion()
 		PxRigidDynamic* actor = gPhysX.cast[k]->isRigidDynamic();
 		if (actor)
 		{
+            if (bIgnoreKinematics && (actor->getRigidDynamicFlags() & PxRigidDynamicFlag::eKINEMATIC)) continue;
 			PxTransform globalPose = actor->getGlobalPose().transform(actor->getCMassLocalPose());
 			PxReal	M_actor = actor->getMass();
 			PxVec3	v_actor = actor->getLinearVelocity(); 
@@ -909,7 +910,7 @@ void RelocateScene(PxVec3 d)
         actor->setGlobalPose(pose);
     }
 }
-void FindExtremers()
+void FindExtremers(bool bIgnoreKinematics/*=false*/)
 {
 	gExp.VIPs.extremers.downmost=gExp.VIPs.extremers.upmost    = NULL;
 	gExp.VIPs.extremers.leftmost=gExp.VIPs.extremers.rightmost = NULL;
@@ -928,6 +929,7 @@ void FindExtremers()
 			{
 				PxRigidDynamic* anActor = gPhysX.cast[k]->isRigidDynamic();
 				if (anActor==NULL) continue; // shouldn't happen though
+                if (bIgnoreKinematics && (anActor->getRigidDynamicFlags() & PxRigidDynamicFlag::eKINEMATIC)) continue;
 				PxVec3 pos = anActor->getGlobalPose().p;
 				PxReal spd = anActor->getLinearVelocity().magnitudeSquared();
 				if (pos.x > right)	{right = pos.x;	gExp.VIPs.extremers.rightmost = anActor;}
