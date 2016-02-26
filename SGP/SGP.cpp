@@ -523,6 +523,7 @@ void sgp::GravitateOnHost()
     for (PxU32 k=0; k<nbActors; k++)
     {
         PxRigidDynamic* actor = gPhysX.cast[k]->isRigidDynamic();
+        if (actor->getRigidDynamicFlags() & PxRigidDynamicFlag::eKINEMATIC) continue;
         PxVec3 F(forces[3*k+0],forces[3*k+1],forces[3*k+2]);
         actor->addForce(F);
     }
