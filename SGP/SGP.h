@@ -60,16 +60,17 @@ namespace sgp
     struct {
         enum {eBAD_ORBIT_TYPE, eELLIPTICAL, eHYPERBOLIC} type;
         PxReal pericenter;
-        PxReal eccentricity;
-        PxReal v_inf;
+        PxReal eccentricity; // elliptical only
+        PxReal v_inf; // hyperbolic only
         PxReal bigM;
         bool bPregenOrbit;
         bool bTrackingCamera;
-        PxReal rocheFactorInitial;
-        PxReal rocheFactorFinal;
+        PxReal rocheFactorInitial; // hyperbolic only
+        PxReal rocheFactorFinal; // hyperbolic only
         PxReal tStart;
         PxReal tEnd;
         PxVec3 X0;
+        int nbOrbits; // elliptical orbits only
     } orbit;
 
     // Parameters for "scaled integration" test
