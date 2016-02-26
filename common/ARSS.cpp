@@ -408,10 +408,6 @@ void IdleCallback()
 		RefreshHUD();
 	}
 
-	// Invoke experiment control
-	if (gSim.isRunning)
-		ControlExperiment();
-
 	// Output something
 	if ((gRun.outputFrequency > 0) && (gSim.frame - outputFrame >= gRun.outputFrequency)) {
 		outputFrame = gSim.frame;
@@ -429,6 +425,10 @@ void IdleCallback()
 		physicsTime = gSim.wallTime;
 		AdvanceSimulation(gSim.timeStep);
 	}
+
+    // Invoke experiment control
+    if (gSim.isRunning)
+        ControlExperiment();
 
 	// Are we done?
 	if (gSim.targetTime && gSim.codeTime >= gSim.targetTime) gSim.isRunning = false;
