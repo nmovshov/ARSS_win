@@ -65,7 +65,11 @@ namespace sgp
         PxReal bigM;
         bool bPregenOrbit;
         bool bTrackingCamera;
-        PxReal rocheFactor;
+        PxReal rocheFactorInitial;
+        PxReal rocheFactorFinal;
+        PxReal tStart;
+        PxReal tEnd;
+        PxVec3 X0;
     } orbit;
 
     // Parameters for "scaled integration" test

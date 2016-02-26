@@ -105,8 +105,10 @@ bool ConfigExperimentOptions()
     ncc::GetStrPropertyFromINIFile("experiment:orbit_sgp","pregen_orbit","false",buf,MAX_CHARS_PER_NAME,gRun.iniFile.c_str());
     if (strcmp(buf,"true")==0)
         sgp::orbit.bPregenOrbit = true;
-    ncc::GetStrPropertyFromINIFile("experiment:orbit_sgp","roche_factor","2",buf,MAX_CHARS_PER_NAME,gRun.iniFile.c_str());
-    sgp::orbit.rocheFactor = atof(buf);
+    ncc::GetStrPropertyFromINIFile("experiment:orbit_sgp","roche_factor_0","2",buf,MAX_CHARS_PER_NAME,gRun.iniFile.c_str());
+    sgp::orbit.rocheFactorInitial = atof(buf);
+    ncc::GetStrPropertyFromINIFile("experiment:orbit_sgp","roche_factor_f","2",buf,MAX_CHARS_PER_NAME,gRun.iniFile.c_str());
+    sgp::orbit.rocheFactorFinal = atof(buf);
     ncc::GetStrPropertyFromINIFile("experiment:orbit_sgp","orbit_type","hyperbolic",buf,MAX_CHARS_PER_NAME,gRun.iniFile.c_str());
     if (strcmp(buf,"hyperbolic")==0)
         sgp::orbit.type = sgp::orbit.eHYPERBOLIC;
@@ -1080,6 +1082,7 @@ void sgp::CreateOrbitSGPExperiment()
     // Load a previously saved SGP
     if (!sgp::LoadSGP(gRun.loadSceneFromFile))
         ncc__error("Could not load SGP from file; experiment aborted.\a");
+    DeadStop(); // stomp any residual velocities
 
     // Determine initial conditions
     if (sgp::orbit.type == sgp::orbit.eELLIPTICAL)
@@ -1093,10 +1096,63 @@ void sgp::CreateOrbitSGPExperiment()
         PxReal bigM = sgp::orbit.bigM;
         PxReal P = 2*PxPi*PxSqrt(a*a*a/bigM/bigG);
 
-        // Estimate Roche limit and requested starting distance
+        // Estimate Roche limit and requested start/end distance
         PxReal rhoBulk = sgp::SGPBulkDensity();
         PxReal roche = 1.51*PxPow(bigM/rhoBulk,1.0/3.0);
-        PxReal dStart = roche*sgp::orbit.rocheFactor;
+        PxReal dStart = roche*sgp::orbit.rocheFactorInitial;
+        PxReal dEnd = roche*sgp::orbit.rocheFactorFinal;
+        if (dStart < q || dEnd < q)
+        {
+            ncc__warning("Orbit completely outside Roche limit - continuing with full orbit.\a");
+            dStart = q;
+            dEnd = q;
+        }
+        else if (dStart > Q || dEnd > Q)
+        {
+            ncc__warning("Orbit completely inside Roche limit - continuing with full orbit.\a");
+            dStart = Q;
+            dEnd = Q;
+        }
+
+        // Convert to start/end eccentric anomaly
+        PxReal cosEStart;
+        PxReal EStart;
+        PxReal cosEEnd;
+        PxReal EEnd;
+        if (e < 1e-6)
+        {
+            cosEStart = 1;
+            cosEEnd = 1;
+        }
+        else
+        {
+            cosEStart = (1 - dStart/a)/e;
+            cosEEnd = (1 - dEnd/a)/e;
+        }
+        EStart = -PxAcos(cosEStart); // pre-periapse negative angle
+        EEnd   =  PxAcos(cosEEnd);   // post-periapse positive angle
+
+        // And to start/end time
+        PxReal t0 = P/(2*PxPi)*(EStart - e*PxSin(EStart));
+        PxReal tf = P/(2*PxPi)*(EEnd - e*PxSin(EEnd));
+        if (tf <= t0)
+            tf += P;
+        cout << "Requested orbit integration time " << (tf-t0) << " (cu) in " << (tf-t0)/gSim.timeStep << " time steps." << endl;
+        if ((tf-t0)/gSim.timeStep > 1e3)
+            ncc__warning("Long orbit requested!\a");
+        sgp::orbit.tStart = t0;
+        sgp::orbit.tEnd = tf;
+
+        // And finally to initial coordinates
+        PxReal f = -PxAcos((cosEStart - e)/(1 - e*cosEStart)); // phase angle (negative pre-periapse)
+        PxReal r = a*(1 - e*e)/(1 + e*PxCos(f)); // the orbit equation
+        PxVec3 R(r*PxCos(f), r*PxSin(f), 0);
+        sgp::orbit.X0 = R;
+
+        // And last but not least, velocity at X0
+
+
+
     }
 
     // Create the gravitator - actor representing the primary
