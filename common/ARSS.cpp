@@ -893,6 +893,19 @@ void DeadStop()
 		actor->setAngularVelocity(PxVec3(0));
 	}
 }
+void KickActors(PxVec3 v, bool bIgnoreKinematics/*=true*/)
+{
+    PxU32 nbActors = gPhysX.mScene->getNbActors(gPhysX.roles.dynamics);
+    gPhysX.mScene->getActors(gPhysX.roles.dynamics,gPhysX.cast,nbActors);
+    while (nbActors--)
+    {
+        PxRigidDynamic* actor = gPhysX.cast[nbActors]->isRigidDynamic();
+        if (bIgnoreKinematics && (actor->getRigidDynamicFlags() & PxRigidDynamicFlag::eKINEMATIC)) continue;
+        PxVec3 oldv = actor->getAngularVelocity();
+        PxVec3 newv = oldv + v;
+        actor->setLinearVelocity(newv);
+    }
+}
 void RecenterScene(PxVec3 X /*= PxVec3(0,0,0)*/)
 {
 	UpdateIntegralsOfMotion();

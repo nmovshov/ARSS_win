@@ -238,6 +238,7 @@ void CycleCamera();
 void RecenterScene(PxVec3 X = PxVec3(0,0,0));
 void RelocateScene(PxVec3 d);
 void FindExtremers(bool bIgnoreKinematics=false);
+void KickActors(PxVec3 v, bool bIgnoreKinematics=true);
 PxActor* FindNamedActor(string name);
 bool SaveSceneToRepXDump();
 bool LoadSceneFromFile(string sceneFile, bool dynamicsOnly=false);
