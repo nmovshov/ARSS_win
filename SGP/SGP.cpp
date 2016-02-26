@@ -97,7 +97,7 @@ bool ConfigExperimentOptions()
     ncc::GetStrPropertyFromINIFile("experiment:orbit_sgp","big_M","0",buf,MAX_CHARS_PER_NAME,gRun.iniFile.c_str());
     sgp::orbit.bigM = atof(buf);
     ncc::GetStrPropertyFromINIFile("experiment:orbit_sgp","pericenter","0",buf,MAX_CHARS_PER_NAME,gRun.iniFile.c_str());
-    sgp::orbit.pericenter = atof(buf);
+    sgp::orbit.periapse = atof(buf);
     ncc::GetStrPropertyFromINIFile("experiment:orbit_sgp","eccentricity","0",buf,MAX_CHARS_PER_NAME,gRun.iniFile.c_str());
     sgp::orbit.eccentricity = atof(buf);
     ncc::GetStrPropertyFromINIFile("experiment:orbit_sgp","v_inf","0",buf,MAX_CHARS_PER_NAME,gRun.iniFile.c_str());
@@ -112,8 +112,10 @@ bool ConfigExperimentOptions()
     ncc::GetStrPropertyFromINIFile("experiment:orbit_sgp","orbit_type","hyperbolic",buf,MAX_CHARS_PER_NAME,gRun.iniFile.c_str());
     if (strcmp(buf,"hyperbolic")==0)
         sgp::orbit.type = sgp::orbit.eHYPERBOLIC;
-    else if (strcmp(buf,"elliptical")==0)
-        sgp::orbit.type = sgp::orbit.eELLIPTICAL;
+    else if (strcmp(buf,"bound")==0)
+        sgp::orbit.type = sgp::orbit.eBOUND;
+    else if (strcmp(buf,"ascii")==0)
+        sgp::orbit.type = sgp::orbit.eASCII;
     else
         sgp::orbit.type = sgp::orbit.eBAD_ORBIT_TYPE;
     sgp::orbit.nbOrbits = ncc::GetIntPropertyFromINIFile("experiment:orbit_sgp","nb_orbits",1,gRun.iniFile.c_str());
@@ -1084,15 +1086,16 @@ void sgp::CreateOrbitSGPExperiment()
     if (!sgp::LoadSGP(gRun.loadSceneFromFile))
         ncc__error("Could not load SGP from file; experiment aborted.\a");
     DeadStop(); // stomp any residual velocities
+    RecenterScene(); // put center-of-mass at origin
 
     // Determine initial conditions, based on orbit type
-    if (sgp::orbit.type == sgp::orbit.eELLIPTICAL)
+    if (sgp::orbit.type == sgp::orbit.eBOUND)
     {
         // Determine orbital parameters
-        PxReal q = sgp::orbit.pericenter;
+        PxReal q = sgp::orbit.periapse;
         PxReal e = sgp::orbit.eccentricity;
         PxReal a = q/(1 - e); // semi-major axis
-        PxReal Q = a*(1 + e); // apocenter
+        PxReal Q = a*(1 + e); // apoapse
         PxReal bigG = sgp::cunits.bigG;
         PxReal bigM = sgp::orbit.bigM;
         PxReal P = 2*PxPi*PxSqrt(a*a*a/bigM/bigG);
@@ -1106,7 +1109,10 @@ void sgp::CreateOrbitSGPExperiment()
         sgp::orbit.tStart = t0;
         sgp::orbit.tEnd = tf;
 
-        // And lastly, set velocity at t_0
+        // Set initial position and velocity (bound, counterclockwise, orbit; starts at apoapse on positive x-axis)
+        PxReal vap = PxSqrt(bigG*bigM/a)*PxSqrt((1 - e)/(1 + e)); // v at apoapse
+        sgp::orbit.X0 = PxVec3(Q,0,0);
+        sgp::orbit.V0 = PxVec3(0,vap,0);
 
     }
     else if (sgp::orbit.type == sgp::orbit.eHYPERBOLIC)
@@ -1165,12 +1171,18 @@ void sgp::CreateOrbitSGPExperiment()
         //sgp::orbit.X0 = R;
     }
 
-    // Create the gravitator - actor representing the primary
-    PxRigidDynamic* center = CreateRubbleGrain(PxVec3(-40,0,0),eSPHERE_GRAIN,1,*gPhysX.mDefaultMaterial);
-    center->setRigidDynamicFlag(PxRigidDynamicFlag::eKINEMATIC, true);
-    center->setMass(sgp::orbit.bigM); // we don't care about the inertia for this kinematic actor
-    ColorActor(center, ncc::rgb::oOrange);
-    sgp::VIPs.gravitator = center;
+    // Create the gravitator (actor representing the primary) located at -X0
+    if (!sgp::orbit.bPregenOrbit)
+    {
+        PxRigidDynamic* center = CreateRubbleGrain(-sgp::orbit.X0,eSPHERE_GRAIN,1,*gPhysX.mDefaultMaterial);
+        center->setRigidDynamicFlag(PxRigidDynamicFlag::eKINEMATIC, true);
+        center->setMass(sgp::orbit.bigM); // we don't care about the inertia for this kinematic actor
+        ColorActor(center, ncc::rgb::oOrange);
+        sgp::VIPs.gravitator = center;
+    }
+
+    // Launch the sgp!
+    KickActors(sgp::orbit.V0);
 
     // Move the camera to a good location
     SpyOnSGP();

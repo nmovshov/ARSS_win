@@ -58,8 +58,8 @@ namespace sgp
 
     // Parameters for orbit_sgp experiment
     struct {
-        enum {eBAD_ORBIT_TYPE, eELLIPTICAL, eHYPERBOLIC} type;
-        PxReal pericenter;
+        enum {eBAD_ORBIT_TYPE, eBOUND, eHYPERBOLIC, eASCII} type;
+        PxReal periapse;
         PxReal eccentricity; // elliptical only
         PxReal v_inf; // hyperbolic only
         PxReal bigM;
@@ -70,6 +70,7 @@ namespace sgp
         PxReal tStart;
         PxReal tEnd;
         PxVec3 X0;
+        PxVec3 V0;
         int nbOrbits; // elliptical orbits only
     } orbit;
 
