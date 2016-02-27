@@ -1121,58 +1121,41 @@ void sgp::CreateOrbitSGPExperiment()
     }
     else if (sgp::orbit.type == sgp::orbit.eHYPERBOLIC)
     {
-        //// Estimate Roche limit and requested start/end distance
-        //PxReal rhoBulk = sgp::SGPBulkDensity();
-        //PxReal roche = 1.51*PxPow(bigM/rhoBulk,1.0/3.0);
-        //PxReal dStart = roche*sgp::orbit.rocheFactorInitial;
-        //PxReal dEnd = roche*sgp::orbit.rocheFactorFinal;
-        //if (dStart < q || dEnd < q)
-        //{
-        //    ncc__warning("Orbit completely outside Roche limit - continuing with full orbit.\a");
-        //    dStart = q;
-        //    dEnd = q;
-        //}
-        //else if (dStart > Q || dEnd > Q)
-        //{
-        //    ncc__warning("Orbit completely inside Roche limit - continuing with full orbit.\a");
-        //    dStart = Q;
-        //    dEnd = Q;
-        //}
+        // Determine orbital parameters
+        PxReal bigG = sgp::cunits.bigG;
+        PxReal bigM = sgp::orbit.bigM;
+        PxReal q = sgp::orbit.periapse;
+        PxReal vinf = sgp::orbit.v_inf;
+        PxReal a = bigG*bigM/vinf/vinf; // semi-major axis
+        PxReal e = 1 + q/a;
 
-        //// Convert to start/end eccentric anomaly
-        //PxReal cosEStart;
-        //PxReal EStart;
-        //PxReal cosEEnd;
-        //PxReal EEnd;
-        //if (e < 1e-6)
-        //{
-        //    cosEStart = 1;
-        //    cosEEnd = 1;
-        //}
-        //else
-        //{
-        //    cosEStart = (1 - dStart/a)/e;
-        //    cosEEnd = (1 - dEnd/a)/e;
-        //}
-        //EStart = -PxAcos(cosEStart); // pre-periapse negative angle
-        //EEnd   =  PxAcos(cosEEnd);   // post-periapse positive angle
+        // Estimate Roche limit and requested start/end distance
+        PxReal rhoBulk = sgp::SGPBulkDensity();
+        PxReal roche = 1.51*PxPow(bigM/rhoBulk,1.0/3.0);
+        PxReal dStart = roche*sgp::orbit.rocheFactorInitial;
+        PxReal dEnd = roche*sgp::orbit.rocheFactorFinal;
+        if (dStart < q || dEnd < q)
+        {
+            ncc__error("Orbit completely outside Roche limit; experiment aborted.\a");
+        }
 
-        //// And to start/end time
-        //PxReal t0 = P/(2*PxPi)*(EStart - e*PxSin(EStart));
-        //PxReal tf = P/(2*PxPi)*(EEnd - e*PxSin(EEnd));
-        //if (tf <= t0)
-        //    tf += P;
-        //cout << "Requested orbit integration time " << (tf-t0) << " (cu) in " << (tf-t0)/gSim.timeStep << " time steps." << endl;
-        //if ((tf-t0)/gSim.timeStep > 1e3)
-        //    ncc__warning("Long orbit requested!\a");
-        //sgp::orbit.tStart = t0;
-        //sgp::orbit.tEnd = tf;
+        // Convert to start/end eccentric anomaly
+        PxReal coshFStart = (1 + dStart/a)/e;
+        PxReal coshFEnd   = (1 + dEnd/a)/e;
+        PxReal FStart = -PxLog(coshFStart + PxSqrt(coshFStart*coshFStart - 1)); // pre-periapse negative angle
+        PxReal FEnd   =  PxLog(coshFEnd   + PxSqrt(coshFEnd*coshFEnd - 1)); // post-periapse positive angle
 
-        //// And finally to initial coordinates
-        //PxReal f = -PxAcos((cosEStart - e)/(1 - e*cosEStart)); // phase angle (negative pre-periapse)
-        //PxReal r = a*(1 - e*e)/(1 + e*PxCos(f)); // the orbit equation
-        //PxVec3 R(r*PxCos(f), r*PxSin(f), 0);
-        //sgp::orbit.X0 = R;
+        // And to start/end time
+        PxReal t0 = PxSqrt(a*a*a/bigG/bigM)*(e*sinh(FStart) - FStart);
+        PxReal tf = PxSqrt(a*a*a/bigG/bigM)*(e*sinh(FEnd) - FEnd);
+        cout << "Requested orbit integration time " << (tf-t0) << " (cu) in " << (tf-t0)/gSim.timeStep << " time steps." << endl;
+        if ((tf-t0)/gSim.timeStep > 1e3)
+            ncc__warning("Long orbit requested!\a");
+        sgp::orbit.tStart = t0;
+        sgp::orbit.tEnd = tf;
+
+        // And finally to initial coordinates and velocity
+        //TODO:sgp::orbit.X0 = R;
     }
 
     // Create the gravitator (actor representing the primary) located at -X0
