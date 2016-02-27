@@ -1187,6 +1187,7 @@ void sgp::CreateOrbitSGPExperiment()
 
     // Move the camera to a good location
     SpyOnSGP();
+    sgp::orbit.bTrackingCamera = true;
 
     // Start a log
     if (gRun.outputFrequency)
@@ -1217,9 +1218,10 @@ void sgp::ControlOrbitSGPExperiment()
     if (sgp::orbit.bTrackingCamera)
         SpyOnSGP();
 }
-void sgp::SpyOnSGP(PxReal f/*=1.0*/)
+void sgp::SpyOnSGP(PxReal f/*=1.0*/, bool bZoomOutOnly/*=true*/)
 {
     // Move the camera to a good location
+    static PxReal currentExtent = 0.0f;
     UpdateIntegralsOfMotion(true);
     FindExtremers(true);
     if (gExp.VIPs.extremers.rightmost)
@@ -1227,16 +1229,22 @@ void sgp::SpyOnSGP(PxReal f/*=1.0*/)
         PxVec3 X0 = gExp.IOMs.systemCM;
         PxVec3 rRight = gExp.VIPs.extremers.rightmost->getGlobalPose().transform(gExp.VIPs.extremers.rightmost->getCMassLocalPose()).p;
         PxVec3 rLeft  = gExp.VIPs.extremers.leftmost->getGlobalPose().transform(gExp.VIPs.extremers.leftmost->getCMassLocalPose()).p;
-        PxReal pileExtent = (rRight.x - rLeft.x);
+        PxVec3 rUp    = gExp.VIPs.extremers.upmost->getGlobalPose().transform(gExp.VIPs.extremers.rightmost->getCMassLocalPose()).p;
+        PxVec3 rDown  = gExp.VIPs.extremers.downmost->getGlobalPose().transform(gExp.VIPs.extremers.leftmost->getCMassLocalPose()).p;
+        PxReal pileExtent = PxMax((rUp.y - rDown.y),(rRight.x - rLeft.x));
         PxU32  nbRubble = gPhysX.mScene->getNbActors(gPhysX.roles.dynamics);
         PxReal gsize = PxPow(nbRubble,-1.0/3.0);
 
-        gCamera.pos.x = X0.x;
-        gCamera.pos.y = X0.y;
-        gCamera.pos.z = X0.z + pileExtent + 2*gsize;
-        gCamera.zBufFar = 2*pileExtent;
-        gCamera.zBufNear = 0.5*gsize;
-        gCamera.pos *= f;
+        if ((pileExtent > currentExtent) || (!bZoomOutOnly))
+        {
+            currentExtent = pileExtent;
+            gCamera.pos.x = X0.x;
+            gCamera.pos.y = X0.y;
+            gCamera.pos.z = X0.z + pileExtent + 2*gsize;
+            gCamera.zBufFar = 2*pileExtent;
+            gCamera.zBufNear = 0.5*gsize;
+            gCamera.pos *= f;
+        }
     }
 }
 PxVec3 sgp::FindSGPCenterOfMass()
