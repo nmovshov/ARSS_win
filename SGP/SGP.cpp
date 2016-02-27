@@ -265,7 +265,10 @@ void ControlExperiment()
 }
 void RenderOtherStuff()
 {
-
+    if (sgp::eExperimentType == sgp::eORBIT_SGP)
+    {
+        DrawLine(gExp.IOMs.systemCM, sgp::VIPs.gravitator->getGlobalPose().p, 1.0, ncc::rgb::oOrangeRed);
+    }
 }
 void CreateExperiment()
 {
