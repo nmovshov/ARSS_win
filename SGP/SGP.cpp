@@ -1107,7 +1107,7 @@ void sgp::CreateOrbitSGPExperiment()
         // Estimate simulation length
         PxReal t0 = 0;
         PxReal tf = sgp::orbit.nbOrbits*P;
-        cout << "Requested orbit integration time " << (tf-t0) << " (cu) in " << (tf-t0)/gSim.timeStep << " time steps." << endl;
+        cout << "Requested orbit integration time " << (tf-t0) << " (cu) in " << (int)((tf-t0)/gSim.timeStep) << " time steps." << endl;
         if ((tf-t0)/gSim.timeStep > 1e3)
             ncc__warning("Long orbit requested!\a");
         sgp::orbit.tStart = t0;
@@ -1126,8 +1126,10 @@ void sgp::CreateOrbitSGPExperiment()
         PxReal bigM = sgp::orbit.bigM;
         PxReal q = sgp::orbit.periapse;
         PxReal vinf = sgp::orbit.v_inf;
-        PxReal a = bigG*bigM/vinf/vinf; // semi-major axis
-        PxReal e = 1 + q/a;
+        PxReal a = bigG*bigM/vinf/vinf;            // semi-major axis
+        PxReal E = 0.5*vinf*vinf;                  // orbital energy per-unit-mass
+        PxReal el = PxSqrt(2*E + 2*bigG*bigM/q)*q; // orbital angular momentum per-unit-mass
+        PxReal e = 1 + (q*vinf*vinf)/(bigG*bigM);  // orbital eccentricity
 
         // Estimate Roche limit and requested start/end distance
         PxReal rhoBulk = sgp::SGPBulkDensity();
@@ -1142,8 +1144,8 @@ void sgp::CreateOrbitSGPExperiment()
         // Convert to start/end eccentric anomaly
         PxReal coshFStart = (1 + dStart/a)/e;
         PxReal coshFEnd   = (1 + dEnd/a)/e;
-        PxReal FStart = -PxLog(coshFStart + PxSqrt(coshFStart*coshFStart - 1)); // pre-periapse negative angle
-        PxReal FEnd   =  PxLog(coshFEnd   + PxSqrt(coshFEnd*coshFEnd - 1)); // post-periapse positive angle
+        PxReal FStart     = -PxLog(coshFStart + PxSqrt(coshFStart*coshFStart - 1)); // pre-periapse negative angle
+        PxReal FEnd       =  PxLog(coshFEnd   + PxSqrt(coshFEnd*coshFEnd - 1)); // post-periapse positive angle
 
         // And to start/end time
         PxReal t0 = PxSqrt(a*a*a/bigG/bigM)*(e*sinh(FStart) - FStart);
@@ -1155,7 +1157,10 @@ void sgp::CreateOrbitSGPExperiment()
         sgp::orbit.tEnd = tf;
 
         // And finally to initial coordinates and velocity
-        //TODO:sgp::orbit.X0 = R;
+        PxReal costeta = (el*el/(bigG*bigM*dStart) - 1)/e;
+        PxReal sinteta = PxSqrt(1 - costeta*costeta);
+        sgp::orbit.X0 = PxVec3(dStart*costeta, dStart*sinteta, 0);
+
     }
 
     // Create the gravitator (actor representing the primary) located at -X0
@@ -1203,6 +1208,12 @@ void sgp::ControlOrbitSGPExperiment()
     // Move the camera to a good location
     if (sgp::orbit.bTrackingCamera)
         SpyOnSGP();
+
+    // Save and quit when done
+    if (gSim.codeTime > (sgp::orbit.tEnd - sgp::orbit.tStart)) {
+        SaveSceneToRepXDump();
+        gSim.isRunning = false;
+    }
 }
 void sgp::SpyOnSGP(PxReal f/*=1.0*/, bool bZoomOutOnly/*=true*/)
 {
@@ -1221,16 +1232,15 @@ void sgp::SpyOnSGP(PxReal f/*=1.0*/, bool bZoomOutOnly/*=true*/)
         PxU32  nbRubble = gPhysX.mScene->getNbActors(gPhysX.roles.dynamics);
         PxReal gsize = PxPow(nbRubble,-1.0/3.0);
 
-        if ((pileExtent > currentExtent) || (!bZoomOutOnly))
-        {
+        gCamera.pos.x = X0.x;
+        gCamera.pos.y = X0.y;
+        if ((pileExtent > currentExtent) || (!bZoomOutOnly)) {
             currentExtent = pileExtent;
-            gCamera.pos.x = X0.x;
-            gCamera.pos.y = X0.y;
             gCamera.pos.z = X0.z + pileExtent + 2*gsize;
-            gCamera.zBufFar = 2*pileExtent;
-            gCamera.zBufNear = 0.5*gsize;
-            gCamera.pos *= f;
         }
+        gCamera.zBufFar = 2*pileExtent;
+        gCamera.zBufNear = 0.5*gsize;
+        gCamera.pos *= f;
     }
 }
 PxVec3 sgp::FindSGPCenterOfMass()
