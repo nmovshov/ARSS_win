@@ -1138,7 +1138,11 @@ void sgp::CreateOrbitSGPExperiment()
         PxReal dEnd = roche*sgp::orbit.rocheFactorFinal;
         if (dStart < q || dEnd < q)
         {
-            ncc__error("Orbit completely outside Roche limit; experiment aborted.\a");
+            ncc__error("Requested orbit inside periapsis; experiment aborted.\a");
+        }
+        if (roche < q)
+        {
+            ncc__warning("Requested orbit completely outside roche limit; boring!");
         }
 
         // Convert to start/end eccentric anomaly
@@ -1150,7 +1154,7 @@ void sgp::CreateOrbitSGPExperiment()
         // And to start/end time
         PxReal t0 = PxSqrt(a*a*a/bigG/bigM)*(e*sinh(FStart) - FStart);
         PxReal tf = PxSqrt(a*a*a/bigG/bigM)*(e*sinh(FEnd) - FEnd);
-        cout << "Requested orbit integration time " << (tf-t0) << " (cu) in " << (tf-t0)/gSim.timeStep << " time steps." << endl;
+        cout << "Requested orbit integration time " << (tf-t0) << " (cu) in " << (int)((tf-t0)/gSim.timeStep) << " time steps." << endl;
         if ((tf-t0)/gSim.timeStep > 1e3)
             ncc__warning("Long orbit requested!\a");
         sgp::orbit.tStart = t0;
@@ -1160,7 +1164,11 @@ void sgp::CreateOrbitSGPExperiment()
         PxReal costeta = (el*el/(bigG*bigM*dStart) - 1)/e;
         PxReal sinteta = PxSqrt(1 - costeta*costeta);
         sgp::orbit.X0 = PxVec3(dStart*costeta, dStart*sinteta, 0);
-
+        PxReal rdot = PxSqrt(2*E - el*el/dStart/dStart + 2*bigG*bigM/dStart);
+        PxReal rtetadot = el/dStart;
+        PxReal vx = -costeta*rdot + sinteta*rtetadot;
+        PxReal vy = -sinteta*rdot - costeta*rtetadot;
+        sgp::orbit.V0 = PxVec3(vx,vy,0);
     }
 
     // Create the gravitator (actor representing the primary) located at -X0
