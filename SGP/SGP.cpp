@@ -1096,7 +1096,12 @@ void sgp::CreateOrbitSGPExperiment()
     if (!sgp::LoadSGP(gRun.loadSceneFromFile))
         ncc__error("Could not load SGP from file; experiment aborted.\a");
     DeadStop(); // stomp any residual velocities
-    RecenterScene(); // put center-of-mass at origin
+    PxVec3 d = sgp::FindSGPCenterOfMass();
+    RelocateScene(-d);
+
+    /*CreateRubbleGrain(PxVec3(1,0,0),eSPHERE_GRAIN,0.5,*gPhysX.mDefaultMaterial,100);
+    CreateRubbleGrain(PxVec3(-1,0,0),eSPHERE_GRAIN,0.5,*gPhysX.mDefaultMaterial,100);*/
+    //RecenterScene(); // put center-of-mass at origin
 
     // Determine initial conditions, based on orbit type
     if (sgp::orbit.type == sgp::orbit.eBOUND)
@@ -1114,8 +1119,10 @@ void sgp::CreateOrbitSGPExperiment()
         PxReal t0 = 0;
         PxReal tf = sgp::orbit.nbOrbits*P;
         cout << "Requested orbit integration time " << (tf-t0) << " (cu) in " << (int)((tf-t0)/gSim.timeStep) << " time steps." << endl;
-        if ((tf-t0)/gSim.timeStep > 1e3)
-            ncc__warning("Long orbit requested!\a");
+        if ((tf-t0)/gSim.timeStep < 1e4)
+            ncc__warning("Forward Euler integrator: consider taking smalller time steps.\a");
+        if ((tf-t0)/gSim.timeStep > 2e4)
+            ncc__warning("Long orbit requested -- this might take a while\a");
         sgp::orbit.tStart = t0;
         sgp::orbit.tEnd = tf;
 
@@ -1161,8 +1168,8 @@ void sgp::CreateOrbitSGPExperiment()
         PxReal t0 = PxSqrt(a*a*a/bigG/bigM)*(e*sinh(FStart) - FStart);
         PxReal tf = PxSqrt(a*a*a/bigG/bigM)*(e*sinh(FEnd) - FEnd);
         cout << "Requested orbit integration time " << (tf-t0) << " (cu) in " << (int)((tf-t0)/gSim.timeStep) << " time steps." << endl;
-        if ((tf-t0)/gSim.timeStep > 1e3)
-            ncc__warning("Long orbit requested!\a");
+        if ((tf-t0)/gSim.timeStep > 1e4)
+            ncc__warning("Long orbit requested -- this might take a while\a");
         sgp::orbit.tStart = t0;
         sgp::orbit.tEnd = tf;
 
@@ -1279,6 +1286,7 @@ PxReal sgp::SGPBulkDensity(bool bRoughGuess/*=true*/)
 {
     PxReal rhoBulk = 0;
     UpdateIntegralsOfMotion(true);
+    if (gExp.rubbleCount < 2) return rhoBulk;
     FindExtremers(true);
     if (gExp.VIPs.extremers.rightmost)
     {
@@ -1301,10 +1309,11 @@ void sgp::LogOrbitSGPExperiment()
 {
     // Orbit information
     PxReal t = gSim.codeTime;
-    PxVec3 X = gExp.IOMs.systemCM - sgp::VIPs.gravitator->getGlobalPose().p;
+    PxVec3 X = gExp.IOMs.systemCM - sgp::VIPs.gravitator->getGlobalPose().transform(sgp::VIPs.gravitator->getCMassLocalPose()).p;
     
     // Pile information (put cluster count here in the future)
     PxReal rho = sgp::SGPBulkDensity();
+    rho = 0; //DEBUG
 
     // Format and write it to log (yes each time, unbuffered)
     char buf[MAX_CHARS_PER_NAME];
