@@ -230,6 +230,9 @@ void LogExperiment()
     case sgp::eTEST_SCALING:
         sgp::LogTestScalingExperiment();
         break;
+    case sgp::eORBIT_SGP:
+        sgp::LogOrbitSGPExperiment();
+        break;
     case sgp::eBAD_EXPERIMENT_TYPE:
         ncc__warning("Unkown experiment type. Nothing logged.");
         break;
@@ -1082,6 +1085,9 @@ bool sgp::LoadSGP(string filename)
     else
         ncc__warning("Unknown color-coding scheme - using default color");
 
+    // And update the IOMs just for good measure (and just for non-kinematic)
+    UpdateIntegralsOfMotion(true);
+
     return true;
 }
 void sgp::CreateOrbitSGPExperiment()
@@ -1195,6 +1201,18 @@ void sgp::CreateOrbitSGPExperiment()
         ostringstream header;
         header << "# This is the run log of " << gRun.baseName << " from " << ctime(&now); // ctime includes a newline
         header << "# Experiment type: ORBIT_SGP (" << sgp::eExperimentType << ")" << endl;
+        header << "# Orbit type: " << sgp::orbit.type << endl;
+        header << "# Central mass = " << sgp::orbit.bigM << " (cu)" << endl;
+        if (sgp::orbit.type == sgp::orbit.eBOUND)
+            header << "# Periapse = " << sgp::orbit.periapse << " (cu); eccentricity = " << sgp::orbit.eccentricity << " (cu)" << endl;
+        if (sgp::orbit.type == sgp::orbit.eHYPERBOLIC)
+            header << "# Periapse = " << sgp::orbit.periapse << " (cu); V_inf = " << sgp::orbit.v_inf << " (cu)" << endl;
+        header << "# Rubble elements = " << gExp.rubbleCount << ";  Bulk density ~ " << SGPBulkDensity() << " (cu)" << endl;
+        header << "# Time step used = " << gSim.timeStep << " (cu)" << endl;
+        header << "# Code units: 1 cu = [" << sgp::cunits.length << " m | " << sgp::cunits.mass << " kg | " << sgp::cunits.time << " s]" << endl;
+        header << "# Scaled G = " << sgp::cunits.bigG << " (cu)" << endl;
+        header << "# Columns are (values in code units):" << endl;
+        header << "# [time]    [CoM X]    [CoM Y]    [CoM Z]    [SGP bulk density]" << endl;
         ofstream fbuf(gRun.outFile.c_str(),ios::trunc);
         if (!fbuf.is_open())
             ncc__error("Could not start a log. Experiment aborted.\a\n");
@@ -1203,7 +1221,7 @@ void sgp::CreateOrbitSGPExperiment()
 
     // Start the action
     gSim.isRunning=true;
-    gSim.bPause=true;
+    gSim.bPause=false;
     gSim.codeTime = 0.0;
     gCUDA.cudaCapable=false; // TODO: remove when CUDA gravity is implemented
 }
@@ -1278,6 +1296,20 @@ PxReal sgp::SGPBulkDensity(bool bRoughGuess/*=true*/)
         rhoBulk = gExp.IOMs.systemMass/V;
     }
     return rhoBulk;
+}
+void sgp::LogOrbitSGPExperiment()
+{
+    // Orbit information
+    PxReal t = gSim.codeTime;
+    PxVec3 X = gExp.IOMs.systemCM - sgp::VIPs.gravitator->getGlobalPose().p;
+    
+    // Pile information (put cluster count here in the future)
+    PxReal rho = sgp::SGPBulkDensity();
+
+    // Format and write it to log (yes each time, unbuffered)
+    char buf[MAX_CHARS_PER_NAME];
+    sprintf(buf,"%8f    %12.3g    %12.3g    %12.3g    %12.3g", t, X.x, X.y, X.z, rho);
+    ncc::logEntry(gRun.outFile.c_str(),buf);
 }
 
 
