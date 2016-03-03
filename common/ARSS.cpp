@@ -786,6 +786,7 @@ void UpdateIntegralsOfMotion(bool bIgnoreKinematics/*=false*/)
 	gExp.IOMs.systemCM = PxVec3(0);
 	gExp.IOMs.systemKE = 0.0f;
 	gExp.IOMs.systemMass = 0.0f;
+    gExp.rubbleCount = 0;
 	PxReal M_system = 0;
 	
 	// Loop over dynamic actors
@@ -797,6 +798,7 @@ void UpdateIntegralsOfMotion(bool bIgnoreKinematics/*=false*/)
 		if (actor)
 		{
             if (bIgnoreKinematics && (actor->getRigidDynamicFlags() & PxRigidDynamicFlag::eKINEMATIC)) continue;
+            gExp.rubbleCount++;
 			PxTransform globalPose = actor->getGlobalPose().transform(actor->getCMassLocalPose());
 			PxReal	M_actor = actor->getMass();
 			PxVec3	v_actor = actor->getLinearVelocity(); 
