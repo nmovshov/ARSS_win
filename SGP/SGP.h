@@ -122,7 +122,7 @@ namespace sgp
     PxU32 MakeLooseRubblePile();
     void GravitateSelf();
     void GravitateOnHost();
-    void GravitateOnDevice();    
+    void GravitateOnGPU();    
     PxReal SystemPotentialEnergy();
     void ColorCodeRubblePile();
     bool LoadSGP(string filename);

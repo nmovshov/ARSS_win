@@ -8,6 +8,9 @@
 
 #include "ARSS.h"
 #include "SGP.h"
+#ifdef HAVE_CUDA_TK
+#include "cugrav.h"
+#endif
 
 // Request lint level warnings with the LINT macro on Microsoft compilers
 #ifdef LINT
@@ -199,6 +202,7 @@ void RefreshCustomHUDElements()
 {
     switch (sgp::eExperimentType)
     {
+    case sgp::eORBIT_SGP:
     case sgp::eMAKE_SGP:
     case sgp::eLOAD_SGP: // intentional fall-through
         sgp::RefreshMakeSGPHUD();
@@ -376,7 +380,7 @@ void sgp::CreateMakeSGPExperiment()
     gSim.isRunning=true;
     gSim.bPause=false;
     gSim.codeTime = 0.0;
-    gCUDA.cudaCapable=false; // TODO: remove when CUDA gravity is implemented
+//    gCUDA.cudaCapable=false; // TODO: remove when CUDA gravity is implemented
 
 }
 void sgp::CreateLoadSGPExperiment()
@@ -422,7 +426,7 @@ void sgp::CreateLoadSGPExperiment()
     gSim.isRunning=true;
     gSim.bPause=false;
     gSim.codeTime = 0.0;
-    gCUDA.cudaCapable=false; // TODO: remove when CUDA gravity is implemented
+    //gCUDA.cudaCapable=false; // TODO: remove when CUDA gravity is implemented
     
 }
 void sgp::CreateTestScalingExperiment()
@@ -470,7 +474,7 @@ void sgp::CreateTestScalingExperiment()
 void sgp::GravitateSelf()
 {
     if (gCUDA.cudaCapable)
-        sgp::GravitateOnDevice();
+        sgp::GravitateOnGPU();
     else
         sgp::GravitateOnHost();
 }
@@ -540,9 +544,45 @@ void sgp::GravitateOnHost()
 
     return;
 }
-void sgp::GravitateOnDevice()
+void sgp::GravitateOnGPU()
 {
+    // Prepare
+    PxU32 nbActors = gPhysX.mScene->getActors(gPhysX.roles.dynamics,gPhysX.cast,MAX_ACTORS_PER_SCENE);
+    if (nbActors<2) return;
+    AllocateCUDAGlobals(nbActors);
 
+    // Linearize actor positions
+    for (PxU32 k=0; k<nbActors; k++)
+    {
+        PxRigidDynamic* actor = gPhysX.cast[k]->isRigidDynamic();
+        PxTransform pose = actor->getGlobalPose().transform(actor->getCMassLocalPose());
+        PxVec3 pos = pose.p;
+        g_hostPositionsArr[k].x = pos.x;
+        g_hostPositionsArr[k].y = pos.y;
+        g_hostPositionsArr[k].z = pos.z;
+        g_hostPositionsArr[k].w = actor->getMass();
+    }
+
+    // And now, the N^2 double loop, on the device
+    GravitateOnDevice(nbActors);
+
+    // Add accumulated forces to actors (don't forget big G)
+    for (PxU32 k=0; k<nbActors; k++)
+    {
+        PxRigidDynamic* actor = gPhysX.cast[k]->isRigidDynamic();
+        if (actor->getRigidDynamicFlags() & PxRigidDynamicFlag::eKINEMATIC) continue;
+        PxVec3 F;
+        F.x = g_hostForcesArr[k].x;
+        F.y = g_hostForcesArr[k].y;
+        F.z = g_hostForcesArr[k].z;
+        F = sgp::cunits.bigG*F;
+        actor->addForce(F);
+    }
+
+    // Clean up
+    ReleaseCUDA();
+
+    return;
 }
 PxU32 sgp::MakeLooseRubblePile()
 /* This function creates a loose rubble pile by placing rubble elements, called
@@ -1099,10 +1139,6 @@ void sgp::CreateOrbitSGPExperiment()
     PxVec3 d = sgp::FindSGPCenterOfMass();
     RelocateScene(-d);
 
-    /*CreateRubbleGrain(PxVec3(1,0,0),eSPHERE_GRAIN,0.5,*gPhysX.mDefaultMaterial,100);
-    CreateRubbleGrain(PxVec3(-1,0,0),eSPHERE_GRAIN,0.5,*gPhysX.mDefaultMaterial,100);*/
-    //RecenterScene(); // put center-of-mass at origin
-
     // Determine initial conditions, based on orbit type
     if (sgp::orbit.type == sgp::orbit.eBOUND)
     {
@@ -1230,7 +1266,7 @@ void sgp::CreateOrbitSGPExperiment()
     gSim.isRunning=true;
     gSim.bPause=false;
     gSim.codeTime = 0.0;
-    gCUDA.cudaCapable=false; // TODO: remove when CUDA gravity is implemented
+//    gCUDA.cudaCapable=false; // TODO: remove when CUDA gravity is implemented
 }
 void sgp::ControlOrbitSGPExperiment()
 {

@@ -26,6 +26,9 @@
     <ClInclude Include="..\extern\ncclib\ncclib.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="cugrav.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="SGP.cpp">
@@ -46,5 +49,10 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="SGP.ini" />
+  </ItemGroup>
+  <ItemGroup>
+    <CudaCompile Include="cugrav.cu">
+      <Filter>Source Files</Filter>
+    </CudaCompile>
   </ItemGroup>
 </Project>
