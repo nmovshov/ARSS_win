@@ -5,7 +5,13 @@ clc
 filename = 'SGP.out';
 
 %% Load orbit log
-raw = importdata(filename,' ',headcount(filename));
+try
+    raw = importdata(filename,' ',headcount(filename));
+catch
+    [filename, pathname] = uigetfile('*.out');
+    filename = fullfile(pathname, filename);
+    raw = importdata(filename,' ',headcount(filename));
+end
 disp(raw.textdata);
 t = raw.data(:,1);
 x = raw.data(:,2);
