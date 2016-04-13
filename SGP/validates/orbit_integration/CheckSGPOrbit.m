@@ -2,7 +2,7 @@
 clear
 close all
 clc
-filename = 'SGP.out';
+filename = '../../SGP.out';
 
 %% Load orbit log
 try

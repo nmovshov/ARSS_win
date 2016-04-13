@@ -847,6 +847,7 @@ void sgp::LogMakeSGPExperiment()
 {
     // Shape information
     FindExtremers();
+    if (gExp.rubbleCount == 0) return;
     PxVec3 rRight = gExp.VIPs.extremers.rightmost->getGlobalPose().transform(gExp.VIPs.extremers.rightmost->getCMassLocalPose()).p;
     PxVec3 rLeft  = gExp.VIPs.extremers.leftmost->getGlobalPose().transform(gExp.VIPs.extremers.leftmost->getCMassLocalPose()).p;
     PxVec3 rUp    = gExp.VIPs.extremers.upmost->getGlobalPose().transform(gExp.VIPs.extremers.upmost->getCMassLocalPose()).p;
@@ -976,6 +977,7 @@ void sgp::ColorCodeRubblePile()
 
     // Detect shape information
     UpdateIntegralsOfMotion();
+    if (gExp.rubbleCount == 0) return;
     FindExtremers();
     PxVec3 X0 = gExp.IOMs.systemCM;
     PxVec3 rRight = gExp.VIPs.extremers.rightmost->getGlobalPose().transform(gExp.VIPs.extremers.rightmost->getCMassLocalPose()).p;
@@ -1131,8 +1133,14 @@ bool sgp::LoadSGP(string filename)
 void sgp::CreateOrbitSGPExperiment()
 {
     // Load a previously saved SGP
-    if (!sgp::LoadSGP(gRun.loadSceneFromFile))
-        ncc__error("Could not load SGP from file; experiment aborted.\a");
+    if (!sgp::LoadSGP(gRun.loadSceneFromFile)) {
+        //ncc__error("Could not load SGP from file; experiment aborted.\a");
+        ncc__warning("Could not load SGP from file; experiment aborted.\a");
+        //PxRigidDynamic* center = CreateRubbleGrain(-sgp::orbit.X0,eSPHERE_GRAIN,1,*gPhysX.mDefaultMaterial);
+        CreateRubbleGrain(PxVec3(1,0,0),eSPHERE_GRAIN,0.5,*gPhysX.mDefaultMaterial,100);
+        CreateRubbleGrain(PxVec3(-1,0,0),eSPHERE_GRAIN,0.5,*gPhysX.mDefaultMaterial,100);
+        RecenterScene(); // put center-of-mass at origin
+    }
     DeadStop(); // stomp any residual velocities
     PxVec3 d = sgp::FindSGPCenterOfMass();
     RelocateScene(-d);
@@ -1343,7 +1351,7 @@ void sgp::LogOrbitSGPExperiment()
 {
     // Orbit information
     PxReal t = gSim.codeTime;
-    PxVec3 X = gExp.IOMs.systemCM - sgp::VIPs.gravitator->getGlobalPose().transform(sgp::VIPs.gravitator->getCMassLocalPose()).p;
+    PxVec3 X = sgp::FindSGPCenterOfMass() - sgp::VIPs.gravitator->getGlobalPose().transform(sgp::VIPs.gravitator->getCMassLocalPose()).p;
     
     // Pile information (put cluster count here in the future)
     PxReal rho = sgp::SGPBulkDensity();
