@@ -32,7 +32,7 @@ int main(int argc, char** argv)
     InitHUD();
     InitDevIL();
     InitPhysX();
-    InitCUDA();
+    InitCUDA(10);
     InitExperiment();
     glutMainLoop(); // enter event processing
 
