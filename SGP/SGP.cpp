@@ -380,7 +380,6 @@ void sgp::CreateMakeSGPExperiment()
     gSim.isRunning=true;
     gSim.bPause=false;
     gSim.codeTime = 0.0;
-    gCUDA.cudaCapable=false; // TODO: remove when CUDA gravity is implemented
 
 }
 void sgp::CreateLoadSGPExperiment()
@@ -426,7 +425,6 @@ void sgp::CreateLoadSGPExperiment()
     gSim.isRunning=true;
     gSim.bPause=false;
     gSim.codeTime = 0.0;
-    gCUDA.cudaCapable=false; // TODO: remove when CUDA gravity is implemented
     
 }
 void sgp::CreateTestScalingExperiment()
@@ -473,7 +471,7 @@ void sgp::CreateTestScalingExperiment()
 }
 void sgp::GravitateSelf()
 {
-    if (gCUDA.cudaCapable)
+    if (gCUDA.cudaCapable && gCUDA.enableGPU)
         sgp::GravitateOnGPU();
     else
         sgp::GravitateOnHost();
@@ -1266,7 +1264,7 @@ void sgp::CreateOrbitSGPExperiment()
     gSim.isRunning=true;
     gSim.bPause=false;
     gSim.codeTime = 0.0;
-    gCUDA.cudaCapable=false; // TODO: remove when CUDA gravity is implemented
+
 }
 void sgp::ControlOrbitSGPExperiment()
 {

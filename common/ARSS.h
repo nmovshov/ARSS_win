@@ -129,6 +129,7 @@ extern arss_physx gPhysX;
 // CUDA globals
 struct arss_cuda {
 	bool			cudaCapable;
+    bool            enableGPU;
 #ifdef HAVE_CUDA_TK
 	cudaDeviceProp	gpuProp;
 #endif

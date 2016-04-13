@@ -710,6 +710,13 @@ bool ConfigARSSOptions()
 	ncc::GetStrPropertyFromINIFile("glut","xz_grid","off",buf,MAX_CHARS_PER_NAME,gRun.iniFile.c_str());
 	if (strcmp(buf,"on")==0) gDebug.bXZGridOn = true;
 
+    // CUDA options group
+    ncc::GetStrPropertyFromINIFile("CUDA","enable_gpu_accel","false",buf,MAX_CHARS_PER_NAME,gRun.iniFile.c_str());
+    if (strcmp(buf,"true")==0)
+        gCUDA.enableGPU = true;
+    else
+        gCUDA.enableGPU = false;
+
 	// PhysX options
 	ncc::GetStrPropertyFromINIFile("PhysX","sleep_threshold",     "-1",buf,MAX_CHARS_PER_NAME,gRun.iniFile.c_str()); // default = 0.00005*velocityScale^2 (per actor)
 	gPhysX.props.sleepThreshold = atof(buf);
