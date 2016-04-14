@@ -1134,12 +1134,11 @@ void sgp::CreateOrbitSGPExperiment()
 {
     // Load a previously saved SGP
     if (!sgp::LoadSGP(gRun.loadSceneFromFile)) {
-        //ncc__error("Could not load SGP from file; experiment aborted.\a");
-        ncc__warning("Could not load SGP from file; experiment aborted.\a");
-        //PxRigidDynamic* center = CreateRubbleGrain(-sgp::orbit.X0,eSPHERE_GRAIN,1,*gPhysX.mDefaultMaterial);
+        ncc__error("Could not load SGP from file; experiment aborted.\a");
+        /*ncc__warning("Could not load SGP from file; experiment aborted.\a");
         CreateRubbleGrain(PxVec3(1,0,0),eSPHERE_GRAIN,0.5,*gPhysX.mDefaultMaterial,100);
         CreateRubbleGrain(PxVec3(-1,0,0),eSPHERE_GRAIN,0.5,*gPhysX.mDefaultMaterial,100);
-        RecenterScene(); // put center-of-mass at origin
+        RecenterScene(); // put center-of-mass at origin*/
     }
     DeadStop(); // stomp any residual velocities
     PxVec3 d = sgp::FindSGPCenterOfMass();
@@ -1326,9 +1325,9 @@ PxVec3 sgp::FindSGPCenterOfMass()
 }
 PxReal sgp::SGPBulkDensity(bool bRoughGuess/*=true*/)
 {
-    PxReal rhoBulk = 0;
+    PxReal rhoBulk = 1000;
     UpdateIntegralsOfMotion(true);
-    if (gExp.rubbleCount < 2) return rhoBulk;
+    if (gExp.rubbleCount < 3) return rhoBulk;
     FindExtremers(true);
     if (gExp.VIPs.extremers.rightmost)
     {
