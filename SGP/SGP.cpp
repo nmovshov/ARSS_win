@@ -1382,9 +1382,9 @@ void sgp::RefreshOrbitSGPHUD()
     PxReal r = X.magnitude();
     PxReal rhoBulk = sgp::SGPBulkDensity();
     PxReal roche = 1.51*PxPow(sgp::orbit.bigM/rhoBulk,1.0/3.0);
-    sprintf(buf,"Distance = %0.2f (cu) = %0.2f x roche",r,r/roche);
+    sprintf(buf,"Distance = %0.3g (cu)",r);
     gHUD.hud.SetElement(sgp::hudMsgs.systemDiag3,buf);
-    sprintf(buf,"Distance = %0.2f x q",r/sgp::orbit.periapse);
+    sprintf(buf,"Distance = %0.2f x q = %0.2f x roche",r/sgp::orbit.periapse, r/roche);
     gHUD.hud.SetElement(sgp::hudMsgs.systemDiag4,buf);
 }
 
