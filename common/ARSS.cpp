@@ -291,7 +291,7 @@ bool InitCUDA(int devToUse)
 		if (devToUse>=nbDevs)
 		{
 			devToUse=nbDevs-1;
-			printf("\a\n\nYou only have %d GPUs, I'll just use the last one.\n",nbDevs);
+			printf("\n\nYou only have %d GPUs, I'll just use the last one.\n",nbDevs);
 		}
 		cudaSetDevice(devToUse);
 		cudaGetDeviceProperties(&gCUDA.gpuProp,devToUse);

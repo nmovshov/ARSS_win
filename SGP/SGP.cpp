@@ -203,6 +203,8 @@ void RefreshCustomHUDElements()
     switch (sgp::eExperimentType)
     {
     case sgp::eORBIT_SGP:
+        sgp::RefreshOrbitSGPHUD();
+        break;
     case sgp::eMAKE_SGP:
     case sgp::eLOAD_SGP: // intentional fall-through
         sgp::RefreshMakeSGPHUD();
@@ -1360,6 +1362,30 @@ void sgp::LogOrbitSGPExperiment()
     char buf[MAX_CHARS_PER_NAME];
     sprintf(buf,"%8f    %12.3g    %12.3g    %12.3g    %12.3g", t, X.x, X.y, X.z, rho);
     ncc::logEntry(gRun.outFile.c_str(),buf);
+}
+
+void sgp::RefreshOrbitSGPHUD()
+{
+    char buf[MAX_CHARS_PER_NAME];
+
+    // Static numbers: Rubble element count and total mass
+    UpdateIntegralsOfMotion();
+    sprintf(buf,"Rubble elements (\"grains\") = %u",gExp.rubbleCount);
+    gHUD.hud.SetElement(sgp::hudMsgs.systemDiag1,buf);
+    sprintf(buf,"M_tot = %0.2g",gExp.IOMs.systemMass);
+    gHUD.hud.SetElement(sgp::hudMsgs.systemDiag2,buf);
+    if (gPhysX.mScene->getNbActors(gPhysX.roles.dynamics)==0)
+        return;
+
+    // Orbit info
+    PxVec3 X = sgp::FindSGPCenterOfMass() - sgp::VIPs.gravitator->getGlobalPose().transform(sgp::VIPs.gravitator->getCMassLocalPose()).p;
+    PxReal r = X.magnitude();
+    PxReal rhoBulk = sgp::SGPBulkDensity();
+    PxReal roche = 1.51*PxPow(sgp::orbit.bigM/rhoBulk,1.0/3.0);
+    sprintf(buf,"Distance = %0.2f (cu) = %0.2f x roche",r,r/roche);
+    gHUD.hud.SetElement(sgp::hudMsgs.systemDiag3,buf);
+    sprintf(buf,"Distance = %0.2f x q",r/sgp::orbit.periapse);
+    gHUD.hud.SetElement(sgp::hudMsgs.systemDiag4,buf);
 }
 
 

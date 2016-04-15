@@ -117,6 +117,7 @@ namespace sgp
     void LogOrbitSGPExperiment();
     void LogTestScalingExperiment();
     void RefreshMakeSGPHUD();
+    void RefreshOrbitSGPHUD();
 
     bool MakeNewSGP();
     PxU32 MakeLooseRubblePile();
