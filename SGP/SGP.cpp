@@ -1150,17 +1150,17 @@ void sgp::CreateOrbitSGPExperiment()
     if (sgp::orbit.type == sgp::orbit.eBOUND)
     {
         // Determine orbital parameters
-        PxReal q = sgp::orbit.periapse;
-        PxReal e = sgp::orbit.eccentricity;
-        PxReal a = q/(1 - e); // semi-major axis
-        PxReal Q = a*(1 + e); // apoapse
-        PxReal bigG = sgp::cunits.bigG;
-        PxReal bigM = sgp::orbit.bigM;
-        PxReal P = 2*PxPi*PxSqrt(a*a*a/bigM/bigG);
+        double q = sgp::orbit.periapse;
+        double e = sgp::orbit.eccentricity;
+        double a = q/(1 - e); // semi-major axis
+        double Q = a*(1 + e); // apoapse
+        double bigG = sgp::cunits.bigG;
+        double bigM = sgp::orbit.bigM;
+        double P = 2*PxPi*PxSqrt(a*a*a/bigM/bigG);
 
         // Estimate simulation length
-        PxReal t0 = 0;
-        PxReal tf = sgp::orbit.nbOrbits*P;
+        double t0 = 0;
+        double tf = sgp::orbit.nbOrbits*P;
         cout << "Requested orbit integration time " << (tf-t0) << " (cu) in " << (int)((tf-t0)/gSim.timeStep) << " time steps." << endl;
         if ((tf-t0)/gSim.timeStep < 1e4)
             ncc__warning("Forward Euler integrator: consider taking smalller time steps.\a");
@@ -1170,7 +1170,7 @@ void sgp::CreateOrbitSGPExperiment()
         sgp::orbit.tEnd = tf;
 
         // Set initial position and velocity (bound, counterclockwise, orbit; starts at apoapse on positive x-axis)
-        PxReal vap = PxSqrt(bigG*bigM/a)*PxSqrt((1 - e)/(1 + e)); // v at apoapse
+        double vap = PxSqrt(bigG*bigM/a)*PxSqrt((1 - e)/(1 + e)); // v at apoapse
         sgp::orbit.X0 = PxVec3(Q,0,0);
         sgp::orbit.V0 = PxVec3(0,vap,0);
 
@@ -1178,20 +1178,20 @@ void sgp::CreateOrbitSGPExperiment()
     else if (sgp::orbit.type == sgp::orbit.eHYPERBOLIC)
     {
         // Determine orbital parameters
-        PxReal bigG = sgp::cunits.bigG;
-        PxReal bigM = sgp::orbit.bigM;
-        PxReal q = sgp::orbit.periapse;
-        PxReal vinf = sgp::orbit.v_inf;
-        PxReal a = bigG*bigM/vinf/vinf;            // semi-major axis
-        PxReal E = 0.5*vinf*vinf;                  // orbital energy per-unit-mass
-        PxReal el = PxSqrt(2*E + 2*bigG*bigM/q)*q; // orbital angular momentum per-unit-mass
-        PxReal e = 1 + (q*vinf*vinf)/(bigG*bigM);  // orbital eccentricity
+        double bigG = sgp::cunits.bigG;
+        double bigM = sgp::orbit.bigM;
+        double q = sgp::orbit.periapse;
+        double vinf = sgp::orbit.v_inf;
+        double a = bigG*bigM/vinf/vinf;            // semi-major axis
+        double E = 0.5*vinf*vinf;                  // orbital energy per-unit-mass
+        double el = PxSqrt(2*E + 2*bigG*bigM/q)*q; // orbital angular momentum per-unit-mass
+        double e = 1 + (q*vinf*vinf)/(bigG*bigM);  // orbital eccentricity
 
         // Estimate Roche limit and requested start/end distance
-        PxReal rhoBulk = sgp::SGPBulkDensity();
-        PxReal roche = 1.51*PxPow(bigM/rhoBulk,1.0/3.0);
-        PxReal dStart = roche*sgp::orbit.rocheFactorInitial;
-        PxReal dEnd = roche*sgp::orbit.rocheFactorFinal;
+        double rhoBulk = sgp::SGPBulkDensity();
+        double roche = 1.51*PxPow(bigM/rhoBulk,1.0/3.0);
+        double dStart = roche*sgp::orbit.rocheFactorInitial;
+        double dEnd = roche*sgp::orbit.rocheFactorFinal;
         if (dStart < q || dEnd < q)
         {
             ncc__error("Requested orbit inside periapsis; experiment aborted.\a");
@@ -1202,14 +1202,14 @@ void sgp::CreateOrbitSGPExperiment()
         }
 
         // Convert to start/end eccentric anomaly
-        PxReal coshFStart = (1 + dStart/a)/e;
-        PxReal coshFEnd   = (1 + dEnd/a)/e;
-        PxReal FStart     = -PxLog(coshFStart + PxSqrt(coshFStart*coshFStart - 1)); // pre-periapse negative angle
-        PxReal FEnd       =  PxLog(coshFEnd   + PxSqrt(coshFEnd*coshFEnd - 1)); // post-periapse positive angle
+        double coshFStart = (1 + dStart/a)/e;
+        double coshFEnd   = (1 + dEnd/a)/e;
+        double FStart     = -PxLog(coshFStart + PxSqrt(coshFStart*coshFStart - 1)); // pre-periapse negative angle
+        double FEnd       =  PxLog(coshFEnd   + PxSqrt(coshFEnd*coshFEnd - 1)); // post-periapse positive angle
 
         // And to start/end time
-        PxReal t0 = PxSqrt(a*a*a/bigG/bigM)*(e*sinh(FStart) - FStart);
-        PxReal tf = PxSqrt(a*a*a/bigG/bigM)*(e*sinh(FEnd) - FEnd);
+        double t0 = PxSqrt(a*a*a/bigG/bigM)*(e*sinh(FStart) - FStart);
+        double tf = PxSqrt(a*a*a/bigG/bigM)*(e*sinh(FEnd) - FEnd);
         cout << "Requested orbit integration time " << (tf-t0) << " (cu) in " << (int)((tf-t0)/gSim.timeStep) << " time steps." << endl;
         if ((tf-t0)/gSim.timeStep > 1e4)
             ncc__warning("Long orbit requested -- this might take a while\a");
@@ -1217,13 +1217,13 @@ void sgp::CreateOrbitSGPExperiment()
         sgp::orbit.tEnd = tf;
 
         // And finally to initial coordinates and velocity
-        PxReal costeta = (el*el/(bigG*bigM*dStart) - 1)/e;
-        PxReal sinteta = PxSqrt(1 - costeta*costeta);
+        double costeta = (el*el/(bigG*bigM*dStart) - 1)/e;
+        double sinteta = PxSqrt(1 - costeta*costeta);
         sgp::orbit.X0 = PxVec3(dStart*costeta, dStart*sinteta, 0);
-        PxReal rdot = PxSqrt(2*E - el*el/dStart/dStart + 2*bigG*bigM/dStart);
-        PxReal rtetadot = el/dStart;
-        PxReal vx = -costeta*rdot + sinteta*rtetadot;
-        PxReal vy = -sinteta*rdot - costeta*rtetadot;
+        double rdot = PxSqrt(2*E - el*el/dStart/dStart + 2*bigG*bigM/dStart);
+        double rtetadot = el/dStart;
+        double vx = -costeta*rdot + sinteta*rtetadot;
+        double vy = -sinteta*rdot - costeta*rtetadot;
         sgp::orbit.V0 = PxVec3(vx,vy,0);
     }
 
