@@ -41,7 +41,8 @@ end
 plot(x,y)
 hold
 plot(q_p(1), q_p(2), 'r+')
+plot(0,0,'ko');
 if orbit_type == 1, plot(Q_p(1), Q_p(2), 'rx'); end
 axis equal
-figure
-plot(t,r)
+%figure
+%plot(t,r)

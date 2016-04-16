@@ -1136,11 +1136,11 @@ void sgp::CreateOrbitSGPExperiment()
 {
     // Load a previously saved SGP
     if (!sgp::LoadSGP(gRun.loadSceneFromFile)) {
-        ncc__error("Could not load SGP from file; experiment aborted.\a");
-        /*ncc__warning("Could not load SGP from file; experiment aborted.\a");
+        //ncc__error("Could not load SGP from file; experiment aborted.\a");
+        ncc__warning("Could not load SGP from file; experiment aborted.\a");
         CreateRubbleGrain(PxVec3(1,0,0),eSPHERE_GRAIN,0.5,*gPhysX.mDefaultMaterial,100);
-        CreateRubbleGrain(PxVec3(-1,0,0),eSPHERE_GRAIN,0.5,*gPhysX.mDefaultMaterial,100);
-        RecenterScene(); // put center-of-mass at origin*/
+//        CreateRubbleGrain(PxVec3(-1,0,0),eSPHERE_GRAIN,0.5,*gPhysX.mDefaultMaterial,100);
+        RecenterScene(); // put center-of-mass at origin
     }
     DeadStop(); // stomp any residual velocities
     PxVec3 d = sgp::FindSGPCenterOfMass();
@@ -1192,6 +1192,7 @@ void sgp::CreateOrbitSGPExperiment()
         double roche = 1.51*PxPow(bigM/rhoBulk,1.0/3.0);
         double dStart = roche*sgp::orbit.rocheFactorInitial;
         double dEnd = roche*sgp::orbit.rocheFactorFinal;
+        dStart = dEnd = 2*q; //DEBUG DEBUG DEBUG
         if (dStart < q || dEnd < q)
         {
             ncc__error("Requested orbit inside periapsis; experiment aborted.\a");
