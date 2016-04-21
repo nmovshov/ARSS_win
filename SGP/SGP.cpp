@@ -1151,14 +1151,43 @@ void sgp::CreateOrbitSGPExperiment()
         // Try to load from file run_base_name.orb (or make our own, some day)
         sgp::orbit.orbFile = gRun.workingDirectory + "/" + gRun.baseName + ".orb";
         nr3::MatDoub raw;
-        if (ncc::load(sgp::orbit.orbFile.c_str(), &raw))
+        if (ncc::load(sgp::orbit.orbFile.c_str(), &raw, 5))
         {
-            cout << "yes" << endl;
+            // Distribute to vectors (kind of pointless really)
+            sgp::orbit.tvec.resize(raw.nrows());
+            sgp::orbit.xvec.resize(raw.nrows());
+            sgp::orbit.yvec.resize(raw.nrows());
+            for (int k=0; k<raw.nrows(); k++) {
+                sgp::orbit.tvec[k] = raw[k][0];
+                sgp::orbit.xvec[k] = raw[k][1];
+                sgp::orbit.yvec[k] = raw[k][2];
+            }
 
+            // Estimate simulation length
+            double t0 = sgp::orbit.tvec[0];
+            double tf = sgp::orbit.tvec[raw.nrows() - 1];
+            cout << "Requested orbit integration time " << (tf-t0) << " (cu) in " << (int)((tf-t0)/gSim.timeStep) << " time steps." << endl;
+            if ((tf-t0)/gSim.timeStep > 2e4)
+                ncc__warning("Long orbit requested -- this might take a while\a");
+            sgp::orbit.tStart = t0;
+            sgp::orbit.tEnd = tf;
+
+            // Save the initial location and orbit parameters
+            sgp::orbit.X0.x = sgp::orbit.xvec[0];
+            sgp::orbit.X0.y = sgp::orbit.yvec[0];
+            double q2 = 1e200;
+            for (int k=0; k<sgp::orbit.xvec.size(); k++)
+            {
+                double x = sgp::orbit.xvec[k];
+                double y = sgp::orbit.yvec[k];
+                double r2 = x*x + y*y;
+                if (r2 < q2) q2 = r2;
+            }
+            sgp::orbit.periapse = sqrt(q2);
         } 
         else
         {
-            sgp::GenerateOrbit();
+            sgp::GenerateOrbit(); // implement some day
         }
     } 
     else
@@ -1287,7 +1316,7 @@ void sgp::CreateOrbitSGPExperiment()
 
     // Start the action
     gSim.isRunning=true;
-    gSim.bPause=false;
+    gSim.bPause=true;
     gSim.codeTime = 0.0;
 
 }
@@ -1296,6 +1325,20 @@ void sgp::ControlOrbitSGPExperiment()
     // Relocate the scene to stay in SGP frame
     PxVec3 d = sgp::FindSGPCenterOfMass();
     RelocateScene(-d);
+
+    // If pregen orbit put gravitator where it belongs
+    if (sgp::orbit.bPregenOrbit)
+    {
+        static int orbStep = 0;
+        PxReal orbTime = sgp::orbit.tStart + gSim.codeTime;
+        while (orbStep < sgp::orbit.tvec.size() && sgp::orbit.tvec[orbStep] < orbTime) {
+            orbStep++;
+        }
+        PxVec3 cforce(sgp::orbit.xvec[orbStep - 1], sgp::orbit.yvec[orbStep - 1], 0);
+        PxTransform pose = sgp::VIPs.gravitator->getGlobalPose();
+        pose.p = -cforce;
+        sgp::VIPs.gravitator->setGlobalPose(pose);
+    }
 
     // Move the camera to a good location
     if (sgp::orbit.bTrackingCamera)
@@ -1387,8 +1430,6 @@ void sgp::RefreshOrbitSGPHUD()
     UpdateIntegralsOfMotion();
     sprintf(buf,"Rubble elements (\"grains\") = %u",gExp.rubbleCount);
     gHUD.hud.SetElement(sgp::hudMsgs.systemDiag1,buf);
-    sprintf(buf,"M_tot = %0.2g",gExp.IOMs.systemMass);
-    gHUD.hud.SetElement(sgp::hudMsgs.systemDiag2,buf);
     if (gPhysX.mScene->getNbActors(gPhysX.roles.dynamics)==0)
         return;
 
