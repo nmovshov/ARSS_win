@@ -64,6 +64,10 @@ namespace sgp
         PxReal v_inf; // hyperbolic only
         PxReal bigM;
         bool bPregenOrbit;
+        string orbFile;
+        nr3::VecDoub tvec;
+        nr3::VecDoub xvec;
+        nr3::VecDoub yvec;
         bool bTrackingCamera;
         PxReal rocheFactorInitial; // hyperbolic only
         PxReal rocheFactorFinal; // hyperbolic only
@@ -131,5 +135,6 @@ namespace sgp
     PxVec3 FindSGPCenterOfMass();
     PxReal SGPBulkDensity(bool bRoughGuess=true);
     bool GenerateOrbit();
+    bool LoadOrbitFromFile();
 };
 #endif

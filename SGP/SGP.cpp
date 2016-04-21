@@ -1137,7 +1137,7 @@ void sgp::CreateOrbitSGPExperiment()
     // Load a previously saved SGP
     if (!sgp::LoadSGP(gRun.loadSceneFromFile)) {
         //ncc__error("Could not load SGP from file; experiment aborted.\a");
-        ncc__warning("Could not load SGP from file; experiment aborted.\a");
+        ncc__warning("Could not load SGP from file; experiment aborted.");
         CreateRubbleGrain(PxVec3(1,0,0),eSPHERE_GRAIN,0.5,*gPhysX.mDefaultMaterial,100);
 //        CreateRubbleGrain(PxVec3(-1,0,0),eSPHERE_GRAIN,0.5,*gPhysX.mDefaultMaterial,100);
         RecenterScene(); // put center-of-mass at origin
@@ -1148,7 +1148,18 @@ void sgp::CreateOrbitSGPExperiment()
 
     if (sgp::orbit.bPregenOrbit)
     {
-        sgp::GenerateOrbit();
+        // Try to load from file run_base_name.orb (or make our own, some day)
+        sgp::orbit.orbFile = gRun.workingDirectory + "/" + gRun.baseName + ".orb";
+        nr3::MatDoub raw;
+        if (ncc::load(sgp::orbit.orbFile.c_str(), &raw))
+        {
+            cout << "yes" << endl;
+
+        } 
+        else
+        {
+            sgp::GenerateOrbit();
+        }
     } 
     else
     {
@@ -1368,7 +1379,6 @@ void sgp::LogOrbitSGPExperiment()
     sprintf(buf,"%8f    %12.3g    %12.3g    %12.3g    %12.3g", t, X.x, X.y, X.z, rho);
     ncc::logEntry(gRun.outFile.c_str(),buf);
 }
-
 void sgp::RefreshOrbitSGPHUD()
 {
     char buf[MAX_CHARS_PER_NAME];
@@ -1394,8 +1404,8 @@ void sgp::RefreshOrbitSGPHUD()
 }
 bool sgp::GenerateOrbit()
 {
+    // placeholder to maybe generate orbits in-house
     bool success = false;
-    cout << "mitzi" << endl;
     return success;
 }
 
