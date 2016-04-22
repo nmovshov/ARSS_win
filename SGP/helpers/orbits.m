@@ -18,7 +18,7 @@ e = 0.4; % bound only
 vinf = 0.1; % hyperbolic only
 r_ini = 2; % for bound this is a fraction of Q (for full orbit use 1) and ...
 r_end = 2; % ... for hyperbolic this is a multiple of q
-dt = 0.02;
+dt = 0.02; % does NOT have to match ARSS dt
 
 %% Orbit calculation
 switch orbit_type
@@ -59,10 +59,12 @@ switch orbit_type
         kepler = @(tau,psi)tau-P/(2*pi)*(psi-e*sin(psi)); % Kepler's equation
         EVec = ones(size(tVec));
         EVec(1) = double(E_ini); % We know the first point
+        progressbar(0);
         for k=2:numel(tVec)
             fun = @(psi)double(kepler(tVec(k),psi));
             guess = EVec(k-1);
             EVec(k)=fzero(fun,guess);
+            progressbar(k/numel(tVec));
         end
         
         % Translate eccentric anomalies back to meaningful space coordinates

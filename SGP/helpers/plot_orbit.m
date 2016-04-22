@@ -8,7 +8,7 @@ filename = 'test.orb';
 try
     raw = importdata(filename,' ',headcount(filename));
 catch
-    [filename, pathname] = uigetfile('*.out');
+    [filename, pathname] = uigetfile('*.orb');
     filename = fullfile(pathname, filename);
     raw = importdata(filename,' ',headcount(filename));
 end

@@ -1184,6 +1184,8 @@ void sgp::CreateOrbitSGPExperiment()
                 if (r2 < q2) q2 = r2;
             }
             sgp::orbit.periapse = sqrt(q2);
+
+            sgp::orbit.type = sgp::orbit.eASCII;
         } 
         else
         {
@@ -1373,7 +1375,7 @@ void sgp::SpyOnSGP(PxReal f/*=1.0*/, bool bZoomOutOnly/*=true*/)
             currentExtent = pileExtent;
             gCamera.pos.z = X0.z + pileExtent + 2*gsize;
         }
-        gCamera.zBufFar = 2*pileExtent;
+        gCamera.zBufFar = 20*pileExtent;
         gCamera.zBufNear = 0.5*gsize;
         gCamera.pos *= f;
     }
@@ -1428,7 +1430,7 @@ void sgp::RefreshOrbitSGPHUD()
 
     // Static numbers: Rubble element count and total mass
     UpdateIntegralsOfMotion();
-    sprintf(buf,"Rubble elements (\"grains\") = %u",gExp.rubbleCount);
+    sprintf(buf,"Rubble elements (\"grains\") = %u",gExp.rubbleCount - 1);
     gHUD.hud.SetElement(sgp::hudMsgs.systemDiag1,buf);
     if (gPhysX.mScene->getNbActors(gPhysX.roles.dynamics)==0)
         return;
