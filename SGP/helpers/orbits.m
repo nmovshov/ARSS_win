@@ -9,11 +9,11 @@ clc
 close all
 
 %% Parameters in code units
-orbit_name = 'test';
+orbit_name = '../sgp';
 orbit_type = 'hyperbolic'; % ['bound'|'hyperbolic']
-bigM = 2e6;
+bigM = 1.9e21;
 bigG = 6.674e-5;
-q = 20;
+q = 2e6;
 e = 0.4; % bound only
 vinf = 0.1; % hyperbolic only
 r_ini = 2; % for bound this is a fraction of Q (for full orbit use 1) and ...

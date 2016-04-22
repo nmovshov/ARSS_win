@@ -30,7 +30,7 @@ if orbit_type == 1
 end
 if orbit_type == 1
     ecc = (Q - q)/(Q + q);
-else
+elseif orbit_type == 2
     vinf = cell2mat(textscan(raw.textdata{5},'%*[^V]%*[^=]%*c%f'));
     bigG = cell2mat(textscan(raw.textdata{9},'%*[^=]%*c%f'));
     bigM = cell2mat(textscan(raw.textdata{4},'%*[^=]%*c%f'));
