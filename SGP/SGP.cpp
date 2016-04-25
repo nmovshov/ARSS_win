@@ -1318,7 +1318,7 @@ void sgp::CreateOrbitSGPExperiment()
 
     // Start the action
     gSim.isRunning=true;
-    gSim.bPause=true;
+    gSim.bPause=false;
     gSim.codeTime = 0.0;
 
 }
@@ -1373,7 +1373,7 @@ void sgp::SpyOnSGP(PxReal f/*=1.0*/, bool bZoomOutOnly/*=true*/)
         gCamera.pos.y = X0.y;
         if ((pileExtent > currentExtent) || (!bZoomOutOnly)) {
             currentExtent = pileExtent;
-            gCamera.pos.z = X0.z + pileExtent + 2*gsize;
+            gCamera.pos.z = X0.z + 1.4*pileExtent + 2*gsize;
         }
         gCamera.zBufFar = 20*pileExtent;
         gCamera.zBufNear = 0.5*gsize;
