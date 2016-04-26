@@ -40,6 +40,7 @@ namespace sgp
     // Parameters for make_sgp experiment
     struct {
         PxReal nucleusRadius; // obsolete
+        PxReal mass;
         struct {
             PxReal longAxis;    // the longest semi-principle-axis, called a
             PxReal abAxesRatio; // a/b semi-principle-axes ratio
@@ -124,7 +125,7 @@ namespace sgp
     void RefreshOrbitSGPHUD();
 
     bool MakeNewSGP();
-    PxU32 MakeLooseRubblePile();
+    PxU32 MakeLooseRubblePile(PxReal mass=0);
     void GravitateSelf();
     void GravitateOnHost();
     void GravitateOnGPU();    

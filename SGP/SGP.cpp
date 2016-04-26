@@ -69,6 +69,9 @@ bool ConfigExperimentOptions()
         sgp::eExperimentType = sgp::eBAD_EXPERIMENT_TYPE;
     
     // The make_sgp subgroup includes parameters of the desired ellipsoid shape and rubble elements
+    ncc::GetStrPropertyFromINIFile("experiment:make_sgp","sgp_mass","0",buf,MAX_CHARS_PER_NAME,gRun.iniFile.c_str());
+    sgp::msgp.mass = atof(buf);
+
     ncc::GetStrPropertyFromINIFile("experiment:make_sgp","ellipsoid_long_axis","1",buf,MAX_CHARS_PER_NAME,gRun.iniFile.c_str());
     sgp::msgp.ellipsoid.longAxis = atof(buf);
     ncc::GetStrPropertyFromINIFile("experiment:make_sgp","ellipsoid_ab_ratio","1",buf,MAX_CHARS_PER_NAME,gRun.iniFile.c_str());
@@ -340,7 +343,7 @@ void sgp::CreateMakeSGPExperiment()
 */
 {
     // Put rubble elements in initial, loose positions
-    sgp::msgp.gsd.nbTotal = sgp::MakeLooseRubblePile();
+    sgp::msgp.gsd.nbTotal = sgp::MakeLooseRubblePile(sgp::msgp.mass);
 
     // Color-code rubble
     if (sgp::diag.eColorCodeType)
@@ -584,7 +587,7 @@ void sgp::GravitateOnGPU()
 
     return;
 }
-PxU32 sgp::MakeLooseRubblePile()
+PxU32 sgp::MakeLooseRubblePile(PxReal mass /*=0*/)
 /* This function creates a loose rubble pile by placing rubble elements, called
  * grains, inside the volume of an imaginary ellipsoid. There will be ample space
  * between neighboring grains to ensure no initial overlap regardless of (possibly
@@ -657,6 +660,7 @@ PxU32 sgp::MakeLooseRubblePile()
     // Make a random convex mesh
     vector<PxVec3> verts = MakeRandomVertexList();
     PxConvexMesh* theMesh = MakePxMeshFromVertexList(verts);
+    PxReal grainMass = mass/positions.size();
 
     for (PxU32 k=0; k<positions.size(); k++)
     {
@@ -685,6 +689,10 @@ PxU32 sgp::MakeLooseRubblePile()
             if (gPhysX.props.sleepThreshold > -1) aGrain->setSleepThreshold(0.5*gPhysX.props.sleepThreshold*gPhysX.props.sleepThreshold);
             if (gPhysX.props.angularDamping > -1) aGrain->setAngularDamping(gPhysX.props.angularDamping);
             if (gPhysX.props.linearDamping  > -1) aGrain->setLinearDamping(gPhysX.props.linearDamping);
+
+            if (mass) {
+                PxRigidBodyExt::setMassAndUpdateInertia(*aGrain, grainMass);
+            }
 
             aGrain->setName("rubble");
             RandOrientActor(aGrain);
