@@ -828,18 +828,19 @@ bool sgp::MakeNewSGP()
 void sgp::RefreshMakeSGPHUD()
 {
     char buf[MAX_CHARS_PER_NAME];
-
-    // Static numbers: Rubble element count and total mass
-    UpdateIntegralsOfMotion();
-    sprintf(buf,"M_tot = %0.2g; |CoM| = %0.2g",gExp.IOMs.systemMass,gExp.IOMs.systemCM.magnitude());
-    gHUD.hud.SetElement(sgp::hudMsgs.systemDiag1,buf);
-    sprintf(buf,"Rubble elements (\"grains\") = %u",gPhysX.mScene->getNbActors(gPhysX.roles.dynamics));
-    gHUD.hud.SetElement(sgp::hudMsgs.systemDiag2,buf);
     if (gPhysX.mScene->getNbActors(gPhysX.roles.dynamics)==0)
         return;
 
-    // Ellipsoid dimensions
-    FindExtremers();
+    // SGP info: element count, total mass, mean density
+    UpdateIntegralsOfMotion(true);
+    PxReal rhoBulk = sgp::SGPBulkDensity();
+    sprintf(buf,"Rubble elements (\"grains\") = %u",gExp.rubbleCount - 1);
+    gHUD.hud.SetElement(sgp::hudMsgs.systemDiag1,buf);
+    sprintf(buf,"M_tot = %0.2g; <rho> = %4.0f",gExp.IOMs.systemMass,rhoBulk);
+    gHUD.hud.SetElement(sgp::hudMsgs.systemDiag2,buf);
+
+    // Dynamic shape info
+    FindExtremers(true);
     PxVec3 rRight = gExp.VIPs.extremers.rightmost->getGlobalPose().transform(gExp.VIPs.extremers.rightmost->getCMassLocalPose()).p;
     PxVec3 rLeft  = gExp.VIPs.extremers.leftmost->getGlobalPose().transform(gExp.VIPs.extremers.leftmost->getCMassLocalPose()).p;
     PxVec3 rUp    = gExp.VIPs.extremers.upmost->getGlobalPose().transform(gExp.VIPs.extremers.upmost->getCMassLocalPose()).p;
@@ -855,11 +856,14 @@ void sgp::RefreshMakeSGPHUD()
     gHUD.hud.SetElement(sgp::hudMsgs.systemDiag4,buf);
     sprintf(buf,"Ellipsoid a/c axes ratio = %-8.2f",a/c);
     gHUD.hud.SetElement(sgp::hudMsgs.systemDiag5,buf);
-
-    // Surface g
-    PxReal gee = sgp::cunits.bigG*gExp.IOMs.systemMass/(a*a);
-    sprintf(buf,"Surface acceleration = %0.2g (cu)",gee);
+    PxReal meanR = PxPow(a*b*c/8,1.0/3.0);
+    sprintf(buf,"Mean radius = %0.2f",meanR);
     gHUD.hud.SetElement(sgp::hudMsgs.systemDiag6,buf);
+
+    //// Surface g
+    //PxReal gee = sgp::cunits.bigG*gExp.IOMs.systemMass/(a*a);
+    //sprintf(buf,"Surface acceleration = %0.2g (cu)",gee);
+    //gHUD.hud.SetElement(sgp::hudMsgs.systemDiag6,buf);
     
 }
 void sgp::LogMakeSGPExperiment()
