@@ -64,20 +64,14 @@ namespace sgp
 
     // Parameters for orbit_sgp experiment
     struct {
-        enum {eBAD_ORBIT_TYPE, eBOUND, eHYPERBOLIC, eASCII} type;
-        PxReal periapse;
-        PxReal eccentricity; // elliptical only
-        PxReal v_inf; // hyperbolic only
         PxReal bigM; // primary mass
         PxReal sgpMass; // overrides loaded sgp!
-        bool bPregenOrbit;
         string orbFile;
         nr3::VecDoub tvec;
         nr3::VecDoub xvec;
         nr3::VecDoub yvec;
+        PxReal periapse;
         bool bTrackingCamera;
-        PxReal rocheFactorInitial; // hyperbolic only
-        PxReal rocheFactorFinal; // hyperbolic only
         PxReal tStart;
         PxReal tEnd;
         PxVec3 X0;

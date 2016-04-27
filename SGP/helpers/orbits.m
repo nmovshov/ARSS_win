@@ -10,14 +10,14 @@ close all
 
 %% Parameters in code units
 orbit_name = '../sgp';
-orbit_type = 'hyperbolic'; % ['bound'|'hyperbolic']
-bigM = 1.9e21;
+orbit_type = 'bound'; % ['bound'|'hyperbolic']
+bigM = 2e6;
 bigG = 6.674e-5;
-q = 2e6;
-e = 0.4; % bound only
+q = 20;
+e = 0.0; % bound only
 vinf = 0.1; % hyperbolic only
-r_ini = 2; % for bound this is a fraction of Q (for full orbit use 1) and ...
-r_end = 2; % ... for hyperbolic this is a multiple of q
+r_ini = 1; % for bound this is a fraction of Q (for full orbit use 1) and ...
+r_end = 1; % ... for hyperbolic this is a multiple of q
 dt = 0.02; % does NOT have to match ARSS dt
 
 %% Orbit calculation
