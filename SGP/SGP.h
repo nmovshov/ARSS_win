@@ -57,13 +57,19 @@ namespace sgp
         } grain;
     } msgp;
 
+    // Parameters for load_sgp experiment
+    struct {
+        PxReal remass;
+    } lsgp;
+
     // Parameters for orbit_sgp experiment
     struct {
         enum {eBAD_ORBIT_TYPE, eBOUND, eHYPERBOLIC, eASCII} type;
         PxReal periapse;
         PxReal eccentricity; // elliptical only
         PxReal v_inf; // hyperbolic only
-        PxReal bigM;
+        PxReal bigM; // primary mass
+        PxReal sgpMass; // overrides loaded sgp!
         bool bPregenOrbit;
         string orbFile;
         nr3::VecDoub tvec;
@@ -137,5 +143,6 @@ namespace sgp
     PxReal SGPBulkDensity(bool bRoughGuess=true);
     bool GenerateOrbit();
     bool LoadOrbitFromFile();
+    void ReMassSGP(PxReal newMass);
 };
 #endif

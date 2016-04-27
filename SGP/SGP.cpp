@@ -99,7 +99,13 @@ bool ConfigExperimentOptions()
     else
         sgp::msgp.grain.shape = eBAD_RUBBLE_GRAIN_TYPE;
 
+    // The load_sgp subgroup includes parameters for rescaling a saved sgp
+    ncc::GetStrPropertyFromINIFile("experiment:load_sgp","sgp_remass","0",buf,MAX_CHARS_PER_NAME,gRun.iniFile.c_str());
+    sgp::lsgp.remass = atof(buf);
+
     // The orbit_sgp subgroup includes parameters for orbit selection/generation
+    ncc::GetStrPropertyFromINIFile("experiment:orbit_sgp","sgp_mass","0",buf,MAX_CHARS_PER_NAME,gRun.iniFile.c_str());
+    sgp::orbit.sgpMass = atof(buf);
     ncc::GetStrPropertyFromINIFile("experiment:orbit_sgp","big_M","0",buf,MAX_CHARS_PER_NAME,gRun.iniFile.c_str());
     sgp::orbit.bigM = atof(buf);
     ncc::GetStrPropertyFromINIFile("experiment:orbit_sgp","pericenter","0",buf,MAX_CHARS_PER_NAME,gRun.iniFile.c_str());
@@ -392,6 +398,9 @@ void sgp::CreateLoadSGPExperiment()
     // Load a previously saved SGP
     if (!sgp::LoadSGP(gRun.loadSceneFromFile))
         ncc__error("Scene could not be loaded from repx file; experiment aborted.\a");
+
+    // Optionally rescale SGP
+    if (sgp::lsgp.remass > 0) sgp::ReMassSGP(sgp::lsgp.remass);
 
     // Move the camera to a good location
     UpdateIntegralsOfMotion();
@@ -1153,6 +1162,7 @@ void sgp::CreateOrbitSGPExperiment()
     DeadStop(); // stomp any residual velocities
     PxVec3 d = sgp::FindSGPCenterOfMass();
     RelocateScene(-d);
+    if (sgp::orbit.sgpMass > 0) sgp::ReMassSGP(sgp::orbit.sgpMass);
 
     if (sgp::orbit.bPregenOrbit)
     {
@@ -1435,29 +1445,56 @@ void sgp::LogOrbitSGPExperiment()
 void sgp::RefreshOrbitSGPHUD()
 {
     char buf[MAX_CHARS_PER_NAME];
-
-    // Static numbers: Rubble element count and total mass
-    UpdateIntegralsOfMotion();
-    sprintf(buf,"Rubble elements (\"grains\") = %u",gExp.rubbleCount - 1);
-    gHUD.hud.SetElement(sgp::hudMsgs.systemDiag1,buf);
     if (gPhysX.mScene->getNbActors(gPhysX.roles.dynamics)==0)
         return;
+
+    // SGP info: element count, total mass, mean density
+    UpdateIntegralsOfMotion(true);
+    PxReal rhoBulk = sgp::SGPBulkDensity();
+    sprintf(buf,"Rubble elements (\"grains\") = %u",gExp.rubbleCount - 1);
+    gHUD.hud.SetElement(sgp::hudMsgs.systemDiag1,buf);
+    sprintf(buf,"M_tot = %0.2g; <rho> = %4.0f",gExp.IOMs.systemMass,rhoBulk);
+    gHUD.hud.SetElement(sgp::hudMsgs.systemDiag2,buf);
+
+    // Dynamic shape info
+    FindExtremers(true);
+    PxVec3 rRight = gExp.VIPs.extremers.rightmost->getGlobalPose().transform(gExp.VIPs.extremers.rightmost->getCMassLocalPose()).p;
+    PxVec3 rLeft  = gExp.VIPs.extremers.leftmost->getGlobalPose().transform(gExp.VIPs.extremers.leftmost->getCMassLocalPose()).p;
+    PxVec3 rUp    = gExp.VIPs.extremers.upmost->getGlobalPose().transform(gExp.VIPs.extremers.upmost->getCMassLocalPose()).p;
+    PxVec3 rDown  = gExp.VIPs.extremers.downmost->getGlobalPose().transform(gExp.VIPs.extremers.downmost->getCMassLocalPose()).p;
+    PxVec3 rIn    = gExp.VIPs.extremers.inmost->getGlobalPose().transform(gExp.VIPs.extremers.inmost->getCMassLocalPose()).p;
+    PxVec3 rOut   = gExp.VIPs.extremers.outmost->getGlobalPose().transform(gExp.VIPs.extremers.outmost->getCMassLocalPose()).p;
+    PxReal a = (rRight.x - rLeft.x)/2;
+    PxReal b = (rOut.z - rIn.z)/2;
+    PxReal c = (rUp.y - rDown.y)/2;
+    PxReal meanR = PxPow(a*b*c,1.0/3.0);
+    sprintf(buf,"Mean radius = %0.2f",meanR);
+    gHUD.hud.SetElement(sgp::hudMsgs.systemDiag3,buf);
 
     // Orbit info
     PxVec3 X = sgp::FindSGPCenterOfMass() - sgp::VIPs.gravitator->getGlobalPose().transform(sgp::VIPs.gravitator->getCMassLocalPose()).p;
     PxReal r = X.magnitude();
-    PxReal rhoBulk = sgp::SGPBulkDensity();
     PxReal roche = 1.51*PxPow(sgp::orbit.bigM/rhoBulk,1.0/3.0);
     sprintf(buf,"Distance = %0.3g (cu)",r);
-    gHUD.hud.SetElement(sgp::hudMsgs.systemDiag3,buf);
-    sprintf(buf,"Distance = %0.2f x q = %0.2f x roche",r/sgp::orbit.periapse, r/roche);
     gHUD.hud.SetElement(sgp::hudMsgs.systemDiag4,buf);
+    sprintf(buf,"Distance = %0.2f x q = %0.2f x roche",r/sgp::orbit.periapse, r/roche);
+    gHUD.hud.SetElement(sgp::hudMsgs.systemDiag5,buf);
 }
 bool sgp::GenerateOrbit()
 {
     // placeholder to maybe generate orbits in-house
     bool success = false;
     return success;
+}
+void sgp::ReMassSGP(PxReal newMass)
+{
+    PxU32 nbGrains = gPhysX.mScene->getActors(gPhysX.roles.dynamics,gPhysX.cast,MAX_ACTORS_PER_SCENE);
+    PxReal newMPerGrain = newMass/nbGrains;
+    while (nbGrains--)
+    {
+        PxRigidDynamic* actor = gPhysX.cast[nbGrains]->isRigidDynamic();
+        PxRigidBodyExt::setMassAndUpdateInertia(*actor,newMPerGrain);
+    }
 }
 
 
