@@ -240,6 +240,8 @@ void PrintDebug()
 void ApplyCustomInteractions()
 {
     sgp::GravitateSelf();
+    if (sgp::eExperimentType == sgp::eORBIT_SGP)
+        sgp::ApplyFicticiousForce();
 }
 void ControlExperiment()
 {
@@ -1138,7 +1140,7 @@ void sgp::CreateOrbitSGPExperiment()
         //ncc__error("Could not load SGP from file; experiment aborted.\a");
         ncc__warning("Could not load SGP from file; experiment aborted.");
         CreateRubbleGrain(PxVec3(1,0,0),eSPHERE_GRAIN,0.5,*gPhysX.mDefaultMaterial,100);
-//        CreateRubbleGrain(PxVec3(-1,0,0),eSPHERE_GRAIN,0.5,*gPhysX.mDefaultMaterial,100);
+        CreateRubbleGrain(PxVec3(-1,0,0),eSPHERE_GRAIN,0.5,*gPhysX.mDefaultMaterial,100);
     }
     DeadStop(); // stomp any residual velocities
     RecenterScene(); // put center-of-mass at origin
@@ -1227,9 +1229,13 @@ void sgp::CreateOrbitSGPExperiment()
 }
 void sgp::ControlOrbitSGPExperiment()
 {
-    // Relocate the scene to stay in SGP frame
+    // If CM drifts too much relocate the scene to preserve accuracy
     PxVec3 d = sgp::FindSGPCenterOfMass();
-    RelocateScene(-d);
+    if (d.magnitudeSquared() > 0.01*sgp::orbit.periapse)
+    {
+        ncc__warning("CM drift detected - recentering.");
+    	RelocateScene(-d);
+    }
 
     // Put gravitator where it belongs
     static int orbStep = 0;
@@ -1376,6 +1382,27 @@ void sgp::ReMassSGP(PxReal newMass)
     {
         PxRigidDynamic* actor = gPhysX.cast[nbGrains]->isRigidDynamic();
         PxRigidBodyExt::setMassAndUpdateInertia(*actor,newMPerGrain);
+    }
+}
+void sgp::ApplyFicticiousForce()
+{
+    PxVec3 CM = sgp::FindSGPCenterOfMass();
+    PxVec3 CF = sgp::VIPs.gravitator->getGlobalPose().p;
+    PxReal G = sgp::cunits.bigG;
+    PxReal M = sgp::orbit.bigM;
+    PxReal r = (CF - CM).magnitude();
+    PxVec3 pseudoA = G*M/(r*r*r)*(CM - CF); // FROM primary TO sgp
+    PxU32 nbActors = gPhysX.mScene->getActors(gPhysX.roles.dynamics,gPhysX.cast,MAX_ACTORS_PER_SCENE);
+    while (nbActors--)
+    {
+        PxRigidDynamic* actor = gPhysX.cast[nbActors]->isRigidDynamic();
+        if (actor)
+        {
+            if (actor->getRigidDynamicFlags() & PxRigidDynamicFlag::eKINEMATIC) continue;
+            PxReal m = actor->getMass();
+            PxVec3 pseudoF = m*pseudoA;
+            actor->addForce(pseudoF);
+        }
     }
 }
 
