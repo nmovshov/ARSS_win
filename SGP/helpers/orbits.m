@@ -11,13 +11,13 @@ close all
 %% Parameters in code units
 orbit_name = '../sgp';
 orbit_type = 'bound'; % ['bound'|'hyperbolic']
-bigM = 2e6;
+bigM = 1.9e21;
 bigG = 6.674e-5;
-q = 20;
-e = 0.0; % bound only
+q = 9e5;
+e = 0.997; % bound only
 vinf = 0.1; % hyperbolic only
-r_ini = 1; % for bound this is a fraction of Q (for full orbit use 1) and ...
-r_end = 1; % ... for hyperbolic this is a multiple of q
+r_ini = 0.01; % for bound this is a fraction of Q (for full orbit use 1) and ...
+r_end = 0.01; % ... for hyperbolic this is a multiple of q
 dt = 0.02; % does NOT have to match ARSS dt
 
 %% Orbit calculation
@@ -41,7 +41,9 @@ switch orbit_type
         E_end=acos(cosE_end); % post-per- positive angle
         if e == 0, E_end = pi*r_ini/Q; end
         if ~(isreal(E_ini) && isreal(E_end))
-            error('something''s wrong')
+            warning('throwing out impaginary noise')
+            E_ini = real(E_ini);
+            E_end = real(E_end);
         end
         
         % Calculate initial and final times corresponding to these "angles"
