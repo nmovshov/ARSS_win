@@ -126,8 +126,8 @@ namespace sgp
 
     bool MakeNewSGP();
     PxU32 MakeLooseRubblePile(PxReal mass=0);
-    void GravitateSelf();
-    void GravitateOnHost();
+    void GravitateSelf(bool bIgnoreKinematics=false);
+    void GravitateOnHost(bool bIgnoreKinematics=false);
     void GravitateOnGPU(); 
     void ApplyFicticiousForce();
     PxReal SystemPotentialEnergy();

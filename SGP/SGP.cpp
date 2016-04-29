@@ -239,9 +239,10 @@ void PrintDebug()
 }
 void ApplyCustomInteractions()
 {
-    sgp::GravitateSelf();
-    if (sgp::eExperimentType == sgp::eORBIT_SGP)
+    sgp::GravitateSelf(true);
+    if (sgp::eExperimentType == sgp::eORBIT_SGP) {
         sgp::ApplyFicticiousForce();
+    }
 }
 void ControlExperiment()
 {
@@ -463,14 +464,14 @@ void sgp::CreateTestScalingExperiment()
 
     return;
 }
-void sgp::GravitateSelf()
+void sgp::GravitateSelf(bool bIgnoreKinematics/*=false*/)
 {
     if (gCUDA.cudaCapable && gCUDA.enableGPU)
         sgp::GravitateOnGPU();
     else
-        sgp::GravitateOnHost();
+        sgp::GravitateOnHost(bIgnoreKinematics);
 }
-void sgp::GravitateOnHost()
+void sgp::GravitateOnHost(bool bIgnoreKinematics/*=false*/)
 /*
  * This is a semi-optimized all-pairs gravity calculation in a single host thread. Not
  * usually the best option, but a necessary fall back option.
@@ -494,6 +495,9 @@ void sgp::GravitateOnHost()
         bodies[4*k+1] = pos.x;
         bodies[4*k+2] = pos.y;
         bodies[4*k+3] = pos.z;
+        if (bIgnoreKinematics && (actor->getRigidDynamicFlags() & PxRigidDynamicFlag::eKINEMATIC)) {
+            bodies[4*k+0] = 0;
+        }
     }
 
     // And now, the N^2 double loop.
@@ -1231,8 +1235,9 @@ void sgp::ControlOrbitSGPExperiment()
 {
     // Remove CM drift
     PxVec3 d = sgp::FindSGPCenterOfMass();
-    if (true)
+    if (d.magnitude() > 0.01*sgp::orbit.periapse)
     {
+        ncc__warning("CM drift detected (and corrected)");
     	RelocateScene(-d);
         PxVec3 V = gExp.IOMs.systemLM; // linear momentum per unit mass, aka CM velocity
         PxU32 nbActors = gPhysX.mScene->getActors(gPhysX.roles.dynamics,gPhysX.cast,MAX_ACTORS_PER_SCENE);
@@ -1397,12 +1402,11 @@ void sgp::ReMassSGP(PxReal newMass)
 }
 void sgp::ApplyFicticiousForce()
 {
-    PxVec3 CM = sgp::FindSGPCenterOfMass();
-    PxVec3 CF = sgp::VIPs.gravitator->getGlobalPose().p;
     PxReal G = sgp::cunits.bigG;
     PxReal M = sgp::orbit.bigM;
-    PxReal r = (CF - CM).magnitude();
-    PxVec3 pseudoA = G*M/(r*r*r)*(CM - CF); // FROM primary TO sgp
+    PxVec3 D = sgp::VIPs.gravitator->getGlobalPose().p; // vector FROM origin TO planet
+    PxReal d = D.magnitude();
+    PxVec3 pseudoA = -G*M/(d*d*d)*D; // FROM planet TO origin
     PxU32 nbActors = gPhysX.mScene->getActors(gPhysX.roles.dynamics,gPhysX.cast,MAX_ACTORS_PER_SCENE);
     while (nbActors--)
     {
@@ -1412,7 +1416,11 @@ void sgp::ApplyFicticiousForce()
             if (actor->getRigidDynamicFlags() & PxRigidDynamicFlag::eKINEMATIC) continue;
             PxReal m = actor->getMass();
             PxVec3 pseudoF = m*pseudoA;
-            actor->addForce(pseudoF);
+            PxVec3 X = D - actor->getGlobalPose().p; // FROM actor TO planet
+            PxReal x = X.magnitude();
+            PxVec3 gravF = G*M*m/(x*x*x)*X;
+            PxVec3 netF = pseudoF + gravF;
+            actor->addForce(netF);
         }
     }
 }
