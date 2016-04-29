@@ -1229,12 +1229,23 @@ void sgp::CreateOrbitSGPExperiment()
 }
 void sgp::ControlOrbitSGPExperiment()
 {
-    // If CM drifts too much relocate the scene to preserve accuracy
+    // Remove CM drift
     PxVec3 d = sgp::FindSGPCenterOfMass();
-    if (d.magnitudeSquared() > 0.01*sgp::orbit.periapse)
+    if (true)
     {
-        ncc__warning("CM drift detected - recentering.");
     	RelocateScene(-d);
+        PxVec3 V = gExp.IOMs.systemLM; // linear momentum per unit mass, aka CM velocity
+        PxU32 nbActors = gPhysX.mScene->getActors(gPhysX.roles.dynamics,gPhysX.cast,MAX_ACTORS_PER_SCENE);
+        while (nbActors--)
+        {
+            PxRigidDynamic* actor = gPhysX.cast[nbActors]->isRigidDynamic();
+            if (actor)
+            {
+                if (actor->getRigidDynamicFlags() & PxRigidDynamicFlag::eKINEMATIC) continue;
+                PxVec3 v = actor->getLinearVelocity();
+                actor->setLinearVelocity(v - V);
+            }
+        }
     }
 
     // Put gravitator where it belongs
