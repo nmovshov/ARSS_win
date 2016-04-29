@@ -26,6 +26,7 @@ Q_p = [x(ind), y(ind)];
 ecc = (Q - q)/(Q + q);
 
 %% Plot orbit in lab frame
+figure
 plot(x,y)
 hold
 plot(q_p(1), q_p(2), 'r+')
