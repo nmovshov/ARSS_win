@@ -13,11 +13,11 @@ orbit_name = '../sgp';
 orbit_type = 'hyper'; % ['bound'|'hyper']
 bigM = 1.9e21;
 bigG = 6.674e-5;
-q = 9e5;
+q = 2.8e6;
 e = 0.997; % bound only
-vinf = 0.05; % hyperbolic only
-r_ini = 3; % for bound this is a fraction of Q (for full orbit use 1) and ...
-r_end = 3; % ... for hyperbolic this is a multiple of q
+vinf = 0.1; % hyperbolic only
+r_ini = 2; % for bound this is a fraction of Q (for full orbit use 1) and ...
+r_end = 4; % ... for hyperbolic this is a multiple of q
 dt = 0.02; % does NOT have to match ARSS dt
 
 %% Orbit calculation
