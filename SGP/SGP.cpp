@@ -241,7 +241,7 @@ void ApplyCustomInteractions()
 {
     sgp::GravitateSelf(true);
     if (sgp::eExperimentType == sgp::eORBIT_SGP) {
-        sgp::ApplyFicticiousForce();
+        sgp::ApplyTidingForce();
     }
 }
 void ControlExperiment()
@@ -1400,7 +1400,7 @@ void sgp::ReMassSGP(PxReal newMass)
         PxRigidBodyExt::setMassAndUpdateInertia(*actor,newMPerGrain);
     }
 }
-void sgp::ApplyFicticiousForce()
+void sgp::ApplyTidingForce()
 {
     PxReal G = sgp::cunits.bigG;
     PxReal M = sgp::orbit.bigM;

@@ -129,7 +129,7 @@ namespace sgp
     void GravitateSelf(bool bIgnoreKinematics=false);
     void GravitateOnHost(bool bIgnoreKinematics=false);
     void GravitateOnGPU(); 
-    void ApplyFicticiousForce();
+    void ApplyTidingForce();
     PxReal SystemPotentialEnergy();
     void ColorCodeRubblePile();
     bool LoadSGP(string filename);
