@@ -1,5 +1,5 @@
 %% A script to generate elliptical or hyperbolic orbits
-% I want to create a (section of an) orbit. I want to set t=0 at perihelion,
+% I want to create a section of an orbit. I want to set t=0 at perihelion,
 % negative pre- and positive post. This would give negative angles for pre-peri
 % from the kepler equation, and so the orbiting body will be approaching from
 % below the x-axis, usually from the 4th quadrant, and swing up and left into
@@ -10,14 +10,14 @@ close all
 
 %% Parameters in code units
 orbit_name = '../sgp';
-orbit_type = 'bound'; % ['bound'|'hyperbolic']
+orbit_type = 'hyper'; % ['bound'|'hyper']
 bigM = 1.9e21;
 bigG = 6.674e-5;
 q = 9e5;
 e = 0.997; % bound only
-vinf = 0.1; % hyperbolic only
-r_ini = 0.01; % for bound this is a fraction of Q (for full orbit use 1) and ...
-r_end = 0.01; % ... for hyperbolic this is a multiple of q
+vinf = 0.05; % hyperbolic only
+r_ini = 3; % for bound this is a fraction of Q (for full orbit use 1) and ...
+r_end = 3; % ... for hyperbolic this is a multiple of q
 dt = 0.02; % does NOT have to match ARSS dt
 
 %% Orbit calculation
@@ -75,7 +75,7 @@ switch orbit_type
         rVec = a*(1 - e^2)./(1 + e*cos(fVec)); % orbit equation
         xVec = rVec.*cos(fVec);
         yVec = rVec.*sin(fVec);
-    case 'hyperbolic'
+    case 'hyper'
         % Start by calculating derived orbital elements
         r_ini = r_ini*q;
         r_end = r_end*q;
