@@ -210,15 +210,18 @@ void FireAction()
 {
     if (sgp::eExperimentType==sgp::eMAKE_SGP)
     {
+        cout << "Stopping short" << endl;
         DeadStop();
     }
     else if (sgp::eExperimentType==sgp::eLOAD_SGP)
     {
+        cout << "Stopping short" << endl;
         DeadStop();
     }
     else if (sgp::eExperimentType==sgp::eORBIT_SGP)
     {
         sgp::orbit.bTrackingCamera = !sgp::orbit.bTrackingCamera;
+        cout << "Tracking camera = " << sgp::orbit.bTrackingCamera << endl;
     }
 }
 void LogExperiment()
