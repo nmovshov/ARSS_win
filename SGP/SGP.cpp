@@ -411,7 +411,7 @@ void sgp::CreateLoadSGPExperiment()
 
     // Start the action
     gSim.isRunning=true;
-    gSim.bPause=false;
+    gSim.bPause=true;
     gSim.codeTime = 0.0;
     
 }
