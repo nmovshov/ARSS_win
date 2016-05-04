@@ -212,6 +212,10 @@ void FireAction()
     {
         DeadStop();
     }
+    else if (sgp::eExperimentType==sgp::eLOAD_SGP)
+    {
+        DeadStop();
+    }
     else if (sgp::eExperimentType==sgp::eORBIT_SGP)
     {
         sgp::orbit.bTrackingCamera = !sgp::orbit.bTrackingCamera;
