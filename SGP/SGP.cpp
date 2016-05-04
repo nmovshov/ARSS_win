@@ -150,6 +150,8 @@ bool ConfigExperimentOptions()
         sgp::diag.eColorCodeType = sgp::diag.eTHREE_LAYER;
     else if (strcmp(buf,"surface")==0)
         sgp::diag.eColorCodeType = sgp::diag.eSURFACE;
+    else if (strcmp(buf,"by_name")==0)
+        sgp::diag.eColorCodeType = sgp::diag.eNAME;
     else
         sgp::diag.eColorCodeType = sgp::diag.eBAD_CCODE;
 
@@ -193,8 +195,10 @@ void RefreshCustomHUDElements()
         sgp::RefreshOrbitSGPHUD();
         break;
     case sgp::eMAKE_SGP:
-    case sgp::eLOAD_SGP: // intentional fall-through
         sgp::RefreshMakeSGPHUD();
+        break;
+    case sgp::eLOAD_SGP:
+        sgp::RefreshLoadSGPHUD();
         break;
     case sgp::eBAD_EXPERIMENT_TYPE: // intentional fall through
     default:
@@ -258,6 +262,8 @@ void ControlExperiment()
     case sgp::eORBIT_SGP:
         sgp::ControlOrbitSGPExperiment();
         break;
+    case sgp::eLOAD_SGP:
+        sgp::ControlLoadSGPExperiment();
     default:
         break;
     }
@@ -384,24 +390,7 @@ void sgp::CreateLoadSGPExperiment()
     if (sgp::lsgp.remass > 0) sgp::ReMassSGP(sgp::lsgp.remass);
 
     // Move the camera to a good location
-    UpdateIntegralsOfMotion();
-    FindExtremers();
-    if (gExp.VIPs.extremers.rightmost)
-    {
-        PxVec3 X0 = gExp.IOMs.systemCM;
-        PxVec3 rRight = gExp.VIPs.extremers.rightmost->getGlobalPose().transform(gExp.VIPs.extremers.rightmost->getCMassLocalPose()).p;
-        PxVec3 rLeft  = gExp.VIPs.extremers.leftmost->getGlobalPose().transform(gExp.VIPs.extremers.leftmost->getCMassLocalPose()).p;
-        PxReal pileExtent = (rRight.x - rLeft.x);
-        PxU32  nbRubble = gPhysX.mScene->getNbActors(gPhysX.roles.dynamics);
-        PxReal gsize = PxPow(nbRubble,-1.0/3.0);
-
-        gCamera.pos.x = X0.x;
-        gCamera.pos.y = X0.y;
-        gCamera.pos.z = X0.z + pileExtent + 2*gsize;
-        gCamera.zBufFar = 2*pileExtent;
-        gCamera.zBufNear = 0.5*gsize;
-        gCamera.speed = gCamera.speed*gsize;
-    }
+    SpyOnSGP();
 
     // Start a log
     if (gRun.outputFrequency)
@@ -982,6 +971,22 @@ void sgp::ColorCodeRubblePile()
     if (sgp::diag.eColorCodeType == sgp::diag.eNO_CCODE)
         return;
 
+    // Choose paint for rust
+    const GLubyte *color = ncc::rgb::oCoral;
+    gColors.colorBucket.push_back(vector<GLubyte>(3));
+    gColors.colorBucket.back()[0]=color[0];
+    gColors.colorBucket.back()[1]=color[1];
+    gColors.colorBucket.back()[2]=color[2];
+    size_t rCIndex = gColors.colorBucket.size() - 1; // core color index
+
+    // Choose paint for snow
+    color = ncc::rgb::wBeige;
+    gColors.colorBucket.push_back(vector<GLubyte>(3));
+    gColors.colorBucket.back()[0]=color[0];
+    gColors.colorBucket.back()[1]=color[1];
+    gColors.colorBucket.back()[2]=color[2];
+    size_t sCIndex = gColors.colorBucket.size() - 1; // mantle color index
+
     // Detect shape information
     UpdateIntegralsOfMotion();
     if (gExp.rubbleCount == 0) return;
@@ -1001,14 +1006,6 @@ void sgp::ColorCodeRubblePile()
     // Paint actors by scheme (avoiding switch/case this time)
     if (sgp::diag.eColorCodeType == sgp::diag.eTWO_LAYER) // Half snow, half default
     {
-        // Choose paint for core
-        const GLubyte *color = ncc::rgb::wBeige;
-        gColors.colorBucket.push_back(vector<GLubyte>(3));
-        gColors.colorBucket.back()[0]=color[0];
-        gColors.colorBucket.back()[1]=color[1];
-        gColors.colorBucket.back()[2]=color[2];
-        size_t cCIndex = gColors.colorBucket.size() - 1; // core color index
-
         // Loop over rubble and color by position
         PxReal ca = a/2, cb = b/2, cc = c/2; // core semi-axes
         PxU32 nbActors = gPhysX.mScene->getActors(gPhysX.roles.dynamics,gPhysX.cast,MAX_ACTORS_PER_SCENE);
@@ -1020,7 +1017,7 @@ void sgp::ColorCodeRubblePile()
             bool incore = ((pos.x*pos.x/ca/ca + pos.y*pos.y/cc/cc + pos.z*pos.z/cb/cb) < 1);
             if (incore)
             {
-                actor->userData=&(gColors.colorBucket[cCIndex][0]); // yes I know I know :/
+                actor->userData=&(gColors.colorBucket[sCIndex][0]); // yes I know I know :/
                 actor->setName("rubble-core");
             }
             else
@@ -1031,22 +1028,6 @@ void sgp::ColorCodeRubblePile()
     }
     if (sgp::diag.eColorCodeType == sgp::diag.eTHREE_LAYER) // Half cotton, half linen, half wool
     {
-        // Choose paint for core
-        const GLubyte *color = ncc::rgb::oCoral;
-        gColors.colorBucket.push_back(vector<GLubyte>(3));
-        gColors.colorBucket.back()[0]=color[0];
-        gColors.colorBucket.back()[1]=color[1];
-        gColors.colorBucket.back()[2]=color[2];
-        size_t cCIndex = gColors.colorBucket.size() - 1; // core color index
-
-        // Choose paint for mantle
-        color = ncc::rgb::wBeige;
-        gColors.colorBucket.push_back(vector<GLubyte>(3));
-        gColors.colorBucket.back()[0]=color[0];
-        gColors.colorBucket.back()[1]=color[1];
-        gColors.colorBucket.back()[2]=color[2];
-        size_t mCIndex = gColors.colorBucket.size() - 1; // mantle color index
-
         // Loop over rubble and color by position
         PxReal ca = a/3, cb = b/3, cc = c/3; // core semi-axes
         PxReal ma = 2*a/3, mb = 2*b/3, mc = 2*c/3; // mantle semi-axes
@@ -1060,12 +1041,12 @@ void sgp::ColorCodeRubblePile()
             bool incore = ((pos.x*pos.x/ca/ca + pos.y*pos.y/cc/cc + pos.z*pos.z/cb/cb) < 1);
             if (incore)
             {
-                actor->userData=&(gColors.colorBucket[cCIndex][0]); // yes I know I know :/
+                actor->userData=&(gColors.colorBucket[rCIndex][0]); // yes I know I know :/
                 actor->setName("rubble-core");
             }
             else if (inmantle)
             {
-                actor->userData=&(gColors.colorBucket[mCIndex][0]); // yes I know I know :/
+                actor->userData=&(gColors.colorBucket[sCIndex][0]); // yes I know I know :/
                 actor->setName("rubble-mantle");
             }
             else
@@ -1079,14 +1060,6 @@ void sgp::ColorCodeRubblePile()
         // Estimate surface layer thickness (normalized)
         PxReal s = 1.0 - sgp::diag.nbSurfaceThickness*PxPow(nbRubble,-1.0/3.0);
 
-        // Choose paint for interior (surface will use default color)
-        const GLubyte *color = ncc::rgb::wBeige;
-        gColors.colorBucket.push_back(vector<GLubyte>(3));
-        gColors.colorBucket.back()[0]=color[0];
-        gColors.colorBucket.back()[1]=color[1];
-        gColors.colorBucket.back()[2]=color[2];
-        size_t cCIndex = gColors.colorBucket.size() - 1; // core color index
-
         // Loop over rubble and color by position
         PxU32 nbActors = gPhysX.mScene->getActors(gPhysX.roles.dynamics,gPhysX.cast,MAX_ACTORS_PER_SCENE);
         while (nbActors--)
@@ -1097,7 +1070,7 @@ void sgp::ColorCodeRubblePile()
             bool incore = ((pos.x*pos.x/a/a + pos.y*pos.y/c/c + pos.z*pos.z/b/b) < s);
             if (incore)
             {
-                actor->userData=&(gColors.colorBucket[cCIndex][0]); // yes I know I know :/
+                actor->userData=&(gColors.colorBucket[sCIndex][0]); // yes I know I know :/
                 actor->setName("rubble-interior");
             }
             else
@@ -1106,7 +1079,23 @@ void sgp::ColorCodeRubblePile()
             }
         }
     }
-        
+    else if (sgp::diag.eColorCodeType == sgp::diag.eNAME)
+    {
+        // Loop over rubble and color by name
+        PxU32 nbActors = gPhysX.mScene->getActors(gPhysX.roles.dynamics,gPhysX.cast,MAX_ACTORS_PER_SCENE);
+        while (nbActors--)
+        {
+            PxRigidDynamic* actor = gPhysX.cast[nbActors]->isRigidDynamic();
+            if (actor->getRigidDynamicFlags() & PxRigidDynamicFlag::eKINEMATIC) continue;
+            const char* buf = actor->getName();
+            if (strcmp(buf,"rubble-interior")==0)
+                actor->userData=&(gColors.colorBucket[sCIndex][0]); // yes I know I know :/
+            if (strcmp(buf,"rubble-mantle")==0)
+                actor->userData=&(gColors.colorBucket[sCIndex][0]); // yes I know I know :/
+            if (strcmp(buf,"rubble-core")==0)
+                actor->userData=&(gColors.colorBucket[rCIndex][0]); // yes I know I know :/
+        }
+    }   
 }
 bool sgp::LoadSGP(string filename)
 /*Load a scene and do some processing specific to SGPs*/
@@ -1423,6 +1412,23 @@ void sgp::ApplyTidingForce()
             actor->addForce(netF);
         }
     }
+}
+void sgp::ControlLoadSGPExperiment()
+{
+    
+}
+void sgp::RefreshLoadSGPHUD()
+{
+    char buf[MAX_CHARS_PER_NAME];
+    if (gPhysX.mScene->getNbActors(gPhysX.roles.dynamics)==0)
+        return;
+
+    // SGP info: element count, total mass, mean density
+    UpdateIntegralsOfMotion(true);
+    sprintf(buf,"Rubble elements (\"grains\") = %u",gExp.rubbleCount - 1);
+    gHUD.hud.SetElement(sgp::hudMsgs.systemDiag1,buf);
+    sprintf(buf,"M_tot = %0.2g",gExp.IOMs.systemMass);
+    gHUD.hud.SetElement(sgp::hudMsgs.systemDiag2,buf);
 }
 
 

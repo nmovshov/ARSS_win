@@ -106,7 +106,7 @@ namespace sgp
 
     // Diagnostics
     struct {
-        enum {eBAD_CCODE, eNO_CCODE, eGRADIENT, eTWO_LAYER, eTHREE_LAYER, eSURFACE} eColorCodeType;
+        enum {eBAD_CCODE, eNO_CCODE, eGRADIENT, eTWO_LAYER, eTHREE_LAYER, eSURFACE, eNAME} eColorCodeType;
         PxReal nbSurfaceThickness;
     } diag;
 
@@ -116,12 +116,14 @@ namespace sgp
     void CreateOrbitSGPExperiment();
     void CreateTestScalingExperiment();
     void ControlMakeSGPExperiment();
+    void ControlLoadSGPExperiment();
     void ControlOrbitSGPExperiment();
     void ControlTestScalingExperiment();
     void LogMakeSGPExperiment();
     void LogOrbitSGPExperiment();
     void LogTestScalingExperiment();
     void RefreshMakeSGPHUD();
+    void RefreshLoadSGPHUD();
     void RefreshOrbitSGPHUD();
 
     bool MakeNewSGP();
