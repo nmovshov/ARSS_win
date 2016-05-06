@@ -102,6 +102,8 @@ bool ConfigExperimentOptions()
     // The load_sgp subgroup includes parameters for rescaling a saved sgp
     ncc::GetStrPropertyFromINIFile("experiment:load_sgp","sgp_remass","0",buf,MAX_CHARS_PER_NAME,gRun.iniFile.c_str());
     sgp::lsgp.remass = atof(buf);
+    ncc::GetStrPropertyFromINIFile("experiment:load_sgp","sgp_rescale","0",buf,MAX_CHARS_PER_NAME,gRun.iniFile.c_str());
+    sgp::lsgp.rescale = atof(buf);
 
     // The orbit_sgp subgroup includes parameters for orbit selection/generation
     ncc::GetStrPropertyFromINIFile("experiment:orbit_sgp","sgp_mass","0",buf,MAX_CHARS_PER_NAME,gRun.iniFile.c_str());
@@ -395,6 +397,14 @@ void sgp::CreateLoadSGPExperiment()
 
     // Optionally rescale SGP
     if (sgp::lsgp.remass > 0) sgp::ReMassSGP(sgp::lsgp.remass);
+    if (sgp::lsgp.rescale > 0) {
+        FindExtremers(true);
+        PxVec3 rRight = gExp.VIPs.extremers.rightmost->getGlobalPose().transform(gExp.VIPs.extremers.rightmost->getCMassLocalPose()).p;
+        PxVec3 rLeft  = gExp.VIPs.extremers.leftmost->getGlobalPose().transform(gExp.VIPs.extremers.leftmost->getCMassLocalPose()).p;
+        PxReal aAxis = rRight.x - rLeft.x;
+        PxReal sfactor = sgp::lsgp.rescale/aAxis;
+        sgp::RescaleSGP(sfactor);
+    }
 
     // Move the camera to a good location
     SpyOnSGP();
@@ -1468,6 +1478,10 @@ void sgp::RefreshLoadSGPHUD()
 	    sprintf(buf,"Mean radius = %0.2f",meanR);
 	    gHUD.hud.SetElement(sgp::hudMsgs.systemDiag6,buf);
     }
+}
+void sgp::RescaleSGP(PxReal factor)
+{
+    cout << "rescaling by" << factor << endl;
 }
 
 
