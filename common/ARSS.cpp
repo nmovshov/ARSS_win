@@ -159,13 +159,13 @@ bool InitDevIL()
 bool InitHUD()
 {
 	// Set up ARSS-wide HUD elements
-	gHUD.FPS		= gHUD.hud.AddElement("FPS = ",0.04,0.04);
-	gHUD.WALL_TIME	= gHUD.hud.AddElement("Wall time = ",0.04,0.08);
-	gHUD.CODE_TIME  = gHUD.hud.AddElement("Code time = ",0.04,0.12);
+	gHUD.FPS		= gHUD.hud.AddElement("",0.04,0.04);
+	gHUD.WALL_TIME	= gHUD.hud.AddElement("",0.04,0.08);
+	gHUD.CODE_TIME  = gHUD.hud.AddElement("",0.04,0.12);
 	gHUD.DBG_MSG	= gHUD.hud.AddElement("",0.5,0.66);
 	gHUD.PAUSED		= gHUD.hud.AddElement("",0.4,0.5);
 	gHUD.HELP       = gHUD.hud.AddElement("",0.4,0.2);
-	gHUD.CAMERA     = gHUD.hud.AddElement("Camera 0",0.04,0.16);
+	gHUD.CAMERA     = gHUD.hud.AddElement("",0.04,0.16);
 
 	// Set up experiment specific HUD elements
 	CustomizeHUD();
@@ -610,32 +610,38 @@ void RefreshHUD()
 {
 	char buf[256];
 
-	// Wall time
-	sprintf(buf,"Wall time = %u",gSim.wallTime/1000U);
-	gHUD.hud.SetElement(gHUD.WALL_TIME,buf);
+    if (gHUD.verbosity > 0)
+    {
+        // Wall time
+        sprintf(buf,"Wall time = %u",gSim.wallTime/1000U);
+        gHUD.hud.SetElement(gHUD.WALL_TIME,buf);
 
-	// Code time
-	sprintf(buf,"Code time = %0.3g (dt = %g)",gSim.codeTime,gSim.timeStep);
-	gHUD.hud.SetElement(gHUD.CODE_TIME,buf);
-	if (!gSim.isRunning)
-		gHUD.hud.SetElementColor(gHUD.CODE_TIME,1.0f,0.0f,0.0f);
-	else
-		gHUD.hud.SetElementColor(gHUD.CODE_TIME,1.0f,1.0f,1.0f);
+        // Code time
+        sprintf(buf,"Code time = %0.3g (dt = %g)",gSim.codeTime,gSim.timeStep);
+        gHUD.hud.SetElement(gHUD.CODE_TIME,buf);
+        if (!gSim.isRunning)
+            gHUD.hud.SetElementColor(gHUD.CODE_TIME,1.0f,0.0f,0.0f);
+        else
+            gHUD.hud.SetElementColor(gHUD.CODE_TIME,1.0f,1.0f,1.0f);
 
-	// FPS
-	sprintf(buf,"FPS = %5.1f",gSim.fps);
-	gHUD.hud.SetElement(gHUD.FPS,buf);
+        // FPS
+        sprintf(buf,"FPS = %5.1f",gSim.fps);
+        gHUD.hud.SetElement(gHUD.FPS,buf);
 
-	// Paused
-	if (gSim.bPause)
-		sprintf(buf,"PAUSED - Hit `p' to unpause");
-	else
-		sprintf(buf,"");
-	gHUD.hud.SetElement(gHUD.PAUSED,buf);
+        // Camera
+        sprintf(buf,"Camera %d",gCamera.liveCamera);
+        gHUD.hud.SetElement(gHUD.CAMERA,buf);
+    }
 
-	// Camera
-	sprintf(buf,"Camera %d",gCamera.liveCamera);
-	gHUD.hud.SetElement(gHUD.CAMERA,buf);
+    if (gHUD.verbosity > -1)
+    {
+        // Paused
+        if (gSim.bPause)
+            sprintf(buf,"PAUSED - Hit `p' to unpause");
+        else
+            sprintf(buf,"");
+        gHUD.hud.SetElement(gHUD.PAUSED,buf);
+    }
 
 	RefreshCustomHUDElements(); // Project specific HUD elements, implemented in project source
 }
@@ -700,7 +706,7 @@ bool ConfigARSSOptions()
 	ncc::GetStrPropertyFromINIFile("simulation","target_time","0",buf,MAX_CHARS_PER_NAME,gRun.iniFile.c_str());
 	gSim.targetTime = atof(buf);
 
-	// GLUT options group
+	// GLUT (and other misc display) options group
 	ncc::GetStrPropertyFromINIFile("glut","z_buffer_far","10",buf,MAX_CHARS_PER_NAME,gRun.iniFile.c_str());
 	gCamera.zBufFar = atof(buf);
 	ncc::GetStrPropertyFromINIFile("glut","z_buffer_near","0.1",buf,MAX_CHARS_PER_NAME,gRun.iniFile.c_str());
@@ -709,6 +715,7 @@ bool ConfigARSSOptions()
 	if (strcmp(buf,"on")==0) gDebug.bXYGridOn = true;
 	ncc::GetStrPropertyFromINIFile("glut","xz_grid","off",buf,MAX_CHARS_PER_NAME,gRun.iniFile.c_str());
 	if (strcmp(buf,"on")==0) gDebug.bXZGridOn = true;
+    gHUD.verbosity = ncc::GetIntPropertyFromINIFile("glut","hud_verbosity",1,gRun.iniFile.c_str());
 
     // CUDA options group
     ncc::GetStrPropertyFromINIFile("CUDA","enable_gpu_accel","false",buf,MAX_CHARS_PER_NAME,gRun.iniFile.c_str());

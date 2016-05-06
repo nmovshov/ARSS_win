@@ -70,6 +70,7 @@ struct arss_glut_hud {
 	unsigned int PAUSED;
 	unsigned int HELP;
 	unsigned int CAMERA;
+    int verbosity;
 };
 extern arss_glut_hud gHUD;
 // Run globals (file names, run name, misc information etc.)
