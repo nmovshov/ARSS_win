@@ -189,6 +189,7 @@ void CustomizeHUD()
 }
 void RefreshCustomHUDElements()
 {
+    if (gHUD.verbosity < 0) return;
     switch (sgp::eExperimentType)
     {
     case sgp::eORBIT_SGP:
@@ -203,7 +204,6 @@ void RefreshCustomHUDElements()
     case sgp::eBAD_EXPERIMENT_TYPE: // intentional fall through
     default:
         break;
-
     }
 }
 void FireAction()
@@ -1431,11 +1431,43 @@ void sgp::RefreshLoadSGPHUD()
         return;
 
     // SGP info: element count, total mass, mean density
-    UpdateIntegralsOfMotion(true);
-    sprintf(buf,"Rubble elements (\"grains\") = %u",gExp.rubbleCount - 1);
-    gHUD.hud.SetElement(sgp::hudMsgs.systemDiag1,buf);
-    sprintf(buf,"M_tot = %0.2g",gExp.IOMs.systemMass);
-    gHUD.hud.SetElement(sgp::hudMsgs.systemDiag2,buf);
+    if (gHUD.verbosity > 0)
+    {
+	    UpdateIntegralsOfMotion(true);
+	    sprintf(buf,"Rubble elements (\"grains\") = %u",gExp.rubbleCount - 1);
+	    gHUD.hud.SetElement(sgp::hudMsgs.systemDiag1,buf);
+	    sprintf(buf,"M_tot = %0.2g",gExp.IOMs.systemMass);
+        if (gHUD.verbosity > 1)
+        {
+            PxReal rhoBulk = sgp::SGPBulkDensity();
+            sprintf(buf,"M_tot = %0.2g; <rho> = %4.0f",gExp.IOMs.systemMass,rhoBulk);
+        }
+	    gHUD.hud.SetElement(sgp::hudMsgs.systemDiag2,buf);
+    }
+
+    // Dynamic shape info
+    if (gHUD.verbosity > 1)
+    {
+	    FindExtremers(true);
+	    PxVec3 rRight = gExp.VIPs.extremers.rightmost->getGlobalPose().transform(gExp.VIPs.extremers.rightmost->getCMassLocalPose()).p;
+	    PxVec3 rLeft  = gExp.VIPs.extremers.leftmost->getGlobalPose().transform(gExp.VIPs.extremers.leftmost->getCMassLocalPose()).p;
+	    PxVec3 rUp    = gExp.VIPs.extremers.upmost->getGlobalPose().transform(gExp.VIPs.extremers.upmost->getCMassLocalPose()).p;
+	    PxVec3 rDown  = gExp.VIPs.extremers.downmost->getGlobalPose().transform(gExp.VIPs.extremers.downmost->getCMassLocalPose()).p;
+	    PxVec3 rIn    = gExp.VIPs.extremers.inmost->getGlobalPose().transform(gExp.VIPs.extremers.inmost->getCMassLocalPose()).p;
+	    PxVec3 rOut   = gExp.VIPs.extremers.outmost->getGlobalPose().transform(gExp.VIPs.extremers.outmost->getCMassLocalPose()).p;
+	    PxReal a = rRight.x - rLeft.x;
+	    PxReal b = rOut.z - rIn.z;
+	    PxReal c = rUp.y - rDown.y;
+	    sprintf(buf,"Ellipsoid long (\"a\") axis = %0.2g (cu)",a);
+	    gHUD.hud.SetElement(sgp::hudMsgs.systemDiag3,buf);
+	    sprintf(buf,"Ellipsoid a/b axes ratio = %-8.2f",a/b);
+	    gHUD.hud.SetElement(sgp::hudMsgs.systemDiag4,buf);
+	    sprintf(buf,"Ellipsoid a/c axes ratio = %-8.2f",a/c);
+	    gHUD.hud.SetElement(sgp::hudMsgs.systemDiag5,buf);
+	    PxReal meanR = PxPow(a*b*c/8,1.0/3.0);
+	    sprintf(buf,"Mean radius = %0.2f",meanR);
+	    gHUD.hud.SetElement(sgp::hudMsgs.systemDiag6,buf);
+    }
 }
 
 
