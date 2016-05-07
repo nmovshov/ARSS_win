@@ -66,7 +66,8 @@ namespace sgp
     // Parameters for orbit_sgp experiment
     struct {
         PxReal bigM; // primary mass
-        PxReal sgpMass; // overrides loaded sgp!
+        PxReal sgpMass; // overrides loaded sgp
+        PxReal sgpRadius; // overrides loaded sgp
         string orbFile;
         nr3::VecDoub tvec;
         nr3::VecDoub xvec;

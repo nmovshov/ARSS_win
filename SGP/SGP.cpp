@@ -108,6 +108,8 @@ bool ConfigExperimentOptions()
     // The orbit_sgp subgroup includes parameters for orbit selection/generation
     ncc::GetStrPropertyFromINIFile("experiment:orbit_sgp","sgp_mass","0",buf,MAX_CHARS_PER_NAME,gRun.iniFile.c_str());
     sgp::orbit.sgpMass = atof(buf);
+    ncc::GetStrPropertyFromINIFile("experiment:orbit_sgp","sgp_radius","0",buf,MAX_CHARS_PER_NAME,gRun.iniFile.c_str());
+    sgp::orbit.sgpRadius = atof(buf);
     ncc::GetStrPropertyFromINIFile("experiment:orbit_sgp","big_M","0",buf,MAX_CHARS_PER_NAME,gRun.iniFile.c_str());
     sgp::orbit.bigM = atof(buf);
     sgp::orbit.nbOrbits = ncc::GetIntPropertyFromINIFile("experiment:orbit_sgp","nb_orbits",1,gRun.iniFile.c_str());
@@ -1147,15 +1149,23 @@ void sgp::CreateOrbitSGPExperiment()
 {
     // Load a previously saved SGP
     if (!sgp::LoadSGP(gRun.loadSceneFromFile)) {
-        //ncc__error("Could not load SGP from file; experiment aborted.\a");
-        ncc__warning("Could not load SGP from file; experiment aborted.");
+        ncc__error("Could not load SGP from file; experiment aborted.\a");
+        /*ncc__warning("Could not load SGP from file; experiment aborted.");
         CreateRubbleGrain(PxVec3(1,0,0),eSPHERE_GRAIN,0.5,*gPhysX.mDefaultMaterial,100);
-        CreateRubbleGrain(PxVec3(-1,0,0),eSPHERE_GRAIN,0.5,*gPhysX.mDefaultMaterial,100);
+        CreateRubbleGrain(PxVec3(-1,0,0),eSPHERE_GRAIN,0.5,*gPhysX.mDefaultMaterial,100);*/
     }
     DeadStop(); // stomp any residual velocities
     RecenterScene(); // put center-of-mass at origin
-    if (sgp::orbit.sgpMass > 0) // set sgp total mass
-        sgp::ReMassSGP(sgp::orbit.sgpMass);
+    // Optionally rescale SGP
+    if (sgp::orbit.sgpMass > 0) sgp::ReMassSGP(sgp::orbit.sgpMass);
+    if (sgp::orbit.sgpRadius > 0) {
+        FindExtremers(true);
+        PxVec3 rRight = gExp.VIPs.extremers.rightmost->getGlobalPose().transform(gExp.VIPs.extremers.rightmost->getCMassLocalPose()).p;
+        PxVec3 rLeft  = gExp.VIPs.extremers.leftmost->getGlobalPose().transform(gExp.VIPs.extremers.leftmost->getCMassLocalPose()).p;
+        PxReal aAxis = rRight.x - rLeft.x;
+        PxReal sfactor = 2*sgp::orbit.sgpRadius/aAxis;
+        if (!sgp::RescaleSGP(sfactor)) ncc__error("Rescaling failed experiment aborted\a\n");
+    }
 
     // Load orbit from run_base_name.orb
     sgp::orbit.orbFile = gRun.workingDirectory + "/" + gRun.baseName + ".orb";
