@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////////////
-// Header file for project SGP. Stands for Self-Gravitating Pile. This project is
+// Source file for project SGP. Stands for Self-Gravitating Pile. This project is
 // normally used to load a rubble pile from some source, impose some initial
 // conditions, and then let it evolve.
 //
@@ -1516,6 +1516,10 @@ bool sgp::RescaleSGP(PxReal factor)
                 }
             }
         }
+
+        // Don't forget to recalculate actor inertia
+        PxReal m = actor->getMass();
+        PxRigidBodyExt::setMassAndUpdateInertia(*actor,m);
     }
 
     return success;
