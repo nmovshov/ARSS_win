@@ -142,6 +142,6 @@ namespace sgp
     bool GenerateOrbit();
     bool LoadOrbitFromFile();
     void ReMassSGP(PxReal newMass);
-    void RescaleSGP(PxReal factor);
+    bool RescaleSGP(PxReal factor);
 };
 #endif

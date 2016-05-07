@@ -403,7 +403,7 @@ void sgp::CreateLoadSGPExperiment()
         PxVec3 rLeft  = gExp.VIPs.extremers.leftmost->getGlobalPose().transform(gExp.VIPs.extremers.leftmost->getCMassLocalPose()).p;
         PxReal aAxis = rRight.x - rLeft.x;
         PxReal sfactor = sgp::lsgp.rescale/aAxis;
-        sgp::RescaleSGP(sfactor);
+        if (!sgp::RescaleSGP(sfactor)) ncc__error("Rescaling failed experiment aborted\a\n");
     }
 
     // Move the camera to a good location
@@ -1479,9 +1479,46 @@ void sgp::RefreshLoadSGPHUD()
 	    gHUD.hud.SetElement(sgp::hudMsgs.systemDiag6,buf);
     }
 }
-void sgp::RescaleSGP(PxReal factor)
+bool sgp::RescaleSGP(PxReal factor)
 {
-    cout << "rescaling by" << factor << endl;
+    bool success = true;
+    cout << "Rescaling SGP by " << factor << endl;
+    PxU32 nbGrains = gPhysX.mScene->getActors(gPhysX.roles.dynamics,gPhysX.cast,MAX_ACTORS_PER_SCENE);
+    for (PxU32 k=0; k < nbGrains; k++)
+    {
+        PxRigidDynamic* actor = gPhysX.cast[k]->isRigidDynamic();
+
+        // First the easy part: move in global frame
+        PxTransform pose = actor->getGlobalPose();
+        pose.p = pose.p*factor;
+        actor->setGlobalPose(pose);
+
+        // Now the hard part, inflate the shape/geometry/mesh/scale
+        PxShape* shapes[MAX_SHAPES_PER_ACTOR];
+        PxU32 nbShapes = actor->getNbShapes();
+        if (nbShapes)
+        {
+            actor->getShapes(shapes,MAX_SHAPES_PER_ACTOR);
+            while (nbShapes--)
+            {
+                PxShape* mshape = shapes[nbShapes];
+                PxGeometryType::Enum gtype = mshape->getGeometryType();
+                if (gtype == PxGeometryType::eCONVEXMESH)
+                {
+                    PxConvexMeshGeometry geom;
+                    mshape->getConvexMeshGeometry(geom);
+                    geom.scale.scale *= factor;
+                    
+                    // We actually need to destroy/remake the shape (Note: using default material always)
+                    mshape->release();
+                    PxShape* newshape = actor->createShape(geom, *gPhysX.mDefaultMaterial);
+                    if (!newshape) success = false;
+                }
+            }
+        }
+    }
+
+    return success;
 }
 
 
