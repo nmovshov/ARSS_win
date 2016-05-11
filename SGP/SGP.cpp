@@ -320,6 +320,11 @@ void LoadExperiment()
 {
 
 }
+void F6Action()
+{
+    string fplFile = gRun.baseName + ".fpl";
+    sgp::AsciizeSGP(fplFile);
+}
 void UpArrowAction()
 {
     PxVec3 d = gExp.IOMs.systemCM;
@@ -1533,6 +1538,52 @@ bool sgp::RescaleSGP(PxReal factor)
     }
 
     return success;
+}
+void sgp::AsciizeSGP(string filename)
+{
+    UpdateIntegralsOfMotion(true);
+
+    // Start with a header
+    ostringstream header;
+    time_t now = time(NULL);
+    header << "# This is output from " << gRun.baseName << " from " << ctime(&now); // ctime includes a newline
+    header << "# Code time = " << gSim.codeTime << endl;
+    header << "# Rubble elements = " << gExp.rubbleCount << endl;
+    header << "# Code units: 1 cu = [" << sgp::cunits.length << " m | " << sgp::cunits.mass << " kg | " << sgp::cunits.time << " s]" << endl;
+    header << "# Scaled G = " << sgp::cunits.bigG << " (cu)" << endl;
+    header << "# Columns are (values in code units):" << endl;
+    header << "# [x]  [y]  [z]  [vx]  [vy]  [vz]  [m]  [class]" << endl;
+    ofstream fbuf(filename.c_str(),ios::trunc);
+    if (!fbuf.is_open())
+        ncc__warning("Could not open file, output not saved!\a\n");
+    fbuf << header.str() << endl;
+
+    // Then records
+    PxU32 nbActors = gPhysX.mScene->getActors(gPhysX.roles.dynamics,gPhysX.cast,MAX_ACTORS_PER_SCENE);
+    for (PxU32 k=0; k<nbActors; k++)
+    {
+        PxRigidDynamic* actor = gPhysX.cast[k]->isRigidDynamic();
+        if (actor)
+        {
+            if (actor->getRigidDynamicFlags() & PxRigidDynamicFlag::eKINEMATIC) continue;
+            PxVec3 r = actor->getGlobalPose().transform(actor->getCMassLocalPose()).p;
+            PxVec3 v = actor->getLinearVelocity();
+            PxReal m = actor->getMass();
+            string pcls;
+            const char* buf = actor->getName();
+            if (strcmp(buf,"")==0) pcls = "DEF";
+            if (strcmp(buf,"rubble-interior")==0) pcls = "INT";
+            if (strcmp(buf,"rubble-surface")==0)  pcls = "SUR";
+            if (strcmp(buf,"rubble-core")==0)     pcls = "COR";
+            if (strcmp(buf,"rubble-mantle")==0)   pcls = "MAN";
+            if (strcmp(buf,"rubble-crust")==0)    pcls = "CRU";
+
+            // Format and write it to file (yes one line at a time, unbuffered)
+            char line[MAX_CHARS_PER_NAME];
+            sprintf(line,"% 8.3f    % 8.3f    % 8.3f    % 12.3e    % 12.3e    % 12.3e    % 12.3e    %s", r.x, r.y, r.z, v.x, v.y, v.z, m, pcls.c_str());
+            ncc::logEntry(filename.c_str(),line);
+        }
+    }
 }
 
 

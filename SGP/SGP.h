@@ -137,6 +137,7 @@ namespace sgp
     PxReal SystemPotentialEnergy();
     void ColorCodeRubblePile();
     bool LoadSGP(string filename);
+    void AsciizeSGP(string filename);
     void SpyOnSGP(PxReal f=1.0, bool bZoomOutOnly=true);
     PxVec3 FindSGPCenterOfMass();
     PxReal SGPBulkDensity(bool bRoughGuess=true);
