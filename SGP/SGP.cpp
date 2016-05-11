@@ -986,6 +986,7 @@ void sgp::ControlMakeSGPExperiment()
     if (X < 1e-4 || (gSim.codeTime > 4*GT))
     {
         SaveSceneToRepXDump();
+        sgp::AsciizeSGP(gRun.baseName + ".fpl");
         gSim.isRunning = false;
     }
 }
@@ -1292,6 +1293,7 @@ void sgp::ControlOrbitSGPExperiment()
     // Save and quit when done
     if (gSim.codeTime > (sgp::orbit.tEnd - sgp::orbit.tStart)) {
         SaveSceneToRepXDump();
+        sgp::AsciizeSGP(gRun.baseName + ".fpl");
         gSim.isRunning = false;
     }
 }
@@ -1584,6 +1586,9 @@ void sgp::AsciizeSGP(string filename)
             ncc::logEntry(filename.c_str(),line);
         }
     }
+
+    // And return
+    cout << "Wrote serial (ascii) SGP state to " << filename << endl;
 }
 
 
