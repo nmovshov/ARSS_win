@@ -509,6 +509,9 @@ void ProcessSpecialKeys(int key, int x, int y)
 	case GLUT_KEY_F5: // save scene to file
 		SaveSceneToRepXDump();
 		break;
+    case GLUT_KEY_F6: // project-specific
+        F6Action();
+        break;
 	case GLUT_KEY_UP:
 		UpArrowAction();
 		break;

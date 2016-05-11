@@ -274,6 +274,7 @@ void CreateExperiment();
 void RebootExperiment();
 void LoadExperiment();
 void LogExperiment();
+void F6Action();
 void UpArrowAction();
 void DownArrowAction();
 void LeftArrowAction();
