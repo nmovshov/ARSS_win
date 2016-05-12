@@ -104,6 +104,8 @@ bool ConfigExperimentOptions()
     sgp::lsgp.remass = atof(buf);
     ncc::GetStrPropertyFromINIFile("experiment:load_sgp","sgp_rescale","0",buf,MAX_CHARS_PER_NAME,gRun.iniFile.c_str());
     sgp::lsgp.rescale = atof(buf);
+    ncc::GetStrPropertyFromINIFile("experiment:load_sgp","spin_period","0",buf,MAX_CHARS_PER_NAME,gRun.iniFile.c_str());
+    sgp::lsgp.period = atof(buf);
 
     // The orbit_sgp subgroup includes parameters for orbit selection/generation
     ncc::GetStrPropertyFromINIFile("experiment:orbit_sgp","sgp_mass","0",buf,MAX_CHARS_PER_NAME,gRun.iniFile.c_str());
@@ -412,6 +414,10 @@ void sgp::CreateLoadSGPExperiment()
         PxReal sfactor = sgp::lsgp.rescale/aAxis;
         if (!sgp::RescaleSGP(sfactor)) ncc__error("Rescaling failed experiment aborted\a\n");
     }
+
+    // Optionally spin SGP
+    if (sgp::lsgp.period)
+        SpinSGP(sgp::lsgp.period);
 
     // Move the camera to a good location
     SpyOnSGP();
@@ -1589,6 +1595,25 @@ void sgp::AsciizeSGP(string filename)
 
     // And return
     cout << "Wrote serial (ascii) SGP state to " << filename << endl;
+}
+void sgp::SpinSGP(PxReal period)
+{
+    PxReal w = 2*PxPi/period;
+    PxVec3 W(0,0,w);
+    PxVec3 X0 = FindSGPCenterOfMass();
+    PxU32 nbGrains = gPhysX.mScene->getActors(gPhysX.roles.dynamics,gPhysX.cast,MAX_ACTORS_PER_SCENE);
+    while (nbGrains--)
+    {
+        PxRigidDynamic* grain = gPhysX.cast[nbGrains]->isRigidDynamic();
+        if (grain)
+        {
+            if (grain->getRigidDynamicFlags() & PxRigidDynamicFlag::eKINEMATIC) continue;
+            PxVec3 R = grain->getGlobalPose().transform(grain->getCMassLocalPose()).p;
+            PxVec3 r = R - X0;
+            PxVec3 v = W.cross(r);
+            grain->setLinearVelocity(v);
+        }
+    }
 }
 
 

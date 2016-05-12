@@ -61,6 +61,7 @@ namespace sgp
     struct {
         PxReal remass;
         PxReal rescale;
+        PxReal period;
     } lsgp;
 
     // Parameters for orbit_sgp experiment
@@ -145,5 +146,6 @@ namespace sgp
     bool LoadOrbitFromFile();
     void ReMassSGP(PxReal newMass);
     bool RescaleSGP(PxReal factor);
+    void SpinSGP(PxReal period);
 };
 #endif
