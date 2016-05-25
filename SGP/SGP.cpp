@@ -115,6 +115,8 @@ bool ConfigExperimentOptions()
     ncc::GetStrPropertyFromINIFile("experiment:orbit_sgp","big_M","0",buf,MAX_CHARS_PER_NAME,gRun.iniFile.c_str());
     sgp::orbit.bigM = atof(buf);
     sgp::orbit.nbOrbits = ncc::GetIntPropertyFromINIFile("experiment:orbit_sgp","nb_orbits",1,gRun.iniFile.c_str());
+    ncc::GetStrPropertyFromINIFile("experiment:orbit_sgp","spin_period","0",buf,MAX_CHARS_PER_NAME,gRun.iniFile.c_str());
+    sgp::orbit.spinPeriod = atof(buf);
     
     // Parameters of the grain size distribution (OBSOLETE REMOVE WHEN READY)
     /*OBSOLETE gsd group remove when ready*/
@@ -1168,6 +1170,7 @@ void sgp::CreateOrbitSGPExperiment()
     }
     DeadStop(); // stomp any residual velocities
     RecenterScene(); // put center-of-mass at origin
+
     // Optionally rescale SGP
     if (sgp::orbit.sgpMass > 0) sgp::ReMassSGP(sgp::orbit.sgpMass);
     if (sgp::orbit.sgpRadius > 0) {
@@ -1178,6 +1181,10 @@ void sgp::CreateOrbitSGPExperiment()
         PxReal sfactor = 2*sgp::orbit.sgpRadius/aAxis;
         if (!sgp::RescaleSGP(sfactor)) ncc__error("Rescaling failed experiment aborted\a\n");
     }
+
+    // Optionally spin SGP
+    if (sgp::orbit.spinPeriod)
+        SpinSGP(sgp::orbit.spinPeriod);
 
     // Load orbit from run_base_name.orb
     sgp::orbit.orbFile = gRun.workingDirectory + "/" + gRun.baseName + ".orb";

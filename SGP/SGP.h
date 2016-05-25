@@ -79,6 +79,7 @@ namespace sgp
         PxReal tEnd;
         PxVec3 X0;
         PxVec3 V0;
+        PxReal spinPeriod;
         int nbOrbits; // elliptical orbits only
     } orbit;
 
