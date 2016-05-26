@@ -1237,7 +1237,7 @@ void sgp::CreateOrbitSGPExperiment()
 
     // Move the camera to a good location
     SpyOnSGP();
-    sgp::orbit.bTrackingCamera = false;
+    sgp::orbit.bTrackingCamera = true;
 
     // Start a log
     if (gRun.outputFrequency)
