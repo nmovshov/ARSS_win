@@ -1306,7 +1306,7 @@ void sgp::ControlOrbitSGPExperiment()
     // Save and quit when done
     if (gSim.codeTime > (sgp::orbit.tEnd - sgp::orbit.tStart)) {
         SaveSceneToRepXDump();
-        sgp::AsciizeSGP(gRun.baseName + ".fpl");
+        sgp::AsciizeSGP(gRun.workingDirectory + "/" + gRun.baseName + ".fpl");
         gSim.isRunning = false;
     }
 }
