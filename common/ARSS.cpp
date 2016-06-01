@@ -401,8 +401,8 @@ void IdleCallback()
 	}
 
 	// Refresh  the HUD
-	if (gSim.wallTime - hudTime > 1000) {
-		gSim.fps = (gSim.frame-hudFrame);
+	if ((gSim.wallTime - hudTime) > 1000) {
+		gSim.fps = (gSim.frame-hudFrame)*1000.0/(gSim.wallTime - hudTime);
 		hudTime = gSim.wallTime;
 		hudFrame = gSim.frame;
 		RefreshHUD();
