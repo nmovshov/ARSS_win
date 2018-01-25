@@ -6,7 +6,8 @@ collections of discrete, rigid-body grains of irregular shape. The DEM
 heavy-lifting is provided by NVIDIA's
 [PhysX](https://developer.nvidia.com/technologies/physx) engine, and the
 self-gravity module requires a
-[CUDA](https://developer.nvidia.com/category/zone/cuda-zone) enabled GPU to run.
+[CUDA](https://developer.nvidia.com/category/zone/cuda-zone) enabled GPU to run
+(**_currently disabled_**).
 ARSS was developed and used on a Windows PC, exclusively, although some care has
 been taken to allow porting to other platforms. The PhysX SDK version >3.0 is
 required for linux and MacOSX, and the crucial binaries are bundled with ARSS, but
@@ -23,15 +24,16 @@ Contents of this package:
 
 + `ARSS_win/ARSS.sln` - This is a Visual Studio 2010 solution file. If you have
   VS2010 Pro or better (no Express, sorry, get a free copy at Microsoft's
-  Dreamspark if you're a college student) and have installed NSIGHT VS Edition,
-  you should be able to double click on this file to load all the projects and
-  build with one click, after installing external dependencies (see below). A
-  "solution" is a Visual Studio concept for organizing multiple "projects" that
-  share code. A "project" is a set of source files that will compile and link
-  with dependencies to create an executable. ARSS contains several projects under
-  the ARSS solution to maximize code reuse. But the projects all create
-  standalone executables that never call each other. For non VS users the solution
-  concept and `ARSS.sln` file are irrelevant. Build each project independently.
+  [Dreamspark](https://imagine.microsoft.com/en-us/custom/Dreamspark) if you're
+  a college student) and have installed NSIGHT VS Edition, you should be able to
+  double click on this file to load all the projects and build with one click,
+  after installing external dependencies (see below). A  "solution" is a Visual
+  Studio concept for organizing multiple "projects" that share code. A "project"
+  is a set of source files that will compile and link with dependencies to create
+  an executable. ARSS contains several projects under the ARSS solution to maximize
+  code reuse. But the projects all create standalone executables that never call
+  each other. For non VS users the solution concept and `ARSS.sln` file are
+  irrelevant. Build each project independently.
 
 + `ARSS_win/common/` - Contains source and header files used in all ARSS projects.
 
